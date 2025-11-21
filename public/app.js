@@ -122,18 +122,32 @@ class App {
         this.router = new Router();
         this.cart = JSON.parse(localStorage.getItem('cart') || '[]');
         this.initRoutes();
+        this.initNavSearch();
         this.updateUI();
     }
 
     initRoutes() {
         this.router.register('/', () => this.renderHome());
-        this.router.register('/products', () => this.renderProducts());
         this.router.register('/product', (params) => this.renderProductDetail(params[0]));
         this.router.register('/cart', () => this.renderCart());
         this.router.register('/login', () => this.renderLogin());
         this.router.register('/register', () => this.renderRegister());
         this.router.register('/profile', () => this.renderProfile());
         this.router.register('/404', () => this.render404());
+    }
+
+    initNavSearch() {
+        const searchInput = document.getElementById('navSearchInput');
+        if (searchInput) {
+            searchInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') this.navSearch();
+            });
+        }
+    }
+
+    navSearch() {
+        const keyword = document.getElementById('navSearchInput').value.trim();
+        this.renderHome(keyword);
     }
 
     updateUI() {
@@ -157,35 +171,69 @@ class App {
 
     // ==================== 页面渲染 ====================
 
-    renderHome() {
+    renderHome(searchKeyword = '') {
         const content = document.getElementById('main-content');
+        const isSearching = !!searchKeyword;
+
         content.innerHTML = `
+            ${!isSearching ? `
             <div class="hero">
                 <h1>🎉 欢迎来到精品商城</h1>
                 <p>发现优质好物，享受购物乐趣</p>
-                <button class="btn btn-primary btn-lg" onclick="app.router.navigate('/products')">开始购物</button>
             </div>
+            ` : `
+            <div class="search-result-header">
+                <h2>🔍 搜索结果: "${searchKeyword}"</h2>
+                <button class="btn btn-sm" onclick="app.renderHome()">清除搜索</button>
+            </div>
+            `}
             <div class="section">
-                <h2>🔥 热门商品</h2>
-                <div id="hot-products" class="products-grid">
+                <h2>${isSearching ? '📦 相关商品' : '🔥 全部商品'}</h2>
+                <div id="products-container" class="products-grid">
                     <div class="loading-text">加载中...</div>
                 </div>
             </div>
         `;
-        this.loadProducts('hot-products', 6);
+
+        if (isSearching) {
+            this.loadSearchResults(searchKeyword, 'products-container');
+        } else {
+            this.loadProducts('products-container');
+        }
     }
 
-    async renderProducts() {
-        const content = document.getElementById('main-content');
-        content.innerHTML = `
-            <div class="section">
-                <h2>📦 全部商品</h2>
-                <div id="all-products" class="products-grid">
-                    <div class="loading-text">加载中...</div>
+    async loadSearchResults(keyword, containerId) {
+        const container = document.getElementById(containerId);
+        container.innerHTML = '<div class="loading-text">搜索中...</div>';
+
+        try {
+            const products = await utils.request(`/guest/search?keyword=${encodeURIComponent(keyword)}`);
+
+            if (!products || products.length === 0) {
+                container.innerHTML = `<div class="empty">未找到 "${keyword}" 相关商品</div>`;
+                return;
+            }
+
+            container.innerHTML = products.map(p => `
+                <div class="product-card" onclick="app.router.navigate('/product/${p.id}')">
+                    <div class="product-image">
+                        ${p.image_url ? `<img src="${p.image_url}" alt="${p.name}" onerror="this.parentElement.innerHTML='📦'">` : '📦'}
+                    </div>
+                    <div class="product-info">
+                        <h3>${p.name}</h3>
+                        <p class="product-desc">${p.description || '优质商品'}</p>
+                        <div class="product-footer">
+                            <span class="price">¥${p.price}</span>
+                            <button class="btn btn-sm btn-primary" onclick="event.stopPropagation(); app.addToCart(${p.id})">
+                                加入购物车
+                            </button>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        `;
-        this.loadProducts('all-products');
+            `).join('');
+        } catch (error) {
+            container.innerHTML = '<div class="error">搜索失败</div>';
+        }
     }
 
     async loadProducts(containerId, limit = null) {

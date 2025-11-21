@@ -13,10 +13,12 @@
         <!-- 导航栏 -->
         <nav class="navbar">
             <div class="container">
-                <div class="nav-brand">🛒 精品商城</div>
+                <div class="nav-brand" onclick="app.router.navigate('/')" style="cursor:pointer;">🛒 精品商城</div>
+                <div class="nav-search">
+                    <input type="text" id="navSearchInput" placeholder="搜索商品..." class="nav-search-input">
+                    <button class="nav-search-btn" onclick="app.navSearch()">🔍</button>
+                </div>
                 <div class="nav-menu">
-                    <a href="#/" class="nav-link">首页</a>
-                    <a href="#/products" class="nav-link">商品</a>
                     <a href="#/cart" class="nav-link">购物车 <span id="cartCount" class="badge">0</span></a>
                     <a href="#/profile" class="nav-link" id="profileNav" style="display:none;">个人中心</a>
                     <a href="#/login" class="nav-link" id="loginNav">登录</a>
