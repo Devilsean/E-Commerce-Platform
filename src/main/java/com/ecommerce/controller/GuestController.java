@@ -199,4 +199,53 @@ public class GuestController {
             return Result.error("获取商品详情失败：" + e.getMessage());
         }
     }
+
+    /**
+     * 获取商品评论列表（游客可见）
+     */
+    @GetMapping("/product/{productId}/reviews")
+    public Result<Map<String, Object>> getProductReviews(
+            @PathVariable Long productId,
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "10") Integer size) {
+        try {
+            int offset = (page - 1) * size;
+            
+            // 获取评论列表（包含用户信息）
+            String sql = "SELECT r.id, r.rating, r.content, r.images, r.create_time, " +
+                        "u.username, u.nickname, u.avatar " +
+                        "FROM product_review r " +
+                        "LEFT JOIN user u ON r.user_id = u.id " +
+                        "WHERE r.product_id = ? AND r.deleted = 0 " +
+                        "ORDER BY r.create_time DESC LIMIT ? OFFSET ?";
+            List<Map<String, Object>> reviews = jdbcTemplate.queryForList(sql, productId, size, offset);
+            
+            // 获取评论总数
+            String countSql = "SELECT COUNT(*) FROM product_review WHERE product_id = ? AND deleted = 0";
+            Integer total = jdbcTemplate.queryForObject(countSql, Integer.class, productId);
+            
+            // 获取评分统计
+            String statsSql = "SELECT " +
+                        "COUNT(*) as total_count, " +
+                        "AVG(rating) as avg_rating, " +
+                        "SUM(CASE WHEN rating = 5 THEN 1 ELSE 0 END) as five_star, " +
+                        "SUM(CASE WHEN rating = 4 THEN 1 ELSE 0 END) as four_star, " +
+                        "SUM(CASE WHEN rating = 3 THEN 1 ELSE 0 END) as three_star, " +
+                        "SUM(CASE WHEN rating = 2 THEN 1 ELSE 0 END) as two_star, " +
+                        "SUM(CASE WHEN rating = 1 THEN 1 ELSE 0 END) as one_star " +
+                        "FROM product_review WHERE product_id = ? AND deleted = 0";
+            Map<String, Object> stats = jdbcTemplate.queryForMap(statsSql, productId);
+            
+            Map<String, Object> result = new HashMap<>();
+            result.put("reviews", reviews);
+            result.put("total", total);
+            result.put("page", page);
+            result.put("size", size);
+            result.put("stats", stats);
+            
+            return Result.success(result);
+        } catch (Exception e) {
+            return Result.error("获取评论失败：" + e.getMessage());
+        }
+    }
 }

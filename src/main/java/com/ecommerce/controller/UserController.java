@@ -6,11 +6,16 @@ import com.ecommerce.service.UserService;
 import com.ecommerce.utils.JwtUtil;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Max;
+import jakarta.validation.constraints.Min;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -25,6 +30,9 @@ public class UserController {
 
     @Autowired
     private JwtUtil jwtUtil;
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
     /**
      * 用户注册
@@ -136,6 +144,105 @@ public class UserController {
         }
     }
 
+    /**
+     * 提交商品评论
+     */
+    @PostMapping("/review")
+    public Result<Void> submitReview(@RequestHeader("Authorization") String token,
+                                      @Valid @RequestBody ReviewRequest request) {
+        if (token.startsWith("Bearer ")) {
+            token = token.substring(7);
+        }
+        
+        Long userId = jwtUtil.getUserIdFromToken(token);
+        
+        try {
+            // 检查是否已经评论过该商品
+            String checkSql;
+            Integer count;
+            if (request.getOrderId() != null) {
+                // 有订单ID时，检查同一订单是否已评论
+                checkSql = "SELECT COUNT(*) FROM product_review WHERE user_id = ? AND product_id = ? AND order_id = ? AND deleted = 0";
+                count = jdbcTemplate.queryForObject(checkSql, Integer.class, userId, request.getProductId(), request.getOrderId());
+            } else {
+                // 无订单ID时，允许评论（或者可以检查是否购买过该商品）
+                checkSql = "SELECT COUNT(*) FROM product_review WHERE user_id = ? AND product_id = ? AND order_id IS NULL AND deleted = 0";
+                count = jdbcTemplate.queryForObject(checkSql, Integer.class, userId, request.getProductId());
+            }
+            
+            if (count != null && count > 0) {
+                return Result.error("您已经评论过该商品");
+            }
+            
+            // 插入评论
+            String insertSql = "INSERT INTO product_review (order_id, product_id, user_id, rating, content, images, deleted, create_time, update_time) " +
+                              "VALUES (?, ?, ?, ?, ?, ?, 0, NOW(), NOW())";
+            jdbcTemplate.update(insertSql,
+                request.getOrderId(),
+                request.getProductId(),
+                userId,
+                request.getRating(),
+                request.getContent(),
+                request.getImages()
+            );
+            
+            return Result.success("评论提交成功");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Result.error("评论提交失败：" + e.getMessage());
+        }
+    }
+
+    /**
+     * 获取用户的评论列表
+     */
+    @GetMapping("/reviews")
+    public Result<List<Map<String, Object>>> getUserReviews(@RequestHeader("Authorization") String token) {
+        if (token.startsWith("Bearer ")) {
+            token = token.substring(7);
+        }
+        
+        Long userId = jwtUtil.getUserIdFromToken(token);
+        
+        try {
+            String sql = "SELECT r.*, p.name as product_name, p.main_image as product_image " +
+                        "FROM product_review r " +
+                        "LEFT JOIN product p ON r.product_id = p.id " +
+                        "WHERE r.user_id = ? AND r.deleted = 0 " +
+                        "ORDER BY r.create_time DESC";
+            List<Map<String, Object>> reviews = jdbcTemplate.queryForList(sql, userId);
+            return Result.success(reviews);
+        } catch (Exception e) {
+            return Result.error("获取评论列表失败：" + e.getMessage());
+        }
+    }
+
+    /**
+     * 删除评论
+     */
+    @DeleteMapping("/review/{reviewId}")
+    public Result<Void> deleteReview(@RequestHeader("Authorization") String token,
+                                      @PathVariable Long reviewId) {
+        if (token.startsWith("Bearer ")) {
+            token = token.substring(7);
+        }
+        
+        Long userId = jwtUtil.getUserIdFromToken(token);
+        
+        try {
+            // 只能删除自己的评论
+            String sql = "UPDATE product_review SET deleted = 1, update_time = NOW() WHERE id = ? AND user_id = ?";
+            int rows = jdbcTemplate.update(sql, reviewId, userId);
+            if (rows > 0) {
+                return Result.success("删除成功");
+            } else {
+                return Result.error("评论不存在或无权删除");
+            }
+        } catch (Exception e) {
+            return Result.error("删除失败：" + e.getMessage());
+        }
+    }
+
     // ========== 请求DTO类 ==========
 
     @Data
@@ -191,5 +298,22 @@ public class UserController {
 
         @NotBlank(message = "验证码不能为空")
         private String code;
+    }
+
+    @Data
+    static class ReviewRequest {
+        private Long orderId;
+
+        @NotNull(message = "商品ID不能为空")
+        private Long productId;
+
+        @NotNull(message = "评分不能为空")
+        @Min(value = 1, message = "评分最低为1星")
+        @Max(value = 5, message = "评分最高为5星")
+        private Integer rating;
+
+        private String content;
+        
+        private String images;
     }
 }

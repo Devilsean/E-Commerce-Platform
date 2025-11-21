@@ -87,50 +87,8 @@ const ProfileService = {
 
     // 生成模拟订单数据
     generateMockOrders() {
-        return [
-            {
-                id: 1001,
-                orderNumber: 'ORD20250120001',
-                createTime: '2025-01-20 10:30:00',
-                status: ORDER_STATUS.PENDING,
-                totalAmount: 299.99,
-                items: [
-                    { name: '测试商品1', quantity: 2, price: 99.99 },
-                    { name: '测试商品2', quantity: 1, price: 100.01 }
-                ]
-            },
-            {
-                id: 1002,
-                orderNumber: 'ORD20250119001',
-                createTime: '2025-01-19 15:20:00',
-                status: ORDER_STATUS.PAID,
-                totalAmount: 199.99,
-                items: [
-                    { name: '测试商品2', quantity: 1, price: 199.99 }
-                ]
-            },
-            {
-                id: 1003,
-                orderNumber: 'ORD20250118001',
-                createTime: '2025-01-18 09:15:00',
-                status: ORDER_STATUS.SHIPPED,
-                totalAmount: 399.98,
-                items: [
-                    { name: '测试商品1', quantity: 4, price: 99.99 }
-                ]
-            },
-            {
-                id: 1004,
-                orderNumber: 'ORD20250117001',
-                createTime: '2025-01-17 14:45:00',
-                status: ORDER_STATUS.COMPLETED,
-                totalAmount: 599.97,
-                items: [
-                    { name: '测试商品1', quantity: 3, price: 99.99 },
-                    { name: '测试商品2', quantity: 3, price: 100.00 }
-                ]
-            }
-        ];
+        // 返回空数组，实际数据应从后端API获取
+        return [];
     },
 
     // 显示订单列表

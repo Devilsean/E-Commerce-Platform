@@ -205,7 +205,7 @@ CREATE TABLE `payment` (
 -- 商品评价表
 CREATE TABLE `product_review` (
     `id` BIGINT PRIMARY KEY AUTO_INCREMENT COMMENT '评价ID',
-    `order_id` BIGINT NOT NULL COMMENT '订单ID',
+    `order_id` BIGINT NULL COMMENT '订单ID（可为空，允许不通过订单直接评论）',
     `product_id` BIGINT NOT NULL COMMENT '商品ID',
     `user_id` BIGINT NOT NULL COMMENT '用户ID',
     `rating` TINYINT NOT NULL COMMENT '评分：1-5星',

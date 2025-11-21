@@ -249,11 +249,22 @@ class App {
                                 <button class="btn btn-primary btn-lg" onclick="app.addToCart(${product.id}, document.getElementById('quantity').value)">
                                     加入购物车
                                 </button>
+                                <button class="btn btn-success btn-lg" onclick="ReviewService.showReviewModal(${product.id}, '${product.name.replace(/'/g, "\\'")}')">
+                                    ✍️ 写评价
+                                </button>
                             </div>
                         </div>
                     </div>
+                    
+                    <!-- 评论区域 -->
+                    <div id="productReviews" class="product-reviews-container"></div>
                 </div>
             `;
+
+            // 加载评论
+            if (typeof ReviewService !== 'undefined') {
+                ReviewService.renderReviewSection('productReviews', product.id);
+            }
         } catch (error) {
             content.innerHTML = '<div class="error">商品不存在</div>';
         }
