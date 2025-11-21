@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>测试页面</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div id="app">
+        <nav class="navbar">
+            <div class="container">
+                <div class="nav-brand">🛒 精品商城 - 测试</div>
+            </div>
+        </nav>
+
+        <main id="main-content" class="container">
+            <h1>JavaScript 加载测试</h1>
+            <div id="test-results"></div>
+        </main>
+
+        <div id="toast" class="toast"></div>
+        <div id="loading" class="loading-overlay" style="display:none;">
+            <div class="spinner"></div>
+        </div>
+    </div>
+
+    <!-- 基础模块 -->
+    <script src="js/config.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/router.js"></script>
+    <script src="js/store.js"></script>
+
+    <!-- 功能模块 -->
+    <script src="js/auth.js"></script>
+    <script src="js/cart.js"></script>
+    <script src="js/product.js"></script>
+    <script src="js/merchant.js"></script>
+    <script src="js/profile.js"></script>
+    <script src="js/review.js"></script>
+
+    <!-- 主应用 -->
+    <script src="app.js"></script>
+
+    <script>
+        // 测试脚本
+        const results = document.getElementById('test-results');
+        let html = '<ul>';
+
+        // 检查各个模块是否加载
+        html += `<li>API_BASE: ${typeof API_BASE !== 'undefined' ? '✅ ' + API_BASE : '❌ 未定义'}</li>`;
+        html += `<li>utils: ${typeof utils !== 'undefined' ? '✅ 已加载' : '❌ 未加载'}</li>`;
+        html += `<li>Router: ${typeof Router !== 'undefined' ? '✅ 已加载' : '❌ 未加载'}</li>`;
+        html += `<li>Store: ${typeof Store !== 'undefined' ? '✅ 已加载' : '❌ 未加载'}</li>`;
+        html += `<li>ProfileService: ${typeof ProfileService !== 'undefined' ? '✅ 已加载' : '❌ 未加载'}</li>`;
+        html += `<li>ReviewService: ${typeof ReviewService !== 'undefined' ? '✅ 已加载' : '❌ 未加载'}</li>`;
+        html += `<li>app: ${typeof app !== 'undefined' ? '✅ 已加载' : '❌ 未加载'}</li>`;
+        html += `<li>window.app: ${typeof window.app !== 'undefined' ? '✅ 已加载' : '❌ 未加载'}</li>`;
+
+        if (typeof app !== 'undefined') {
+            html += `<li>app.router: ${typeof app.router !== 'undefined' ? '✅ 存在' : '❌ 不存在'}</li>`;
+        }
+
+        html += '</ul>';
+
+        // 检查控制台错误
+        html += '<h3>控制台信息：</h3>';
+        html += '<div id="console-log" style="background: #f5f5f5; padding: 10px; border-radius: 4px; max-height: 300px; overflow-y: auto;"></div>';
+
+        results.innerHTML = html;
+
+        // 捕获控制台错误
+        const consoleLog = document.getElementById('console-log');
+        const originalError = console.error;
+        console.error = function (...args) {
+            consoleLog.innerHTML += `<div style="color: red;">❌ ${args.join(' ')}</div>`;
+            originalError.apply(console, args);
+        };
+
+        const originalLog = console.log;
+        console.log = function (...args) {
+            consoleLog.innerHTML += `<div>ℹ️ ${args.join(' ')}</div>`;
+            originalLog.apply(console, args);
+        };
+
+        console.log('测试页面加载完成');
+    </script>
+</body>
+
+</html>

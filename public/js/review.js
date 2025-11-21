@@ -318,7 +318,9 @@ const ReviewService = {
         const user = utils.getUserInfo();
         if (!user) {
             utils.showToast('请先登录', 'warning');
-            app.router.navigate('/login');
+            if (window.app && window.app.router) {
+                window.app.router.navigate('/login');
+            }
             return;
         }
 

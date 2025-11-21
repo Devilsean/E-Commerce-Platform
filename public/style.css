@@ -2375,3 +2375,123 @@ select.form-input {
         padding: 8px 12px;
     }
 }
+
+/* ==================== 地址管理样式 ==================== */
+.address-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 12px;
+    margin-bottom: 15px;
+    transition: all 0.3s;
+    border: 1px solid transparent;
+}
+
+.address-item:hover {
+    background: #e9ecef;
+    transform: translateX(5px);
+    border-color: var(--primary);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.address-info {
+    flex: 1;
+}
+
+.address-info h4 {
+    margin: 0 0 8px 0;
+    font-size: 16px;
+    color: #333;
+    font-weight: 600;
+}
+
+.address-info p {
+    margin: 0;
+    color: #666;
+    font-size: 14px;
+    line-height: 1.6;
+}
+
+.address-info .badge {
+    margin-left: 10px;
+    background: var(--success);
+}
+
+.address-actions {
+    display: flex;
+    gap: 10px;
+    flex-shrink: 0;
+}
+
+/* ==================== 标签必填标记 ==================== */
+.label-required {
+    color: var(--danger);
+    margin-right: 4px;
+    font-weight: bold;
+}
+
+/* ==================== 空状态（小型）优化 ==================== */
+.empty-state-small {
+    text-align: center;
+    padding: 40px 20px;
+    background: #f8f9fa;
+    border-radius: 12px;
+}
+
+.empty-icon-small {
+    font-size: 48px;
+    margin-bottom: 15px;
+    opacity: 0.6;
+}
+
+.empty-state-small p {
+    color: #666;
+    margin-bottom: 20px;
+    font-size: 14px;
+}
+
+/* ==================== 响应式优化（地址管理） ==================== */
+@media (max-width: 768px) {
+    .address-item {
+        flex-direction: column;
+        text-align: center;
+        gap: 15px;
+    }
+
+    .address-actions {
+        width: 100%;
+        justify-content: center;
+    }
+    
+    .address-info {
+        width: 100%;
+    }
+}
+
+/* ==================== 模态框内容优化 ==================== */
+.modal-content .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 15px;
+}
+
+.modal-content .stat-card {
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    padding: 20px;
+    border-radius: 12px;
+    text-align: center;
+}
+
+.modal-content .stat-card h4 {
+    margin: 0 0 10px 0;
+    font-size: 14px;
+    color: #666;
+}
+
+.modal-content .stat-card .stat-value {
+    font-size: 24px;
+    font-weight: bold;
+    color: #333;
+}

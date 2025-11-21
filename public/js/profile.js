@@ -1,53 +1,285 @@
-// 个人中心服务模块
+// 个人中心服务模块 - 增强版
+
+// 订单状态常量
+const ORDER_STATUS = {
+    PENDING: 'pending',
+    PAID: 'paid',
+    SHIPPED: 'shipped',
+    COMPLETED: 'completed',
+    CANCELLED: 'cancelled'
+};
+
+const ORDER_STATUS_TEXT = {
+    all: '全部',
+    pending: '待付款',
+    paid: '待发货',
+    shipped: '待收货',
+    completed: '已完成',
+    cancelled: '已取消'
+};
+
+const ORDER_STATUS_BADGE = {
+    pending: 'badge-warning',
+    paid: 'badge-info',
+    shipped: 'badge-primary',
+    completed: 'badge-success',
+    cancelled: 'badge-secondary'
+};
 
 const ProfileService = {
     // 加载个人中心
-    loadProfile() {
+    async loadProfile() {
         const currentUser = Store.getCurrentUser();
 
         if (!currentUser) {
             showMessage('请先登录', 'error');
-            Router.navigate('login');
+            if (window.app && window.app.router) {
+                window.app.router.navigate('/login');
+            }
             return;
         }
 
-        // 显示用户信息
-        const usernameEl = document.getElementById('profileUsername');
-        const emailEl = document.getElementById('profileEmail');
-        const roleEl = document.getElementById('profileRole');
-        const titleEl = document.getElementById('profileTitle');
-
-        if (usernameEl) {
-            usernameEl.textContent = currentUser.username || currentUser.nickname || '用户';
-        }
-        if (emailEl) {
-            emailEl.textContent = currentUser.email || currentUser.phone || '未设置';
-        }
-
-        // 判断用户角色
         const isMerchant = currentUser.role === 'merchant' || currentUser.userType === 2;
 
-        if (roleEl) {
-            roleEl.textContent = isMerchant ? '商家账号' : '普通用户';
-        }
-        if (titleEl) {
-            titleEl.textContent = isMerchant ? '🏪 店铺中心' : '👤 个人中心';
-        }
+        // 渲染个人中心页面
+        const content = document.getElementById('main-content');
+        content.innerHTML = `
+            <div class="profile-container">
+                <div class="profile-header">
+                    <div class="profile-banner">
+                        <div class="profile-avatar-large">
+                            ${isMerchant ? '🏪' : '👤'}
+                        </div>
+                        <div class="profile-header-info">
+                            <h2>${currentUser.username || '用户'}</h2>
+                            <p class="profile-subtitle">${currentUser.email || currentUser.phone || '未设置联系方式'}</p>
+                            <span class="badge badge-${isMerchant ? 'merchant' : 'user'}">
+                                ${isMerchant ? '🏪 商家账号' : '👤 普通用户'}
+                            </span>
+                        </div>
+                    </div>
+                </div>
 
-        // 显示对应的内容区域
-        const userOrderSection = document.getElementById('userOrderSection');
-        const merchantShopSection = document.getElementById('merchantShopSection');
+                ${isMerchant ? this.renderMerchantContent() : this.renderUserContent()}
+            </div>
+        `;
 
+        // 加载对应数据
         if (isMerchant) {
-            // 商家用户：显示店铺管理
-            if (userOrderSection) userOrderSection.style.display = 'none';
-            if (merchantShopSection) merchantShopSection.style.display = 'block';
-            MerchantService.loadMerchantProducts();
+            this.loadMerchantStats();
         } else {
-            // 普通用户：显示订单管理
-            if (userOrderSection) userOrderSection.style.display = 'block';
-            if (merchantShopSection) merchantShopSection.style.display = 'none';
-            this.loadOrders();
+            this.loadUserStats();
+        }
+    },
+
+    // 渲染普通用户内容
+    renderUserContent() {
+        return `
+            <div class="profile-content">
+                <!-- 订单统计 -->
+                <div class="profile-section">
+                    <div class="section-title">
+                        <h3>📋 我的订单</h3>
+                        <a href="javascript:ProfileService.showAllOrders()" class="view-all">查看全部 →</a>
+                    </div>
+                    <div class="order-stats-grid">
+                        <div class="order-stat-card" onclick="ProfileService.filterOrders('pending')">
+                            <div class="stat-icon">💰</div>
+                            <div class="stat-info">
+                                <div class="stat-number" id="pendingCount">0</div>
+                                <div class="stat-label">待付款</div>
+                            </div>
+                        </div>
+                        <div class="order-stat-card" onclick="ProfileService.filterOrders('paid')">
+                            <div class="stat-icon">📦</div>
+                            <div class="stat-info">
+                                <div class="stat-number" id="paidCount">0</div>
+                                <div class="stat-label">待发货</div>
+                            </div>
+                        </div>
+                        <div class="order-stat-card" onclick="ProfileService.filterOrders('shipped')">
+                            <div class="stat-icon">🚚</div>
+                            <div class="stat-info">
+                                <div class="stat-number" id="shippedCount">0</div>
+                                <div class="stat-label">待收货</div>
+                            </div>
+                        </div>
+                        <div class="order-stat-card" onclick="ProfileService.filterOrders('completed')">
+                            <div class="stat-icon">✅</div>
+                            <div class="stat-info">
+                                <div class="stat-number" id="completedCount">0</div>
+                                <div class="stat-label">已完成</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 收货地址 -->
+                <div class="profile-section">
+                    <div class="section-title">
+                        <h3>📍 收货地址</h3>
+                        <button class="btn btn-primary btn-sm" onclick="ProfileService.showAddAddressModal()">
+                            + 新增地址
+                        </button>
+                    </div>
+                    <div id="addressList">
+                        <div class="loading-text">加载中...</div>
+                    </div>
+                </div>
+
+                <!-- 账户设置 -->
+                <div class="profile-section">
+                    <div class="section-title">
+                        <h3>⚙️ 账户设置</h3>
+                    </div>
+                    <div class="settings-list">
+                        <div class="setting-item" onclick="ProfileService.showEditProfileModal()">
+                            <div class="setting-icon">👤</div>
+                            <div class="setting-info">
+                                <h4>个人信息</h4>
+                                <p>修改昵称、联系方式等基本信息</p>
+                            </div>
+                            <button class="btn btn-sm">编辑</button>
+                        </div>
+                        <div class="setting-item" onclick="ProfileService.showChangePasswordModal()">
+                            <div class="setting-icon">🔒</div>
+                            <div class="setting-info">
+                                <h4>安全设置</h4>
+                                <p>修改密码、绑定手机号</p>
+                            </div>
+                            <button class="btn btn-sm">设置</button>
+                        </div>
+                        <div class="setting-item" onclick="ProfileService.showAccountStats()">
+                            <div class="setting-icon">📊</div>
+                            <div class="setting-info">
+                                <h4>账户统计</h4>
+                                <p>查看消费记录和订单历史</p>
+                            </div>
+                            <button class="btn btn-sm">查看</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    },
+
+    // 渲染商家内容
+    renderMerchantContent() {
+        return `
+            <div class="profile-content">
+                <!-- 商家统计 -->
+                <div class="profile-section">
+                    <div class="section-title">
+                        <h3>📊 店铺数据</h3>
+                    </div>
+                    <div class="order-stats-grid">
+                        <div class="order-stat-card">
+                            <div class="stat-icon">📦</div>
+                            <div class="stat-info">
+                                <div class="stat-number" id="merchantProductCount">0</div>
+                                <div class="stat-label">商品总数</div>
+                            </div>
+                        </div>
+                        <div class="order-stat-card">
+                            <div class="stat-icon">🔥</div>
+                            <div class="stat-info">
+                                <div class="stat-number" id="merchantTotalSales">0</div>
+                                <div class="stat-label">总销量</div>
+                            </div>
+                        </div>
+                        <div class="order-stat-card">
+                            <div class="stat-icon">💰</div>
+                            <div class="stat-info">
+                                <div class="stat-number" id="merchantRevenue">¥0</div>
+                                <div class="stat-label">总收入</div>
+                            </div>
+                        </div>
+                        <div class="order-stat-card">
+                            <div class="stat-icon">⭐</div>
+                            <div class="stat-info">
+                                <div class="stat-number" id="merchantRating">5.0</div>
+                                <div class="stat-label">店铺评分</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 快捷操作 -->
+                <div class="profile-section">
+                    <div class="section-title">
+                        <h3>⚡ 快捷操作</h3>
+                    </div>
+                    <div class="settings-list">
+                        <div class="setting-item">
+                            <div class="setting-icon">📦</div>
+                            <div class="setting-info">
+                                <h4>商品管理</h4>
+                                <p>查看和管理店铺商品</p>
+                            </div>
+                            <button class="btn btn-sm btn-primary" onclick="event.stopPropagation(); window.location.hash = '/merchant';">进入</button>
+                        </div>
+                        <div class="setting-item" onclick="showMessage('订单管理功能开发中...', 'info')">
+                            <div class="setting-icon">📋</div>
+                            <div class="setting-info">
+                                <h4>订单管理</h4>
+                                <p>处理客户订单和发货</p>
+                            </div>
+                            <button class="btn btn-sm">查看</button>
+                        </div>
+                        <div class="setting-item" onclick="showMessage('数据分析功能开发中...', 'info')">
+                            <div class="setting-icon">📈</div>
+                            <div class="setting-info">
+                                <h4>数据分析</h4>
+                                <p>查看销售趋势和热门商品</p>
+                            </div>
+                            <button class="btn btn-sm">分析</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    },
+
+    // 加载用户统计数据
+    async loadUserStats() {
+        try {
+            // 模拟订单统计数据（实际应从后端API获取）
+            const stats = {
+                pending: 0,
+                paid: 0,
+                shipped: 0,
+                completed: 0
+            };
+
+            document.getElementById('pendingCount').textContent = stats.pending;
+            document.getElementById('paidCount').textContent = stats.paid;
+            document.getElementById('shippedCount').textContent = stats.shipped;
+            document.getElementById('completedCount').textContent = stats.completed;
+
+            // 加载收货地址
+            await this.loadAddresses();
+        } catch (error) {
+            console.error('加载用户统计失败:', error);
+        }
+    },
+
+    // 加载商家统计数据
+    async loadMerchantStats() {
+        try {
+            const token = localStorage.getItem('token');
+            if (!token) return;
+
+            const products = await utils.request('/merchant/products');
+
+            const totalProducts = products.length;
+            const totalSales = products.reduce((sum, p) => sum + (p.sales || 0), 0);
+            const totalRevenue = products.reduce((sum, p) => sum + (p.price * (p.sales || 0)), 0);
+
+            document.getElementById('merchantProductCount').textContent = totalProducts;
+            document.getElementById('merchantTotalSales').textContent = totalSales;
+            document.getElementById('merchantRevenue').textContent = '¥' + totalRevenue.toFixed(2);
+        } catch (error) {
+            console.error('加载商家统计失败:', error);
         }
     },
 
@@ -111,7 +343,7 @@ const ProfileService = {
                         ${order.items.map(item => `
                             <div class="order-item">
                                 <div class="order-item-info">
-                                    <h4>${escapeHtml(item.name)}</h4>
+                                    <h4>${item.name}</h4>
                                     <p>数量: ${item.quantity}</p>
                                 </div>
                                 <div class="order-item-price">¥${(item.price * item.quantity).toFixed(2)}</div>
@@ -209,8 +441,304 @@ const ProfileService = {
                 this.loadOrders(Store.getOrderFilter());
             }, 1500);
         }
+    },
+
+    // 加载收货地址
+    async loadAddresses() {
+        const container = document.getElementById('addressList');
+        if (!container) return;
+
+        // 模拟地址数据（实际应从后端API获取）
+        const addresses = [];
+
+        if (addresses.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state-small">
+                    <div class="empty-icon-small">📍</div>
+                    <p>还没有收货地址</p>
+                    <button class="btn btn-primary btn-sm" onclick="ProfileService.showAddAddressModal()">
+                        添加地址
+                    </button>
+                </div>
+            `;
+            return;
+        }
+
+        container.innerHTML = addresses.map(addr => `
+            <div class="address-item">
+                <div class="address-info">
+                    <h4>${addr.receiver} ${addr.phone}</h4>
+                    <p>${addr.address}</p>
+                    ${addr.isDefault ? '<span class="badge">默认</span>' : ''}
+                </div>
+                <div class="address-actions">
+                    <button class="btn btn-sm" onclick="ProfileService.editAddress(${addr.id})">编辑</button>
+                    <button class="btn btn-sm btn-danger" onclick="ProfileService.deleteAddress(${addr.id})">删除</button>
+                </div>
+            </div>
+        `).join('');
+    },
+
+    // 显示所有订单
+    showAllOrders() {
+        showMessage('订单管理功能开发中...', 'info');
+    },
+
+    // 筛选订单
+    filterOrders(status) {
+        showMessage(`查看${status}订单功能开发中...`, 'info');
+    },
+
+    // 显示添加地址模态框
+    showAddAddressModal() {
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.style.display = 'flex';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>📍 新增收货地址</h3>
+                    <button class="modal-close" onclick="this.closest('.modal').remove()">×</button>
+                </div>
+                <form onsubmit="ProfileService.handleAddAddress(event)">
+                    <div class="form-group">
+                        <label>收货人姓名 <span class="label-required">*</span></label>
+                        <input type="text" name="receiver" required class="form-input" placeholder="请输入收货人姓名">
+                    </div>
+                    <div class="form-group">
+                        <label>联系电话 <span class="label-required">*</span></label>
+                        <input type="tel" name="phone" required pattern="[0-9]{11}" class="form-input" placeholder="请输入11位手机号">
+                    </div>
+                    <div class="form-group">
+                        <label>所在地区 <span class="label-required">*</span></label>
+                        <input type="text" name="region" required class="form-input" placeholder="省/市/区">
+                    </div>
+                    <div class="form-group">
+                        <label>详细地址 <span class="label-required">*</span></label>
+                        <textarea name="address" required rows="3" class="form-input" placeholder="请输入详细地址（街道、门牌号等）"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" name="isDefault" style="width: auto; margin-right: 8px;">
+                            设为默认地址
+                        </label>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" onclick="this.closest('.modal').remove()">取消</button>
+                        <button type="submit" class="btn btn-primary">保存</button>
+                    </div>
+                </form>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    },
+
+    // 处理添加地址
+    async handleAddAddress(event) {
+        event.preventDefault();
+        const form = event.target;
+        const data = {
+            receiver: form.receiver.value,
+            phone: form.phone.value,
+            region: form.region.value,
+            address: form.address.value,
+            isDefault: form.isDefault.checked
+        };
+
+        // 这里应该调用后端API保存地址
+        showMessage('地址添加成功', 'success');
+        form.closest('.modal').remove();
+        this.loadAddresses();
+    },
+
+    // 显示编辑资料模态框
+    showEditProfileModal() {
+        const currentUser = Store.getCurrentUser();
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.style.display = 'flex';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>👤 编辑个人信息</h3>
+                    <button class="modal-close" onclick="this.closest('.modal').remove()">×</button>
+                </div>
+                <form onsubmit="ProfileService.handleEditProfile(event)">
+                    <div class="form-group">
+                        <label>用户名</label>
+                        <input type="text" name="username" value="${currentUser.username || ''}" required class="form-input" placeholder="请输入用户名">
+                    </div>
+                    <div class="form-group">
+                        <label>手机号</label>
+                        <input type="tel" name="phone" value="${currentUser.phone || ''}" pattern="[0-9]{11}" class="form-input" placeholder="请输入手机号">
+                    </div>
+                    <div class="form-group">
+                        <label>邮箱</label>
+                        <input type="email" name="email" value="${currentUser.email || ''}" class="form-input" placeholder="请输入邮箱">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" onclick="this.closest('.modal').remove()">取消</button>
+                        <button type="submit" class="btn btn-primary">保存</button>
+                    </div>
+                </form>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    },
+
+    // 处理编辑资料
+    async handleEditProfile(event) {
+        event.preventDefault();
+        const form = event.target;
+        const data = {
+            username: form.username.value,
+            phone: form.phone.value,
+            email: form.email.value
+        };
+
+        try {
+            await utils.request('/user/update', {
+                method: 'PUT',
+                body: JSON.stringify(data)
+            });
+
+            // 更新本地用户信息
+            const currentUser = Store.getCurrentUser();
+            Object.assign(currentUser, data);
+            Store.setCurrentUser(currentUser);
+
+            showMessage('个人信息更新成功', 'success');
+            form.closest('.modal').remove();
+            this.loadProfile();
+        } catch (error) {
+            // 错误已由utils.request处理
+        }
+    },
+
+    // 显示修改密码模态框
+    showChangePasswordModal() {
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.style.display = 'flex';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>🔒 修改密码</h3>
+                    <button class="modal-close" onclick="this.closest('.modal').remove()">×</button>
+                </div>
+                <form onsubmit="ProfileService.handleChangePassword(event)">
+                    <div class="form-group">
+                        <label>原密码 <span class="label-required">*</span></label>
+                        <input type="password" name="oldPassword" required class="form-input" placeholder="请输入原密码">
+                    </div>
+                    <div class="form-group">
+                        <label>新密码 <span class="label-required">*</span></label>
+                        <input type="password" name="newPassword" required minlength="6" class="form-input" placeholder="请输入新密码（至少6位）">
+                    </div>
+                    <div class="form-group">
+                        <label>确认新密码 <span class="label-required">*</span></label>
+                        <input type="password" name="confirmPassword" required class="form-input" placeholder="请再次输入新密码">
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" onclick="this.closest('.modal').remove()">取消</button>
+                        <button type="submit" class="btn btn-primary">确认修改</button>
+                    </div>
+                </form>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    },
+
+    // 处理修改密码
+    async handleChangePassword(event) {
+        event.preventDefault();
+        const form = event.target;
+        const oldPassword = form.oldPassword.value;
+        const newPassword = form.newPassword.value;
+        const confirmPassword = form.confirmPassword.value;
+
+        if (newPassword !== confirmPassword) {
+            showMessage('两次输入的新密码不一致', 'error');
+            return;
+        }
+
+        try {
+            await utils.request('/user/change-password', {
+                method: 'POST',
+                body: JSON.stringify({ oldPassword, newPassword })
+            });
+            showMessage('密码修改成功，请重新登录', 'success');
+            form.closest('.modal').remove();
+            setTimeout(() => {
+                if (window.app) {
+                    window.app.logout();
+                }
+            }, 1500);
+        } catch (error) {
+            // 错误已由utils.request处理
+        }
+    },
+
+    // 显示账户统计
+    showAccountStats() {
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.style.display = 'flex';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>📊 账户统计</h3>
+                    <button class="modal-close" onclick="this.closest('.modal').remove()">×</button>
+                </div>
+                <div style="padding: 20px;">
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <h4>总订单数</h4>
+                            <div class="stat-value">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <h4>总消费金额</h4>
+                            <div class="stat-value">¥0</div>
+                        </div>
+                        <div class="stat-card">
+                            <h4>会员等级</h4>
+                            <div class="stat-value">普通会员</div>
+                        </div>
+                    </div>
+                    <div style="margin-top: 20px; text-align: center; color: #666;">
+                        <p>更多统计功能开发中...</p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" onclick="this.closest('.modal').remove()">关闭</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    },
+
+    // 编辑地址
+    editAddress(id) {
+        showMessage('编辑地址功能开发中...', 'info');
+    },
+
+    // 删除地址
+    deleteAddress(id) {
+        if (confirm('确定要删除此地址吗？')) {
+            showMessage('地址删除成功', 'success');
+            this.loadAddresses();
+        }
     }
 };
+
+// 全局辅助函数
+function showMessage(message, type = 'info') {
+    if (typeof utils !== 'undefined' && utils.showToast) {
+        utils.showToast(message, type);
+    } else {
+        alert(message);
+    }
+}
 
 // 筛选订单
 function filterOrders(status) {

@@ -1,122 +1,6 @@
-// ==================== 配置 ====================
-const API_BASE = '/api';
-
-// ==================== 工具函数 ====================
-const utils = {
-    // 显示Toast提示
-    showToast(message, type = 'info') {
-        const toast = document.getElementById('toast');
-        toast.textContent = message;
-        toast.className = `toast toast-${type} show`;
-        setTimeout(() => toast.classList.remove('show'), 3000);
-    },
-
-    // 显示/隐藏Loading
-    showLoading(show = true) {
-        document.getElementById('loading').style.display = show ? 'flex' : 'none';
-    },
-
-    // 获取Token
-    getToken() {
-        return localStorage.getItem('token');
-    },
-
-    // 设置Token
-    setToken(token) {
-        localStorage.setItem('token', token);
-    },
-
-    // 移除Token
-    removeToken() {
-        localStorage.removeItem('token');
-        localStorage.removeItem('userInfo');
-    },
-
-    // 获取用户信息
-    getUserInfo() {
-        const info = localStorage.getItem('userInfo');
-        return info ? JSON.parse(info) : null;
-    },
-
-    // 设置用户信息
-    setUserInfo(info) {
-        localStorage.setItem('userInfo', JSON.stringify(info));
-    },
-
-    // API请求
-    async request(url, options = {}) {
-        const token = this.getToken();
-        const headers = {
-            'Content-Type': 'application/json',
-            ...(token && { 'Authorization': `Bearer ${token}` }),
-            ...options.headers
-        };
-
-        try {
-            const response = await fetch(API_BASE + url, {
-                ...options,
-                headers
-            });
-
-            // 检查响应是否为空
-            const text = await response.text();
-            if (!text) {
-                throw new Error('服务器返回空响应');
-            }
-
-            const data = JSON.parse(text);
-
-            if (data.code === 200) {
-                return data.data;
-            } else {
-                throw new Error(data.message || '请求失败');
-            }
-        } catch (error) {
-            console.error('API Error:', error);
-            this.showToast(error.message || '请求失败', 'error');
-            throw error;
-        }
-    }
-};
-
-// ==================== 路由系统 ====================
-class Router {
-    constructor() {
-        this.routes = {};
-        this.currentRoute = null;
-
-        window.addEventListener('hashchange', () => this.handleRoute());
-        window.addEventListener('load', () => this.handleRoute());
-    }
-
-    register(path, handler) {
-        this.routes[path] = handler;
-    }
-
-    navigate(path) {
-        window.location.hash = path;
-    }
-
-    handleRoute() {
-        const hash = window.location.hash.slice(1) || '/';
-        const [path, ...params] = hash.split('/').filter(Boolean);
-        const route = '/' + (path || '');
-
-        this.currentRoute = route;
-
-        // 更新导航高亮
-        document.querySelectorAll('.nav-link').forEach(link => {
-            link.classList.toggle('active', link.getAttribute('href') === '#' + route);
-        });
-
-        const handler = this.routes[route] || this.routes['/404'];
-        if (handler) {
-            handler(params);
-        }
-    }
-}
-
 // ==================== 应用主类 ====================
+// 注意：API_BASE, utils, Router, Store 等已在独立模块中定义
+
 class App {
     constructor() {
         this.router = new Router();
@@ -138,6 +22,7 @@ class App {
         this.router.register('/login', () => this.renderLogin());
         this.router.register('/register', () => this.renderRegister());
         this.router.register('/profile', () => this.renderProfile());
+        this.router.register('/merchant', () => this.renderMerchantManagement());
         this.router.register('/404', () => this.render404());
     }
 
@@ -486,7 +371,7 @@ class App {
                     <div class="empty-icon">🛒</div>
                     <h3>购物车是空的</h3>
                     <p>快去挑选心仪的商品吧</p>
-                    <button class="btn btn-primary btn-lg" onclick="app.router.navigate('/products')">
+                    <button class="btn btn-primary btn-lg" onclick="window.location.hash = '/';">
                         <span>🛍️</span> 去购物
                     </button>
                 </div>
@@ -873,38 +758,18 @@ class App {
     }
 
     renderProfile() {
-        const user = utils.getUserInfo();
-        if (!user) {
-            this.router.navigate('/login');
-            return;
-        }
-
-        const content = document.getElementById('main-content');
-        const isMerchant = user.userType === 2;
-
-        content.innerHTML = `
-            <div class="profile-container">
-                <div class="profile-header">
-                    <div class="profile-banner">
-                        <div class="profile-avatar-large">
-                            ${isMerchant ? '🏪' : '👤'}
-                        </div>
-                        <div class="profile-header-info">
-                            <h2>${user.username}</h2>
-                            <p class="profile-subtitle">${user.email || user.phone || '未设置联系方式'}</p>
-                            <span class="badge badge-${isMerchant ? 'merchant' : 'user'}">
-                                ${isMerchant ? '🏪 商家账号' : '👤 普通用户'}
-                            </span>
-                        </div>
-                    </div>
-                </div>
-
-                ${isMerchant ? this.renderMerchantSection() : this.renderUserSection()}
-            </div>
-        `;
-
-        if (isMerchant) {
-            this.loadMerchantData();
+        // 使用 ProfileService 来渲染个人中心
+        if (typeof ProfileService !== 'undefined') {
+            ProfileService.loadProfile();
+        } else {
+            // 降级处理
+            const user = utils.getUserInfo();
+            if (!user) {
+                this.router.navigate('/login');
+                return;
+            }
+            const content = document.getElementById('main-content');
+            content.innerHTML = '<div class="loading-text">加载中...</div>';
         }
     }
 
@@ -984,7 +849,7 @@ class App {
                     <div class="empty-state-small">
                         <div class="empty-icon-small">📦</div>
                         <p>暂无订单记录</p>
-                        <button class="btn btn-primary" onclick="app.router.navigate('/products')">
+                        <button class="btn btn-primary" onclick="window.location.hash = '/';">
                             去购物
                         </button>
                     </div>
@@ -1313,6 +1178,20 @@ class App {
         } finally {
             utils.showLoading(false);
         }
+    }
+
+    // 渲染商家管理页面
+    renderMerchantManagement() {
+        const user = utils.getUserInfo();
+        if (!user || (user.userType !== 2 && user.role !== 'merchant')) {
+            utils.showToast('需要商家权限', 'error');
+            this.router.navigate('/');
+            return;
+        }
+
+        const content = document.getElementById('main-content');
+        content.innerHTML = this.renderMerchantSection();
+        this.loadMerchantData();
     }
 
     render404() {
