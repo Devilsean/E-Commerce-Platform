@@ -70,26 +70,166 @@ class App {
         this.currentCategoryId = categoryId;
         this.currentCategoryName = categoryName;
 
+        // 如果是搜索或分类筛选，显示简化布局
+        if (isSearching || isCategory) {
+            content.innerHTML = `
+                ${isSearching ? `
+                <div class="filter-header">
+                    <h2>🔍 搜索结果: "${searchKeyword}"</h2>
+                    <button class="btn btn-sm" onclick="app.renderHome()">清除搜索</button>
+                </div>
+                ` : ''}
+                ${isCategory ? `
+                <div class="filter-header">
+                    <h2>📁 分类: ${categoryName}</h2>
+                    <button class="btn btn-sm" onclick="app.renderHome()">查看全部</button>
+                </div>
+                ` : ''}
+                <div class="main-layout">
+                    <aside class="category-sidebar">
+                        <h3>📂 商品分类</h3>
+                        <div id="category-list" class="category-list">
+                            <div class="loading-text">加载中...</div>
+                        </div>
+                    </aside>
+                    <div class="products-section">
+                        <div class="section">
+                            <div class="section-header-with-sort">
+                                <h2>${isSearching ? '📦 相关商品' : '📦 分类商品'}</h2>
+                                <div class="sort-controls">
+                                    <label>排序：</label>
+                                    <select id="sortSelect" class="sort-select" onchange="app.handleSortChange(this.value)">
+                                        <option value="default">默认排序</option>
+                                        <option value="sales_desc">销量从高到低</option>
+                                        <option value="sales_asc">销量从低到高</option>
+                                        <option value="price_desc">价格从高到低</option>
+                                        <option value="price_asc">价格从低到高</option>
+                                        <option value="time_desc">最新上架</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div id="products-container" class="products-grid">
+                                <div class="loading-text">加载中...</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            this.loadCategories();
+            this.loadProductsWithSort();
+            return;
+        }
+
+        // 首页丰富布局
         content.innerHTML = `
-            ${!isSearching && !isCategory ? `
-            <div class="hero">
-                <h1>🎉 欢迎来到精品商城</h1>
-                <p>发现优质好物，享受购物乐趣</p>
+            <!-- Hero Banner 轮播区 -->
+            <div class="hero-banner">
+                <div class="hero-slider" id="heroSlider">
+                    <div class="hero-slide active" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                        <div class="hero-content">
+                            <h1>🎉 欢迎来到精品商城</h1>
+                            <p>发现优质好物，享受购物乐趣</p>
+                            <button class="btn btn-lg hero-btn" onclick="document.getElementById('all-products').scrollIntoView({behavior:'smooth'})">
+                                立即选购 →
+                            </button>
+                        </div>
+                    </div>
+                    <div class="hero-slide" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                        <div class="hero-content">
+                            <h1>🔥 热卖爆款</h1>
+                            <p>精选好物，限时特惠</p>
+                            <button class="btn btn-lg hero-btn" onclick="document.getElementById('hot-products').scrollIntoView({behavior:'smooth'})">
+                                查看热卖 →
+                            </button>
+                        </div>
+                    </div>
+                    <div class="hero-slide" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                        <div class="hero-content">
+                            <h1>✨ 新品上架</h1>
+                            <p>每日上新，惊喜不断</p>
+                            <button class="btn btn-lg hero-btn" onclick="document.getElementById('new-products').scrollIntoView({behavior:'smooth'})">
+                                发现新品 →
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="hero-dots">
+                    <span class="hero-dot active" onclick="app.goToSlide(0)"></span>
+                    <span class="hero-dot" onclick="app.goToSlide(1)"></span>
+                    <span class="hero-dot" onclick="app.goToSlide(2)"></span>
+                </div>
+                <button class="hero-arrow hero-prev" onclick="app.prevSlide()">‹</button>
+                <button class="hero-arrow hero-next" onclick="app.nextSlide()">›</button>
             </div>
-            ` : ''}
-            ${isSearching ? `
-            <div class="filter-header">
-                <h2>🔍 搜索结果: "${searchKeyword}"</h2>
-                <button class="btn btn-sm" onclick="app.renderHome()">清除搜索</button>
+
+            <!-- 快捷分类入口 -->
+            <div class="quick-categories section">
+                <h2 class="section-title-center">🏷️ 热门分类</h2>
+                <div id="quick-category-list" class="quick-category-grid">
+                    <div class="loading-text">加载中...</div>
+                </div>
             </div>
-            ` : ''}
-            ${isCategory ? `
-            <div class="filter-header">
-                <h2>📁 分类: ${categoryName}</h2>
-                <button class="btn btn-sm" onclick="app.renderHome()">查看全部</button>
+
+            <!-- 促销活动区 -->
+            <div class="promo-section">
+                <div class="promo-card promo-hot">
+                    <div class="promo-icon">🔥</div>
+                    <div class="promo-info">
+                        <h3>限时热卖</h3>
+                        <p>爆款商品限时抢购</p>
+                    </div>
+                    <button class="btn btn-sm" onclick="document.getElementById('hot-products').scrollIntoView({behavior:'smooth'})">去看看</button>
+                </div>
+                <div class="promo-card promo-new">
+                    <div class="promo-icon">✨</div>
+                    <div class="promo-info">
+                        <h3>新品首发</h3>
+                        <p>每日上新好物</p>
+                    </div>
+                    <button class="btn btn-sm" onclick="document.getElementById('new-products').scrollIntoView({behavior:'smooth'})">去看看</button>
+                </div>
+                <div class="promo-card promo-discount">
+                    <div class="promo-icon">💰</div>
+                    <div class="promo-info">
+                        <h3>超值特惠</h3>
+                        <p>精选低价好物</p>
+                    </div>
+                    <button class="btn btn-sm" onclick="document.getElementById('all-products').scrollIntoView({behavior:'smooth'})">去看看</button>
+                </div>
+                <div class="promo-card promo-quality">
+                    <div class="promo-icon">👑</div>
+                    <div class="promo-info">
+                        <h3>品质保证</h3>
+                        <p>正品保障售后无忧</p>
+                    </div>
+                    <button class="btn btn-sm" onclick="document.getElementById('all-products').scrollIntoView({behavior:'smooth'})">去看看</button>
+                </div>
             </div>
-            ` : ''}
-            <div class="main-layout">
+
+            <!-- 热卖商品区 -->
+            <div class="section" id="hot-products">
+                <div class="section-header">
+                    <h2>🔥 热卖爆款</h2>
+                    <span class="section-subtitle">销量最高的人气商品</span>
+                </div>
+                <div id="hot-products-container" class="products-grid products-grid-4">
+                    <div class="loading-text">加载中...</div>
+                </div>
+            </div>
+
+            <!-- 新品上架区 -->
+            <div class="section" id="new-products">
+                <div class="section-header">
+                    <h2>✨ 新品上架</h2>
+                    <span class="section-subtitle">最新上架的优质商品</span>
+                </div>
+                <div id="new-products-container" class="products-grid products-grid-4">
+                    <div class="loading-text">加载中...</div>
+                </div>
+            </div>
+
+            <!-- 主内容区：分类 + 全部商品 -->
+            <div class="main-layout" id="all-products">
                 <aside class="category-sidebar">
                     <h3>📂 商品分类</h3>
                     <div id="category-list" class="category-list">
@@ -99,7 +239,7 @@ class App {
                 <div class="products-section">
                     <div class="section">
                         <div class="section-header-with-sort">
-                            <h2>${isSearching ? '📦 相关商品' : isCategory ? '📦 分类商品' : '� 全部商品'}</h2>
+                            <h2>📦 全部商品</h2>
                             <div class="sort-controls">
                                 <label>排序：</label>
                                 <select id="sortSelect" class="sort-select" onchange="app.handleSortChange(this.value)">
@@ -120,8 +260,145 @@ class App {
             </div>
         `;
 
+        // 加载各区块数据
         this.loadCategories();
+        this.loadQuickCategories();
+        this.loadHotProducts();
+        this.loadNewProducts();
         this.loadProductsWithSort();
+        this.startHeroSlider();
+    }
+
+    // 轮播图控制
+    currentSlide = 0;
+    slideInterval = null;
+
+    startHeroSlider() {
+        this.slideInterval = setInterval(() => this.nextSlide(), 5000);
+    }
+
+    goToSlide(index) {
+        const slides = document.querySelectorAll('.hero-slide');
+        const dots = document.querySelectorAll('.hero-dot');
+        if (slides.length === 0) return;
+
+        this.currentSlide = index;
+        slides.forEach((slide, i) => {
+            slide.classList.toggle('active', i === index);
+        });
+        dots.forEach((dot, i) => {
+            dot.classList.toggle('active', i === index);
+        });
+    }
+
+    nextSlide() {
+        const slides = document.querySelectorAll('.hero-slide');
+        if (slides.length === 0) return;
+        this.goToSlide((this.currentSlide + 1) % slides.length);
+    }
+
+    prevSlide() {
+        const slides = document.querySelectorAll('.hero-slide');
+        if (slides.length === 0) return;
+        this.goToSlide((this.currentSlide - 1 + slides.length) % slides.length);
+    }
+
+    // 加载快捷分类
+    async loadQuickCategories() {
+        try {
+            const categories = await utils.request('/guest/categories');
+            const container = document.getElementById('quick-category-list');
+            if (!container) return;
+
+            if (!categories || categories.length === 0) {
+                container.innerHTML = '<div class="empty-small">暂无分类</div>';
+                return;
+            }
+
+            container.innerHTML = categories.slice(0, 8).map(c => `
+                <div class="quick-category-item" onclick="app.selectCategory(${c.id}, '${c.name}')">
+                    <div class="quick-category-icon">${c.icon || '📦'}</div>
+                    <span class="quick-category-name">${c.name}</span>
+                </div>
+            `).join('');
+        } catch (error) {
+            const container = document.getElementById('quick-category-list');
+            if (container) container.innerHTML = '<div class="error-small">加载失败</div>';
+        }
+    }
+
+    // 加载热卖商品
+    async loadHotProducts() {
+        try {
+            const products = await utils.request('/guest/products');
+            const container = document.getElementById('hot-products-container');
+            if (!container) return;
+
+            // 按销量排序，取前4个
+            const hotProducts = [...products].sort((a, b) => (b.sales || 0) - (a.sales || 0)).slice(0, 4);
+
+            if (hotProducts.length === 0) {
+                container.innerHTML = '<div class="empty-small">暂无热卖商品</div>';
+                return;
+            }
+
+            container.innerHTML = hotProducts.map(p => this.renderProductCard(p, 'hot')).join('');
+        } catch (error) {
+            const container = document.getElementById('hot-products-container');
+            if (container) container.innerHTML = '<div class="error-small">加载失败</div>';
+        }
+    }
+
+    // 加载新品
+    async loadNewProducts() {
+        try {
+            const products = await utils.request('/guest/products');
+            const container = document.getElementById('new-products-container');
+            if (!container) return;
+
+            // 按时间排序，取前4个
+            const newProducts = [...products].sort((a, b) =>
+                new Date(b.create_time || 0) - new Date(a.create_time || 0)
+            ).slice(0, 4);
+
+            if (newProducts.length === 0) {
+                container.innerHTML = '<div class="empty-small">暂无新品</div>';
+                return;
+            }
+
+            container.innerHTML = newProducts.map(p => this.renderProductCard(p, 'new')).join('');
+        } catch (error) {
+            const container = document.getElementById('new-products-container');
+            if (container) container.innerHTML = '<div class="error-small">加载失败</div>';
+        }
+    }
+
+    // 渲染商品卡片（带标签）
+    renderProductCard(p, tag = '') {
+        const tagHtml = tag === 'hot' ? '<span class="product-tag tag-hot">热卖</span>' :
+            tag === 'new' ? '<span class="product-tag tag-new">新品</span>' : '';
+
+        return `
+            <div class="product-card" onclick="app.router.navigate('/product/${p.id}')">
+                ${tagHtml}
+                <div class="product-image">
+                    ${p.image_url || p.main_image ? `<img src="${p.image_url || p.main_image}" alt="${p.name}" onerror="this.parentElement.innerHTML='📦'">` : '📦'}
+                </div>
+                <div class="product-info">
+                    <h3>${p.name}</h3>
+                    <p class="product-desc">${p.description || '优质商品'}</p>
+                    <div class="product-meta">
+                        <span class="product-sales">销量: ${p.sales || 0}</span>
+                    </div>
+                    <div class="product-footer">
+                        <span class="price">¥${p.price}</span>
+                        <button class="btn btn-sm btn-primary" onclick="event.stopPropagation(); app.addToCart(${p.id})">
+                            加入购物车
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
     }
 
     async loadCategories() {

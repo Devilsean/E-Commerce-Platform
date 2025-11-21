@@ -1,0 +1,361 @@
+/* ==================== 个人中心 ==================== */
+.profile-container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.profile-header {
+    margin-bottom: 32px;
+}
+
+.profile-card,
+.profile-banner {
+    display: flex;
+    align-items: center;
+    gap: 32px;
+    padding: 48px;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    border-radius: var(--radius-xl);
+    color: white;
+    margin-bottom: 32px;
+    box-shadow: var(--shadow-xl);
+    position: relative;
+    overflow: hidden;
+}
+
+.profile-card::before,
+.profile-banner::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -20%;
+    width: 500px;
+    height: 500px;
+    background: radial-gradient(circle, rgba(255, 255, 255, 0.15) 0%, transparent 70%);
+    animation: float 8s ease-in-out infinite;
+}
+
+.profile-avatar,
+.profile-avatar-large {
+    width: 110px;
+    height: 110px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.25);
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 52px;
+    border: 4px solid rgba(255, 255, 255, 0.4);
+    box-shadow: var(--shadow-lg);
+    position: relative;
+    z-index: 1;
+    flex-shrink: 0;
+}
+
+.profile-info,
+.profile-header-info {
+    flex: 1;
+    position: relative;
+    z-index: 1;
+}
+
+.profile-info h3,
+.profile-header-info h2 {
+    font-size: 32px;
+    margin-bottom: 12px;
+    font-weight: 800;
+}
+
+.profile-info p,
+.profile-subtitle {
+    opacity: 0.95;
+    margin-bottom: 10px;
+    font-size: 16px;
+}
+
+.profile-info .badge {
+    background: rgba(255, 255, 255, 0.3);
+    backdrop-filter: blur(10px);
+    padding: 6px 16px;
+    border-radius: var(--radius-full);
+    font-size: 13px;
+    margin-top: 12px;
+    display: inline-block;
+    font-weight: 600;
+    margin-left: 0;
+}
+
+.profile-content {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.profile-section {
+    background: var(--white);
+    border-radius: var(--radius-lg);
+    padding: 32px;
+    box-shadow: var(--shadow);
+}
+
+.section-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 2px solid var(--border-light);
+}
+
+.section-title h3 {
+    margin: 0;
+    font-size: 20px;
+    color: var(--text);
+    font-weight: 700;
+}
+
+.view-all {
+    color: var(--primary);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 600;
+    transition: var(--transition);
+}
+
+.view-all:hover {
+    color: var(--secondary);
+}
+
+/* ==================== 统计卡片 ==================== */
+.order-stats,
+.stats-grid,
+.order-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 20px;
+    margin: 28px 0;
+}
+
+.stat-box,
+.stat-card,
+.order-stat-card {
+    background: var(--white);
+    padding: 28px 24px;
+    border-radius: var(--radius-lg);
+    text-align: center;
+    transition: var(--transition);
+    border: 2px solid var(--border-light);
+    box-shadow: var(--shadow);
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+.stat-box::before,
+.stat-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, var(--primary) 0%, var(--secondary) 100%);
+    transform: scaleX(0);
+    transition: var(--transition);
+}
+
+.stat-box:hover,
+.stat-card:hover {
+    transform: translateY(-6px);
+    box-shadow: var(--shadow-xl);
+    border-color: var(--primary);
+}
+
+.stat-box:hover::before,
+.stat-card:hover::before {
+    transform: scaleX(1);
+}
+
+.order-stat-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    text-align: left;
+}
+
+.order-stat-card:nth-child(1) {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    border-color: #fcd34d;
+}
+
+.order-stat-card:nth-child(2) {
+    background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+    border-color: #93c5fd;
+}
+
+.order-stat-card:nth-child(3) {
+    background: linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%);
+    border-color: #f9a8d4;
+}
+
+.order-stat-card:nth-child(4) {
+    background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+    border-color: #6ee7b7;
+}
+
+.order-stat-card:hover {
+    transform: translateY(-6px);
+    box-shadow: var(--shadow-lg);
+}
+
+.stat-icon {
+    font-size: 40px;
+    opacity: 0.8;
+}
+
+.stat-info {
+    flex: 1;
+}
+
+.stat-number,
+.stat-value {
+    font-size: 40px;
+    font-weight: 800;
+    margin-bottom: 12px;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.stat-info .stat-number {
+    font-size: 32px;
+    color: var(--text);
+    -webkit-text-fill-color: var(--text);
+    margin-bottom: 4px;
+}
+
+.stat-label {
+    font-size: 14px;
+    color: var(--text-secondary);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.stat-info .stat-label {
+    text-transform: none;
+    font-size: 13px;
+}
+
+.stat-card h4 {
+    font-size: 13px;
+    margin-bottom: 12px;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    font-weight: 600;
+}
+
+/* ==================== 设置列表 ==================== */
+.settings-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.setting-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 20px;
+    background: var(--bg-secondary);
+    border-radius: var(--radius);
+    transition: var(--transition);
+    cursor: pointer;
+}
+
+.setting-item:hover {
+    background: var(--border-light);
+    transform: translateX(8px);
+}
+
+.setting-icon {
+    width: 52px;
+    height: 52px;
+    background: var(--white);
+    border-radius: var(--radius);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    flex-shrink: 0;
+    box-shadow: var(--shadow-sm);
+}
+
+.setting-info {
+    flex: 1;
+}
+
+.setting-info h4 {
+    margin: 0 0 4px 0;
+    font-size: 15px;
+    color: var(--text);
+    font-weight: 600;
+}
+
+.setting-info p {
+    margin: 0;
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+/* ==================== 地址管理 ==================== */
+.address-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 24px;
+    background: var(--bg-secondary);
+    border-radius: var(--radius);
+    margin-bottom: 16px;
+    transition: var(--transition);
+    border: 2px solid transparent;
+}
+
+.address-item:hover {
+    background: var(--border-light);
+    transform: translateX(8px);
+    border-color: var(--primary);
+    box-shadow: var(--shadow);
+}
+
+.address-info {
+    flex: 1;
+}
+
+.address-info h4 {
+    margin: 0 0 10px 0;
+    font-size: 16px;
+    color: var(--text);
+    font-weight: 700;
+}
+
+.address-info p {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 14px;
+    line-height: 1.7;
+}
+
+.address-info .badge {
+    margin-left: 12px;
+    background: linear-gradient(135deg, var(--success) 0%, #059669 100%);
+}
+
+.address-actions {
+    display: flex;
+    gap: 10px;
+    flex-shrink: 0;
+}
