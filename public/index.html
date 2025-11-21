@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>精品商城</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <div id="app">
+        <!-- 导航栏 -->
+        <nav class="navbar">
+            <div class="container">
+                <div class="nav-brand">🛒 精品商城</div>
+                <div class="nav-menu">
+                    <a href="#/" class="nav-link">首页</a>
+                    <a href="#/products" class="nav-link">商品</a>
+                    <a href="#/cart" class="nav-link">购物车 <span id="cartCount" class="badge">0</span></a>
+                    <a href="#/profile" class="nav-link" id="profileNav" style="display:none;">个人中心</a>
+                    <a href="#/login" class="nav-link" id="loginNav">登录</a>
+                    <button class="btn btn-sm" id="logoutBtn" style="display:none;" onclick="app.logout()">退出</button>
+                </div>
+            </div>
+        </nav>
+
+        <!-- 主内容区 -->
+        <main id="main-content" class="container">
+            <!-- 动态内容将在这里渲染 -->
+        </main>
+
+        <!-- Toast 提示 -->
+        <div id="toast" class="toast"></div>
+
+        <!-- Loading 遮罩 -->
+        <div id="loading" class="loading-overlay" style="display:none;">
+            <div class="spinner"></div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+
+</html>

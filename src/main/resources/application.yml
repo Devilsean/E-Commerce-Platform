@@ -1,0 +1,105 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+
+spring:
+  application:
+    name: ecommerce-platform
+  
+  # 数据源配置
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/ecommerce?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false
+    username: root
+    password: 70716968
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+  
+  # Redis配置
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password: 
+      database: 0
+      lettuce:
+        pool:
+          max-active: 8
+          max-idle: 8
+          min-idle: 0
+          max-wait: -1ms
+      timeout: 3000ms
+  
+  # 文件上传配置
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 100MB
+      enabled: true
+
+# MyBatis Plus配置
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      id-type: auto
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+  mapper-locations: classpath*:/mapper/**/*.xml
+
+# JWT配置
+jwt:
+  secret: ecommerce-platform-secret-key-2024-very-long-secret
+  expiration: 604800000  # 7天（毫秒）
+  header: Authorization
+  prefix: Bearer 
+
+# 阿里云OSS配置（需要替换为实际的配置）
+aliyun:
+  oss:
+    endpoint: oss-cn-hangzhou.aliyuncs.com
+    access-key-id: your-access-key-id
+    access-key-secret: your-access-key-secret
+    bucket-name: ecommerce-images
+
+# 支付配置
+payment:
+  # 微信支付配置
+  wechat:
+    app-id: your-wechat-app-id
+    mch-id: your-merchant-id
+    api-key: your-api-key
+    notify-url: http://yourdomain.com/api/payment/wechat/notify
+  # 支付宝配置
+  alipay:
+    app-id: your-alipay-app-id
+    private-key: your-private-key
+    public-key: your-public-key
+    notify-url: http://yourdomain.com/api/payment/alipay/notify
+    return-url: http://yourdomain.com/payment/success
+
+# 订单配置
+order:
+  auto-cancel-minutes: 30  # 未支付订单自动取消时间（分钟）
+  auto-confirm-days: 7     # 自动确认收货天数
+
+# 平台配置
+platform:
+  name: 电商平台
+  commission-rate: 0.05  # 平台手续费比例 5%
+
+# 日志配置
+logging:
+  level:
+    com.ecommerce: debug
+    org.springframework.web: info
+  pattern:
+    console: '%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{50} - %msg%n'
