@@ -150,7 +150,7 @@ public class GuestController {
     public Result<List<Map<String, Object>>> getCategories() {
         try {
             String sql = "SELECT id, name, icon, sort_order FROM category " +
-                        "WHERE deleted = 0 AND status = 1 " +
+                        "WHERE deleted = 0 " +
                         "ORDER BY sort_order ASC, create_time DESC";
             List<Map<String, Object>> categories = jdbcTemplate.queryForList(sql);
             return Result.success(categories);

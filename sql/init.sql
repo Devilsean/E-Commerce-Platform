@@ -243,20 +243,20 @@ INSERT INTO `user` (`username`, `password`, `nickname`, `phone`, `email`, `user_
 VALUES ('admin', '$2a$10$N.zmdr9k7uOCQb376NoUnuTJ8iAt6Z5EHsM8lE9lBOsl7iKTVKIUi', '系统管理员', '13800138000', 'admin@ecommerce.com', 3, 1);
 
 -- 插入商品分类
-INSERT INTO `category` (`name`, `parent_id`, `sort_order`) VALUES
-('电子产品', 0, 1),
-('服装鞋包', 0, 2),
-('食品饮料', 0, 3),
-('家居生活', 0, 4),
-('图书音像', 0, 5);
-
-INSERT INTO `category` (`name`, `parent_id`, `sort_order`) VALUES
-('手机', 1, 1),
-('电脑', 1, 2),
-('数码配件', 1, 3),
-('男装', 2, 1),
-('女装', 2, 2),
-('鞋靴', 2, 3);
+INSERT INTO `category` (`name`, `parent_id`, `sort_order`, `icon`) VALUES
+('数码家电', 0, 1, '📱'),
+('服饰鞋包', 0, 2, '👔'),
+('美妆个护', 0, 3, '💄'),
+('食品生鲜', 0, 4, '🍎'),
+('家居生活', 0, 5, '🏠'),
+('母婴亲子', 0, 6, '👶'),
+('运动户外', 0, 7, '⚽'),
+('图书文娱', 0, 8, '📚'),
+('汽车用品', 0, 9, '🚗'),
+('宠物用品', 0, 10, '🐾'),
+('健康保健', 0, 11, '💊'),
+('虚拟商品', 0, 12, '💳'),
+('其他商品', 0, 99, '📦');
 
 -- 插入系统配置
 INSERT INTO `system_config` (`config_key`, `config_value`, `description`) VALUES

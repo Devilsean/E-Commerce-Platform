@@ -121,6 +121,11 @@ class App {
     constructor() {
         this.router = new Router();
         this.cart = JSON.parse(localStorage.getItem('cart') || '[]');
+        this.currentSortBy = 'default';
+        this.currentCategory = null;
+        this.currentSearchKeyword = '';
+        this.currentCategoryId = null;
+        this.currentCategoryName = '';
         this.initRoutes();
         this.initNavSearch();
         this.updateUI();
@@ -171,35 +176,189 @@ class App {
 
     // ==================== 页面渲染 ====================
 
-    renderHome(searchKeyword = '') {
+    renderHome(searchKeyword = '', categoryId = null, categoryName = '') {
         const content = document.getElementById('main-content');
         const isSearching = !!searchKeyword;
+        const isCategory = !!categoryId;
+
+        this.currentSearchKeyword = searchKeyword;
+        this.currentCategoryId = categoryId;
+        this.currentCategoryName = categoryName;
 
         content.innerHTML = `
-            ${!isSearching ? `
+            ${!isSearching && !isCategory ? `
             <div class="hero">
                 <h1>🎉 欢迎来到精品商城</h1>
                 <p>发现优质好物，享受购物乐趣</p>
             </div>
-            ` : `
-            <div class="search-result-header">
+            ` : ''}
+            ${isSearching ? `
+            <div class="filter-header">
                 <h2>🔍 搜索结果: "${searchKeyword}"</h2>
                 <button class="btn btn-sm" onclick="app.renderHome()">清除搜索</button>
             </div>
-            `}
-            <div class="section">
-                <h2>${isSearching ? '📦 相关商品' : '🔥 全部商品'}</h2>
-                <div id="products-container" class="products-grid">
-                    <div class="loading-text">加载中...</div>
+            ` : ''}
+            ${isCategory ? `
+            <div class="filter-header">
+                <h2>📁 分类: ${categoryName}</h2>
+                <button class="btn btn-sm" onclick="app.renderHome()">查看全部</button>
+            </div>
+            ` : ''}
+            <div class="main-layout">
+                <aside class="category-sidebar">
+                    <h3>📂 商品分类</h3>
+                    <div id="category-list" class="category-list">
+                        <div class="loading-text">加载中...</div>
+                    </div>
+                </aside>
+                <div class="products-section">
+                    <div class="section">
+                        <div class="section-header-with-sort">
+                            <h2>${isSearching ? '📦 相关商品' : isCategory ? '📦 分类商品' : '� 全部商品'}</h2>
+                            <div class="sort-controls">
+                                <label>排序：</label>
+                                <select id="sortSelect" class="sort-select" onchange="app.handleSortChange(this.value)">
+                                    <option value="default">默认排序</option>
+                                    <option value="sales_desc">销量从高到低</option>
+                                    <option value="sales_asc">销量从低到高</option>
+                                    <option value="price_desc">价格从高到低</option>
+                                    <option value="price_asc">价格从低到高</option>
+                                    <option value="time_desc">最新上架</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div id="products-container" class="products-grid">
+                            <div class="loading-text">加载中...</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         `;
 
-        if (isSearching) {
-            this.loadSearchResults(searchKeyword, 'products-container');
-        } else {
-            this.loadProducts('products-container');
+        this.loadCategories();
+        this.loadProductsWithSort();
+    }
+
+    async loadCategories() {
+        try {
+            const categories = await utils.request('/guest/categories');
+            const container = document.getElementById('category-list');
+
+            if (!categories || categories.length === 0) {
+                container.innerHTML = '<div class="empty-small">暂无分类</div>';
+                return;
+            }
+
+            container.innerHTML = `
+                <div class="category-item ${!this.currentCategory ? 'active' : ''}" onclick="app.renderHome()">
+                    <span class="category-icon">🏠</span>
+                    <span>全部商品</span>
+                </div>
+                ${categories.map(c => `
+                    <div class="category-item ${this.currentCategory == c.id ? 'active' : ''}"
+                         onclick="app.selectCategory(${c.id}, '${c.name}')">
+                        <span class="category-icon">${c.icon || '📦'}</span>
+                        <span>${c.name}</span>
+                    </div>
+                `).join('')}
+            `;
+        } catch (error) {
+            document.getElementById('category-list').innerHTML = '<div class="error-small">加载失败</div>';
         }
+    }
+
+    selectCategory(categoryId, categoryName) {
+        this.currentCategory = categoryId;
+        this.renderHome('', categoryId, categoryName);
+    }
+
+    handleSortChange(sortBy) {
+        this.currentSortBy = sortBy;
+        document.getElementById('sortSelect').value = sortBy;
+        this.loadProductsWithSort();
+    }
+
+    async loadProductsWithSort() {
+        const isSearching = !!this.currentSearchKeyword;
+        const isCategory = !!this.currentCategoryId;
+
+        let products = [];
+
+        try {
+            if (isSearching) {
+                products = await utils.request(`/guest/search?keyword=${encodeURIComponent(this.currentSearchKeyword)}`);
+            } else if (isCategory) {
+                products = await utils.request(`/guest/products/category/${this.currentCategoryId}`);
+            } else {
+                products = await utils.request('/guest/products');
+            }
+
+            products = this.sortProducts(products, this.currentSortBy);
+            this.displayProductList(products, 'products-container');
+        } catch (error) {
+            document.getElementById('products-container').innerHTML = '<div class="error">加载失败</div>';
+        }
+    }
+
+    sortProducts(products, sortBy) {
+        if (!products || products.length === 0) return products;
+
+        const sorted = [...products];
+
+        switch (sortBy) {
+            case 'sales_desc':
+                sorted.sort((a, b) => (b.sales || 0) - (a.sales || 0));
+                break;
+            case 'sales_asc':
+                sorted.sort((a, b) => (a.sales || 0) - (b.sales || 0));
+                break;
+            case 'price_desc':
+                sorted.sort((a, b) => b.price - a.price);
+                break;
+            case 'price_asc':
+                sorted.sort((a, b) => a.price - b.price);
+                break;
+            case 'time_desc':
+                sorted.sort((a, b) => new Date(b.create_time || 0) - new Date(a.create_time || 0));
+                break;
+            default:
+                sorted.sort((a, b) => (b.sales || 0) - (a.sales || 0));
+        }
+
+        return sorted;
+    }
+
+    displayProductList(products, containerId) {
+        const container = document.getElementById(containerId);
+
+        if (!products || products.length === 0) {
+            const keyword = this.currentSearchKeyword;
+            container.innerHTML = keyword ?
+                `<div class="empty">未找到 "${keyword}" 相关商品</div>` :
+                '<div class="empty">暂无商品</div>';
+            return;
+        }
+
+        container.innerHTML = products.map(p => `
+            <div class="product-card" onclick="app.router.navigate('/product/${p.id}')">
+                <div class="product-image">
+                    ${p.image_url || p.main_image ? `<img src="${p.image_url || p.main_image}" alt="${p.name}" onerror="this.parentElement.innerHTML='📦'">` : '📦'}
+                </div>
+                <div class="product-info">
+                    <h3>${p.name}</h3>
+                    <p class="product-desc">${p.description || '优质商品'}</p>
+                    <div class="product-meta">
+                        <span class="product-sales">销量: ${p.sales || 0}</span>
+                    </div>
+                    <div class="product-footer">
+                        <span class="price">¥${p.price}</span>
+                        <button class="btn btn-sm btn-primary" onclick="event.stopPropagation(); app.addToCart(${p.id})">
+                            加入购物车
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `).join('');
     }
 
     async loadSearchResults(keyword, containerId) {
@@ -880,6 +1039,13 @@ class App {
                             </div>
                             
                             <div class="form-group">
+                                <label>商品分类</label>
+                                <select id="productCategory" name="categoryId" class="form-input">
+                                    <option value="">加载中...</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
                                 <label>商品状态</label>
                                 <select id="productStatus" name="status" class="form-input">
                                     <option value="1">上架</option>
@@ -1002,14 +1168,32 @@ class App {
         }
     }
 
-    showAddProductModal() {
+    async showAddProductModal() {
         const form = document.getElementById('productForm');
         if (form) form.reset();
         document.getElementById('productId').value = '';
         document.getElementById('modalTitle').textContent = '➕ 添加商品';
         const preview = document.getElementById('mainImagePreview');
         if (preview) preview.innerHTML = '<div class="image-preview-placeholder">暂无图片</div>';
+        await this.loadCategoryOptions();
         document.getElementById('productModal').style.display = 'flex';
+    }
+
+    async loadCategoryOptions(selectedId = null) {
+        const select = document.getElementById('productCategory');
+        if (!select) return;
+
+        try {
+            const categories = await utils.request('/guest/categories');
+            const otherCategory = categories.find(c => c.name === '其他商品');
+            const defaultId = selectedId || (otherCategory ? otherCategory.id : null);
+
+            select.innerHTML = categories.map(c =>
+                `<option value="${c.id}" ${defaultId == c.id ? 'selected' : ''}>${c.icon || '📦'} ${c.name}</option>`
+            ).join('');
+        } catch (error) {
+            select.innerHTML = '<option value="">加载分类失败</option>';
+        }
     }
 
     closeProductModal() {
@@ -1046,6 +1230,7 @@ class App {
             document.getElementById('productImages').value = product.images || '';
             document.getElementById('productStatus').value = product.status !== undefined ? product.status : 1;
 
+            await this.loadCategoryOptions(product.categoryId);
             this.updateImagePreview();
             document.getElementById('modalTitle').textContent = '✏️ 编辑商品';
             document.getElementById('productModal').style.display = 'flex';
@@ -1078,9 +1263,12 @@ class App {
             return;
         }
 
+        const categoryId = form.categoryId.value;
+
         const data = {
             name: name,
             price: price,
+            categoryId: categoryId ? parseInt(categoryId) : null,
             originalPrice: form.originalPrice.value ? parseFloat(form.originalPrice.value) : null,
             stock: stock,
             description: form.description.value.trim(),

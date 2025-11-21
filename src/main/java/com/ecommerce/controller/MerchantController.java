@@ -119,6 +119,12 @@ public class MerchantController {
             return Result.error("库存数量不能为负数");
         }
 
+        // 如果没有选择分类，默认使用"其他商品"分类
+        Long categoryId = request.getCategoryId();
+        if (categoryId == null) {
+            categoryId = 77L; // 默认"其他商品"分类ID
+        }
+
         Product product = new Product();
         product.setName(request.getName());
         product.setDescription(request.getDescription());
@@ -129,7 +135,7 @@ public class MerchantController {
         product.setMainImage(request.getMainImage());
         product.setImages(request.getImages());
         product.setStatus(request.getStatus() != null ? request.getStatus() : 1);
-        product.setCategoryId(request.getCategoryId() != null ? request.getCategoryId() : 1L);
+        product.setCategoryId(categoryId);
         product.setMerchantId(merchantId); // 使用从token中获取的商家ID
         
         // 保存到数据库

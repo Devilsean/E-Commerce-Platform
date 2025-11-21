@@ -353,10 +353,23 @@ const ReviewService = {
                     
                     <div class="form-group">
                         <label>评价内容</label>
-                        <textarea id="reviewContent" name="content" rows="4" 
-                            placeholder="分享您的使用体验，帮助其他买家做出选择..." 
+                        <textarea id="reviewContent" name="content" rows="4"
+                            placeholder="分享您的使用体验，帮助其他买家做出选择..."
                             class="form-input" maxlength="500"></textarea>
                         <div class="char-count"><span id="contentLength">0</span>/500</div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>晒图（可选）</label>
+                        <div class="image-upload-area">
+                            <div class="upload-tip">
+                                <span>📷</span>
+                                <p>支持输入图片URL，多个URL用逗号分隔</p>
+                            </div>
+                            <textarea id="reviewImages" name="images" rows="2"
+                                placeholder="https://example.com/img1.jpg,https://example.com/img2.jpg"
+                                class="form-input"></textarea>
+                        </div>
                     </div>
                     
                     <div class="modal-footer">
@@ -432,12 +445,15 @@ const ReviewService = {
         // 处理 orderId，确保 null 值正确传递
         const actualOrderId = (orderId === null || orderId === 'null' || orderId === undefined) ? null : orderId;
 
+        const images = document.getElementById('reviewImages').value.trim();
+        const imageArray = images ? images.split(',').map(url => url.trim()).filter(url => url) : [];
+
         const reviewData = {
             productId: productId,
             orderId: actualOrderId,
             rating: rating,
             content: content || '',
-            images: null
+            images: imageArray.length > 0 ? JSON.stringify(imageArray) : null
         };
 
         console.log('Submitting review:', reviewData);
