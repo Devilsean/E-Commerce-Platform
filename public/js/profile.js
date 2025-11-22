@@ -80,31 +80,31 @@ const ProfileService = {
                 <div class="profile-section">
                     <div class="section-title">
                         <h3>📋 我的订单</h3>
-                        <a href="javascript:ProfileService.showAllOrders()" class="view-all">查看全部 →</a>
+                        <a href="#/orders" class="view-all">查看全部 →</a>
                     </div>
                     <div class="order-stats-grid">
-                        <div class="order-stat-card" onclick="ProfileService.filterOrders('pending')">
+                        <div class="order-stat-card" onclick="window.location.hash = '/orders'; setTimeout(() => { if(window.app && window.app.loadOrders) window.app.loadOrders(0); }, 200);" style="cursor: pointer;">
                             <div class="stat-icon">💰</div>
                             <div class="stat-info">
                                 <div class="stat-number" id="pendingCount">0</div>
                                 <div class="stat-label">待付款</div>
                             </div>
                         </div>
-                        <div class="order-stat-card" onclick="ProfileService.filterOrders('paid')">
+                        <div class="order-stat-card" onclick="window.location.hash = '/orders'; setTimeout(() => { if(window.app && window.app.loadOrders) window.app.loadOrders(1); }, 200);" style="cursor: pointer;">
                             <div class="stat-icon">📦</div>
                             <div class="stat-info">
                                 <div class="stat-number" id="paidCount">0</div>
                                 <div class="stat-label">待发货</div>
                             </div>
                         </div>
-                        <div class="order-stat-card" onclick="ProfileService.filterOrders('shipped')">
+                        <div class="order-stat-card" onclick="window.location.hash = '/orders'; setTimeout(() => { if(window.app && window.app.loadOrders) window.app.loadOrders(3); }, 200);" style="cursor: pointer;">
                             <div class="stat-icon">🚚</div>
                             <div class="stat-info">
                                 <div class="stat-number" id="shippedCount">0</div>
                                 <div class="stat-label">待收货</div>
                             </div>
                         </div>
-                        <div class="order-stat-card" onclick="ProfileService.filterOrders('completed')">
+                        <div class="order-stat-card" onclick="window.location.hash = '/orders'; setTimeout(() => { if(window.app && window.app.loadOrders) window.app.loadOrders(4); }, 200);" style="cursor: pointer;">
                             <div class="stat-icon">✅</div>
                             <div class="stat-info">
                                 <div class="stat-number" id="completedCount">0</div>
@@ -243,12 +243,14 @@ const ProfileService = {
     // 加载用户统计数据
     async loadUserStats() {
         try {
-            // 模拟订单统计数据（实际应从后端API获取）
+            // 从后端API获取订单统计数据
+            const orders = await OrderService.getOrders();
+
             const stats = {
-                pending: 0,
-                paid: 0,
-                shipped: 0,
-                completed: 0
+                pending: orders.filter(o => o.status === 0).length,
+                paid: orders.filter(o => o.status === 1 || o.status === 2).length,
+                shipped: orders.filter(o => o.status === 3).length,
+                completed: orders.filter(o => o.status === 4).length
             };
 
             document.getElementById('pendingCount').textContent = stats.pending;
@@ -481,12 +483,44 @@ const ProfileService = {
 
     // 显示所有订单
     showAllOrders() {
-        showMessage('订单管理功能开发中...', 'info');
+        if (window.app && window.app.router) {
+            window.app.router.navigate('/orders');
+        }
     },
 
     // 筛选订单
     filterOrders(status) {
-        showMessage(`查看${status}订单功能开发中...`, 'info');
+        if (window.app && window.app.router) {
+            // 先保存要筛选的状态
+            const statusMap = {
+                'pending': 0,
+                'paid': 1,
+                'shipped': 3,
+                'completed': 4
+            };
+            const targetStatus = statusMap[status];
+
+            // 跳转到订单页面
+            window.app.router.navigate('/orders');
+
+            // 等待页面加载后再筛选
+            setTimeout(() => {
+                if (window.app && window.app.currentOrderStatus !== undefined) {
+                    // 直接调用loadOrders方法
+                    window.app.loadOrders(targetStatus);
+
+                    // 更新标签激活状态
+                    document.querySelectorAll('.order-tab').forEach((tab, index) => {
+                        tab.classList.remove('active');
+                        // 根据索引匹配：0-全部, 1-待支付(0), 2-已支付(1), 3-已发货(3), 4-已完成(4), 5-已取消(5)
+                        const tabStatusMap = [null, 0, 1, 3, 4, 5];
+                        if (tabStatusMap[index] === targetStatus) {
+                            tab.classList.add('active');
+                        }
+                    });
+                }
+            }, 200);
+        }
     },
 
     // 显示添加地址模态框
