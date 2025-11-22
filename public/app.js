@@ -19,6 +19,8 @@ class App {
         this.router.register('/', () => this.renderHome());
         this.router.register('/product', (params) => this.renderProductDetail(params[0]));
         this.router.register('/cart', () => this.renderCart());
+        this.router.register('/checkout', () => this.renderCheckout());
+        this.router.register('/orders', () => this.renderOrders());
         this.router.register('/login', () => this.renderLogin());
         this.router.register('/register', () => this.renderRegister());
         this.router.register('/profile', () => this.renderProfile());
@@ -1041,11 +1043,225 @@ class App {
             return;
         }
 
-        utils.showToast('订单已提交（演示功能）', 'success');
-        this.cart = [];
-        localStorage.removeItem('cart');
-        this.updateUI();
-        this.router.navigate('/profile');
+        if (this.cart.length === 0) {
+            utils.showToast('购物车是空的', 'warning');
+            return;
+        }
+
+        // 跳转到结算页面
+        this.router.navigate('/checkout');
+    }
+
+    renderCheckout() {
+        const user = utils.getUserInfo();
+        if (!user) {
+            utils.showToast('请先登录', 'warning');
+            this.router.navigate('/login');
+            return;
+        }
+
+        if (this.cart.length === 0) {
+            utils.showToast('购物车是空的', 'warning');
+            this.router.navigate('/cart');
+            return;
+        }
+
+        const total = this.cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
+        const content = document.getElementById('main-content');
+
+        content.innerHTML = `
+            <div class="checkout-container">
+                <h2>📋 确认订单</h2>
+                
+                <div class="checkout-section">
+                    <h3>📍 收货信息</h3>
+                    <form id="checkoutForm" class="address-form">
+                        <div class="form-group">
+                            <label>收货人姓名 <span class="label-required">*</span></label>
+                            <input type="text" name="receiverName" required class="form-input" placeholder="请输入收货人姓名">
+                        </div>
+                        <div class="form-group">
+                            <label>联系电话 <span class="label-required">*</span></label>
+                            <input type="tel" name="receiverPhone" required class="form-input" placeholder="请输入联系电话" pattern="[0-9]{11}">
+                        </div>
+                        <div class="form-group">
+                            <label>收货地址 <span class="label-required">*</span></label>
+                            <textarea name="receiverAddress" required class="form-input" rows="3" placeholder="请输入详细收货地址"></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>订单备注</label>
+                            <textarea name="remark" class="form-input" rows="2" placeholder="选填，可以告诉商家您的特殊需求"></textarea>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="checkout-section">
+                    <h3>📦 商品清单</h3>
+                    <div class="checkout-items">
+                        ${this.cart.map(item => `
+                            <div class="checkout-item">
+                                <div class="product-mini-img">📦</div>
+                                <div class="product-mini-info">
+                                    <h4>${item.name}</h4>
+                                    <p>¥${item.price} × ${item.quantity}</p>
+                                </div>
+                                <div class="item-subtotal">
+                                    ¥${(item.price * item.quantity).toFixed(2)}
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+
+                <div class="checkout-section">
+                    <div class="checkout-summary">
+                        <div class="checkout-summary-row">
+                            <span>商品总额：</span>
+                            <span>¥${total.toFixed(2)}</span>
+                        </div>
+                        <div class="checkout-summary-row">
+                            <span>运费：</span>
+                            <span>¥0.00</span>
+                        </div>
+                        <div class="checkout-summary-row checkout-summary-total">
+                            <span>应付总额：</span>
+                            <span class="amount">¥${total.toFixed(2)}</span>
+                        </div>
+                    </div>
+                    <div class="checkout-actions">
+                        <button class="btn btn-secondary btn-lg" onclick="app.router.navigate('/cart')">返回购物车</button>
+                        <button class="btn btn-primary btn-lg" onclick="app.submitOrder()">提交订单</button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    async submitOrder() {
+        const form = document.getElementById('checkoutForm');
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
+
+        const formData = new FormData(form);
+        const orderData = {
+            items: this.cart.map(item => ({
+                productId: item.id,
+                quantity: item.quantity
+            })),
+            receiverName: formData.get('receiverName'),
+            receiverPhone: formData.get('receiverPhone'),
+            receiverAddress: formData.get('receiverAddress'),
+            remark: formData.get('remark') || ''
+        };
+
+        utils.showLoading();
+        const result = await OrderService.createOrder(orderData);
+        utils.showLoading(false);
+
+        if (result) {
+            // 显示支付二维码（演示用）
+            this.showPaymentQRCode(result.orderId, result.totalAmount);
+        }
+    }
+
+    showPaymentQRCode(orderId, amount) {
+        const modal = document.createElement('div');
+        modal.id = 'paymentModal';
+        modal.className = 'modal';
+        modal.style.display = 'flex';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>💳 扫码支付</h3>
+                </div>
+                <div class="modal-body" style="text-align: center; padding: 40px;">
+                    <div style="margin-bottom: 20px;">
+                        <p style="font-size: 16px; color: var(--text-secondary);">订单金额</p>
+                        <p style="font-size: 32px; font-weight: 800; color: var(--danger); margin: 10px 0;">¥${amount}</p>
+                    </div>
+                    
+                    <div style="width: 200px; height: 200px; margin: 20px auto; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 80px;">
+                        📱
+                    </div>
+                    
+                    <p style="margin: 20px 0; color: var(--text-secondary);">请使用微信或支付宝扫码支付</p>
+                    <p style="font-size: 13px; color: var(--text-secondary);">（演示模式：3秒后自动完成支付）</p>
+                    
+                    <div style="margin-top: 30px;">
+                        <div class="loading-spinner" style="margin: 0 auto;"></div>
+                        <p style="margin-top: 10px; font-size: 14px; color: var(--text-secondary);">支付处理中...</p>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+
+        // 3秒后自动完成支付
+        setTimeout(async () => {
+            const success = await OrderService.payOrder(orderId, 1);
+            modal.remove();
+
+            if (success) {
+                // 清空购物车
+                this.cart = [];
+                localStorage.removeItem('cart');
+                this.updateUI();
+
+                // 显示成功提示并跳转到订单列表
+                utils.showToast('支付成功！订单已提交', 'success');
+                this.router.navigate('/orders');
+            }
+        }, 3000);
+    }
+
+    renderOrders() {
+        const user = utils.getUserInfo();
+        if (!user) {
+            utils.showToast('请先登录', 'warning');
+            this.router.navigate('/login');
+            return;
+        }
+
+        const content = document.getElementById('main-content');
+        content.innerHTML = `
+            <div class="section">
+                <h2>📦 我的订单</h2>
+                
+                <div class="order-tabs">
+                    <button class="order-tab active" onclick="app.filterOrders(null)">全部订单</button>
+                    <button class="order-tab" onclick="app.filterOrders(0)">待支付</button>
+                    <button class="order-tab" onclick="app.filterOrders(1)">已支付</button>
+                    <button class="order-tab" onclick="app.filterOrders(3)">已发货</button>
+                    <button class="order-tab" onclick="app.filterOrders(4)">已完成</button>
+                    <button class="order-tab" onclick="app.filterOrders(5)">已取消</button>
+                </div>
+
+                <div id="ordersList">
+                    <div class="loading-text">加载中...</div>
+                </div>
+            </div>
+        `;
+
+        this.currentOrderStatus = null;
+        this.loadOrders();
+    }
+
+    async loadOrders(status = null) {
+        this.currentOrderStatus = status;
+        await OrderService.loadAndDisplayOrders(status);
+    }
+
+    filterOrders(status) {
+        // 更新标签激活状态
+        document.querySelectorAll('.order-tab').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        event.target.classList.add('active');
+
+        // 加载订单
+        this.loadOrders(status);
     }
 
     renderLogin() {

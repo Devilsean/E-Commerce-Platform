@@ -2,7 +2,11 @@ package com.ecommerce.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.ecommerce.common.Result;
+import com.ecommerce.entity.Order;
+import com.ecommerce.entity.OrderItem;
 import com.ecommerce.entity.Product;
+import com.ecommerce.mapper.OrderItemMapper;
+import com.ecommerce.mapper.OrderMapper;
 import com.ecommerce.mapper.ProductMapper;
 import com.ecommerce.utils.JwtUtil;
 import lombok.Data;
@@ -11,8 +15,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -28,6 +31,12 @@ public class MerchantController {
 
     @Autowired
     private ProductMapper productMapper;
+
+    @Autowired
+    private OrderMapper orderMapper;
+
+    @Autowired
+    private OrderItemMapper orderItemMapper;
 
     /**
      * 从请求头中提取并验证Token，返回商家ID
@@ -306,6 +315,149 @@ public class MerchantController {
     }
 
     /**
+     * 获取商家订单列表
+     */
+    @GetMapping("/orders")
+    public Result<List<Map<String, Object>>> getMerchantOrders(@RequestHeader("Authorization") String authHeader,
+                                                                 @RequestParam(required = false) Integer status) {
+        Long merchantId = getMerchantIdFromToken(authHeader);
+        if (merchantId == null) {
+            return Result.error("无权限访问，请以商家身份登录");
+        }
+
+        // 查询商家的所有商品ID
+        LambdaQueryWrapper<Product> productWrapper = new LambdaQueryWrapper<>();
+        productWrapper.eq(Product::getMerchantId, merchantId);
+        List<Product> products = productMapper.selectList(productWrapper);
+        
+        if (products.isEmpty()) {
+            return Result.success(new ArrayList<>());
+        }
+
+        List<Long> productIds = products.stream().map(Product::getId).collect(java.util.stream.Collectors.toList());
+
+        // 查询包含这些商品的订单项
+        LambdaQueryWrapper<OrderItem> itemWrapper = new LambdaQueryWrapper<>();
+        itemWrapper.in(OrderItem::getProductId, productIds);
+        List<OrderItem> orderItems = orderItemMapper.selectList(itemWrapper);
+
+        if (orderItems.isEmpty()) {
+            return Result.success(new ArrayList<>());
+        }
+
+        // 获取订单ID列表
+        List<Long> orderIds = orderItems.stream()
+                .map(OrderItem::getOrderId)
+                .distinct()
+                .collect(java.util.stream.Collectors.toList());
+
+        // 查询订单
+        LambdaQueryWrapper<Order> orderWrapper = new LambdaQueryWrapper<>();
+        orderWrapper.in(Order::getId, orderIds);
+        if (status != null) {
+            orderWrapper.eq(Order::getStatus, status);
+        }
+        orderWrapper.orderByDesc(Order::getCreateTime);
+        List<Order> orders = orderMapper.selectList(orderWrapper);
+
+        // 组装订单详情
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (Order order : orders) {
+            Map<String, Object> orderMap = new HashMap<>();
+            orderMap.put("id", order.getId());
+            orderMap.put("orderNo", order.getOrderNo());
+            orderMap.put("totalAmount", order.getTotalAmount());
+            orderMap.put("actualAmount", order.getActualAmount());
+            orderMap.put("status", order.getStatus());
+            orderMap.put("statusText", getOrderStatusText(order.getStatus()));
+            orderMap.put("createTime", order.getCreateTime());
+            orderMap.put("receiverName", order.getReceiverName());
+            orderMap.put("receiverPhone", order.getReceiverPhone());
+            orderMap.put("receiverAddress", order.getReceiverAddress());
+
+            // 只返回属于该商家的订单项
+            LambdaQueryWrapper<OrderItem> itemQuery = new LambdaQueryWrapper<>();
+            itemQuery.eq(OrderItem::getOrderId, order.getId())
+                     .in(OrderItem::getProductId, productIds);
+            List<OrderItem> items = orderItemMapper.selectList(itemQuery);
+            orderMap.put("items", items);
+
+            result.add(orderMap);
+        }
+
+        return Result.success(result);
+    }
+
+    /**
+     * 发货
+     */
+    @PostMapping("/orders/{id}/ship")
+    public Result<Void> shipOrder(@PathVariable Long id,
+                                   @RequestHeader("Authorization") String authHeader,
+                                   @RequestBody ShipOrderRequest request) {
+        Long merchantId = getMerchantIdFromToken(authHeader);
+        if (merchantId == null) {
+            return Result.error("无权限操作，请以商家身份登录");
+        }
+
+        Order order = orderMapper.selectById(id);
+        if (order == null) {
+            return Result.error("订单不存在");
+        }
+
+        // 验证订单是否包含该商家的商品
+        LambdaQueryWrapper<OrderItem> itemWrapper = new LambdaQueryWrapper<>();
+        itemWrapper.eq(OrderItem::getOrderId, order.getId());
+        List<OrderItem> items = orderItemMapper.selectList(itemWrapper);
+        
+        boolean hasMerchantProduct = false;
+        for (OrderItem item : items) {
+            Product product = productMapper.selectById(item.getProductId());
+            if (product != null && merchantId.equals(product.getMerchantId())) {
+                hasMerchantProduct = true;
+                break;
+            }
+        }
+
+        if (!hasMerchantProduct) {
+            return Result.error("无权操作该订单");
+        }
+
+        if (order.getStatus() != 1) {
+            return Result.error("只能发货已支付订单");
+        }
+
+        // 更新订单状态
+        order.setStatus(3); // 已发货
+        order.setDeliveryTime(LocalDateTime.now());
+        order.setLogisticsCompany(request.getLogisticsCompany());
+        order.setLogisticsNo(request.getLogisticsNo());
+
+        int result = orderMapper.updateById(order);
+        if (result <= 0) {
+            return Result.error("发货失败");
+        }
+
+        return Result.success("发货成功");
+    }
+
+    /**
+     * 获取订单状态文本
+     */
+    private String getOrderStatusText(Integer status) {
+        if (status == null) return "未知";
+        switch (status) {
+            case 0: return "待支付";
+            case 1: return "已支付";
+            case 2: return "待发货";
+            case 3: return "已发货";
+            case 4: return "已完成";
+            case 5: return "已取消";
+            default: return "未知";
+        }
+    }
+
+    /**
      * 商品请求DTO
      */
     @Data
@@ -319,5 +471,14 @@ public class MerchantController {
         private String images;
         private Integer status;
         private Long categoryId;
+    }
+
+    /**
+     * 发货请求DTO
+     */
+    @Data
+    public static class ShipOrderRequest {
+        private String logisticsCompany;
+        private String logisticsNo;
     }
 }
