@@ -598,35 +598,201 @@ class App {
         try {
             const product = await utils.request(`/guest/product/${id}`);
 
+            // 处理图片数组
+            const images = [];
+            if (product.main_image) images.push(product.main_image);
+            if (product.images) {
+                try {
+                    const additionalImages = JSON.parse(product.images);
+                    if (Array.isArray(additionalImages)) {
+                        images.push(...additionalImages);
+                    }
+                } catch (e) {
+                    // 如果不是JSON，尝试按逗号分割
+                    const additionalImages = product.images.split(',').map(img => img.trim()).filter(img => img);
+                    images.push(...additionalImages);
+                }
+            }
+
             content.innerHTML = `
                 <div class="product-detail">
-                    <button class="btn" onclick="history.back()">← 返回</button>
+                    <div class="detail-breadcrumb">
+                        <button class="btn btn-sm" onclick="history.back()">← 返回</button>
+                        <span class="breadcrumb-separator">/</span>
+                        <span class="breadcrumb-text">商品详情</span>
+                    </div>
+                    
                     <div class="detail-container">
-                        <div class="detail-image">
-                            ${product.main_image ? `<img src="${product.main_image}" alt="${product.name}" onerror="this.parentElement.innerHTML='📦'" onclick="openImageViewer('${product.main_image}')" style="width:100%;height:100%;object-fit:cover;border-radius:8px;cursor:zoom-in;">` : '📦'}
-                        </div>
-                        <div class="detail-info">
-                            <h1>${product.name}</h1>
-                            <p class="price-large">¥${product.price}</p>
-                            <p class="detail-desc">${product.description || '优质商品，品质保证'}</p>
-                            <div class="detail-meta">
-                                <span>库存: ${product.stock}</span>
-                                <span>已售: ${product.sales || 0}</span>
+                        <!-- 左侧图片区域 -->
+                        <div class="detail-image-section">
+                            <div class="detail-main-image">
+                                ${images.length > 0 ? `
+                                    <img id="mainProductImage" src="${images[0]}" alt="${product.name}"
+                                         onerror="this.parentElement.innerHTML='<div class=\\'image-placeholder\\'>📦</div>'"
+                                         onclick="openImageGallery(${JSON.stringify(images).replace(/"/g, '&quot;')}, 0)"
+                                         style="cursor:zoom-in;">
+                                ` : '<div class="image-placeholder">📦</div>'}
                             </div>
-                            <div class="detail-actions">
-                                <input type="number" id="quantity" value="1" min="1" max="${product.stock}" class="quantity-input">
-                                <button class="btn btn-primary btn-lg" onclick="app.addToCart(${product.id}, document.getElementById('quantity').value)">
-                                    加入购物车
-                                </button>
-                                <button class="btn btn-success btn-lg" onclick="ReviewService.showReviewModal(${product.id}, '${product.name.replace(/'/g, "\\'")}')">
-                                    ✍️ 写评价
-                                </button>
+                            ${images.length > 1 ? `
+                                <div class="detail-image-thumbnails">
+                                    ${images.map((img, idx) => `
+                                        <div class="thumbnail ${idx === 0 ? 'active' : ''}"
+                                             onclick="app.switchProductImage('${img}', ${idx})"
+                                             data-index="${idx}">
+                                            <img src="${img}" alt="图片${idx + 1}"
+                                                 onerror="this.parentElement.innerHTML='📦'">
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            ` : ''}
+                        </div>
+                        
+                        <!-- 右侧信息区域 -->
+                        <div class="detail-info">
+                            <h1 class="detail-title">${product.name}</h1>
+                            
+                            <!-- 价格区域 -->
+                            <div class="detail-price-section">
+                                <div class="price-row">
+                                    <span class="price-label">价格</span>
+                                    <div class="price-value">
+                                        <span class="price-large">¥${product.price}</span>
+                                        ${product.originalPrice && product.originalPrice > product.price ?
+                    `<span class="price-original">¥${product.originalPrice}</span>` : ''}
+                                    </div>
+                                </div>
+                                ${product.originalPrice && product.originalPrice > product.price ? `
+                                    <div class="discount-badge">
+                                        省¥${(product.originalPrice - product.price).toFixed(2)}
+                                    </div>
+                                ` : ''}
+                            </div>
+                            
+                            <!-- 商品信息 -->
+                            <div class="detail-info-list">
+                                <div class="info-item">
+                                    <span class="info-label">📦 库存</span>
+                                    <span class="info-value ${product.stock < 10 ? 'text-danger' : ''}">${product.stock} 件${product.stock < 10 ? ' (库存紧张)' : ''}</span>
+                                </div>
+                                <div class="info-item">
+                                    <span class="info-label">🔥 销量</span>
+                                    <span class="info-value">${product.sales || 0} 件</span>
+                                </div>
+                                ${product.category_name ? `
+                                    <div class="info-item">
+                                        <span class="info-label">🏷️ 分类</span>
+                                        <span class="info-value">${product.category_name}</span>
+                                    </div>
+                                ` : ''}
+                            </div>
+                            
+                            <!-- 商品描述 -->
+                            <div class="detail-description">
+                                <h3>📝 商品描述</h3>
+                                <p>${product.description || '优质商品，品质保证'}</p>
+                            </div>
+                            
+                            <!-- 购买操作 -->
+                            <div class="detail-purchase">
+                                <div class="quantity-selector">
+                                    <span class="quantity-label">数量</span>
+                                    <div class="quantity-control-modern">
+                                        <button class="qty-btn" onclick="app.decreaseProductQuantity()" ${product.stock < 1 ? 'disabled' : ''}>−</button>
+                                        <input type="number" id="quantity" value="1" min="1" max="${product.stock}"
+                                               class="qty-input" readonly>
+                                        <button class="qty-btn" onclick="app.increaseProductQuantity(${product.stock})" ${product.stock < 1 ? 'disabled' : ''}>+</button>
+                                    </div>
+                                </div>
+                                
+                                <div class="detail-actions">
+                                    <button class="btn btn-primary btn-lg btn-block"
+                                            onclick="app.addToCart(${product.id}, document.getElementById('quantity').value)"
+                                            ${product.stock < 1 ? 'disabled' : ''}>
+                                        <span>🛒</span> ${product.stock < 1 ? '已售罄' : '加入购物车'}
+                                    </button>
+                                    <button class="btn btn-outline btn-lg btn-block"
+                                            onclick="ReviewService.showReviewModal(${product.id}, '${product.name.replace(/'/g, "\\'")}')">
+                                        <span>✍️</span> 写评价
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- 服务保障 -->
+                            <div class="detail-services">
+                                <div class="service-item">
+                                    <span class="service-icon">✅</span>
+                                    <span class="service-text">正品保证</span>
+                                </div>
+                                <div class="service-item">
+                                    <span class="service-icon">🚚</span>
+                                    <span class="service-text">快速配送</span>
+                                </div>
+                                <div class="service-item">
+                                    <span class="service-icon">🔄</span>
+                                    <span class="service-text">7天退换</span>
+                                </div>
+                                <div class="service-item">
+                                    <span class="service-icon">💳</span>
+                                    <span class="service-text">安全支付</span>
+                                </div>
                             </div>
                         </div>
                     </div>
                     
-                    <!-- 评论区域 -->
-                    <div id="productReviews" class="product-reviews-container"></div>
+                    <!-- 商品详情标签页 -->
+                    <div class="detail-tabs">
+                        <div class="tabs-header">
+                            <button class="tab-btn active" onclick="app.switchDetailTab('details')">商品详情</button>
+                            <button class="tab-btn" onclick="app.switchDetailTab('specs')">规格参数</button>
+                            <button class="tab-btn" onclick="app.switchDetailTab('reviews')">用户评价</button>
+                        </div>
+                        <div class="tabs-content">
+                            <div id="tab-details" class="tab-pane active">
+                                <div class="detail-content">
+                                    <h3>📋 详细信息</h3>
+                                    <p>${product.description || '优质商品，品质保证'}</p>
+                                    ${images.length > 0 ? `
+                                        <div class="detail-images-grid">
+                                            ${images.map(img => `
+                                                <img src="${img}" alt="商品详情"
+                                                     onclick="openImageViewer('${img}')"
+                                                     style="cursor:zoom-in;">
+                                            `).join('')}
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            </div>
+                            <div id="tab-specs" class="tab-pane">
+                                <div class="specs-table">
+                                    <div class="spec-row">
+                                        <span class="spec-label">商品名称</span>
+                                        <span class="spec-value">${product.name}</span>
+                                    </div>
+                                    <div class="spec-row">
+                                        <span class="spec-label">商品价格</span>
+                                        <span class="spec-value">¥${product.price}</span>
+                                    </div>
+                                    <div class="spec-row">
+                                        <span class="spec-label">库存数量</span>
+                                        <span class="spec-value">${product.stock} 件</span>
+                                    </div>
+                                    <div class="spec-row">
+                                        <span class="spec-label">累计销量</span>
+                                        <span class="spec-value">${product.sales || 0} 件</span>
+                                    </div>
+                                    ${product.category_name ? `
+                                        <div class="spec-row">
+                                            <span class="spec-label">商品分类</span>
+                                            <span class="spec-value">${product.category_name}</span>
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            </div>
+                            <div id="tab-reviews" class="tab-pane">
+                                <div id="productReviews"></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             `;
 
@@ -635,8 +801,65 @@ class App {
                 ReviewService.renderReviewSection('productReviews', product.id);
             }
         } catch (error) {
-            content.innerHTML = '<div class="error">商品不存在</div>';
+            content.innerHTML = `
+                <div class="error-state">
+                    <div class="error-icon">😕</div>
+                    <h3>商品不存在</h3>
+                    <p>该商品可能已下架或不存在</p>
+                    <button class="btn btn-primary" onclick="history.back()">返回上一页</button>
+                </div>
+            `;
         }
+    }
+
+    // 切换商品图片
+    switchProductImage(imageUrl, index) {
+        const mainImage = document.getElementById('mainProductImage');
+        if (mainImage) {
+            mainImage.src = imageUrl;
+        }
+
+        // 更新缩略图激活状态
+        document.querySelectorAll('.detail-image-thumbnails .thumbnail').forEach((thumb, idx) => {
+            thumb.classList.toggle('active', idx === index);
+        });
+    }
+
+    // 增加商品数量
+    increaseProductQuantity(maxStock) {
+        const input = document.getElementById('quantity');
+        if (input) {
+            const currentValue = parseInt(input.value) || 1;
+            if (currentValue < maxStock) {
+                input.value = currentValue + 1;
+            }
+        }
+    }
+
+    // 减少商品数量
+    decreaseProductQuantity() {
+        const input = document.getElementById('quantity');
+        if (input) {
+            const currentValue = parseInt(input.value) || 1;
+            if (currentValue > 1) {
+                input.value = currentValue - 1;
+            }
+        }
+    }
+
+    // 切换详情标签页
+    switchDetailTab(tabName) {
+        // 更新标签按钮状态
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        event.target.classList.add('active');
+
+        // 更新内容面板
+        document.querySelectorAll('.tab-pane').forEach(pane => {
+            pane.classList.remove('active');
+        });
+        document.getElementById(`tab-${tabName}`).classList.add('active');
     }
 
     renderCart() {
