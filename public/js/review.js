@@ -211,7 +211,7 @@ const ReviewService = {
                 </div>
                 ${images.length > 0 ? `
                     <div class="review-images">
-                        ${images.map(img => `<img src="${img}" alt="评价图片" onclick="ReviewService.showImagePreview('${img}')">`).join('')}
+                        ${images.map((img, idx) => `<img src="${img}" alt="评价图片" onclick="ReviewService.showImageGallery(${JSON.stringify(images).replace(/"/g, '&quot;')}, ${idx})">`).join('')}
                     </div>
                 ` : ''}
             </div>
@@ -299,18 +299,24 @@ const ReviewService = {
         });
     },
 
-    // 显示图片预览
+    // 显示图片预览（单图）
     showImagePreview(imageUrl) {
-        const modal = document.createElement('div');
-        modal.className = 'image-preview-modal';
-        modal.innerHTML = `
-            <div class="image-preview-backdrop" onclick="this.parentElement.remove()"></div>
-            <div class="image-preview-content">
-                <img src="${imageUrl}" alt="预览图片">
-                <button class="image-preview-close" onclick="this.parentElement.parentElement.remove()">×</button>
-            </div>
-        `;
-        document.body.appendChild(modal);
+        if (typeof ImageViewer !== 'undefined') {
+            ImageViewer.open(imageUrl);
+        } else {
+            // 降级处理
+            window.open(imageUrl, '_blank');
+        }
+    },
+
+    // 显示图片画廊（多图）
+    showImageGallery(images, startIndex = 0) {
+        if (typeof ImageViewer !== 'undefined') {
+            ImageViewer.openGallery(images, startIndex);
+        } else {
+            // 降级处理
+            window.open(images[startIndex], '_blank');
+        }
     },
 
     // 显示评论表单弹窗

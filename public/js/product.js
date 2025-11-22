@@ -27,9 +27,9 @@ const ProductService = {
     // 显示商品列表
     displayProducts(products, container) {
         container.innerHTML = products.map(product => `
-            <div class="product-card" onclick="ProductService.showProductDetail(${product.id}, '${escapeHtml(product.name)}', ${product.price}, '${escapeHtml(product.description || '优质商品，品质保证')}', ${product.stock || 100})">
+            <div class="product-card" onclick="ProductService.showProductDetail(${product.id}, '${escapeHtml(product.name)}', ${product.price}, '${escapeHtml(product.description || '优质商品，品质保证')}', ${product.stock || 100}, '${product.image_url || ''}')">
                 <div class="product-image">
-                    ${product.image_url ? `<img src="${product.image_url}" alt="${escapeHtml(product.name)}" style="width:100%;height:100%;object-fit:cover;">` : '📦'}
+                    ${product.image_url ? `<img src="${product.image_url}" alt="${escapeHtml(product.name)}" style="width:100%;height:100%;object-fit:cover;" onclick="event.stopPropagation(); openImageViewer('${product.image_url}')">` : '📦'}
                 </div>
                 <div>
                     <div class="product-name">${escapeHtml(product.name)}</div>
@@ -43,8 +43,8 @@ const ProductService = {
     },
 
     // 显示商品详情
-    showProductDetail(id, name, price, description, stock) {
-        this.currentProduct = { id, name, price, description, stock };
+    showProductDetail(id, name, price, description, stock, imageUrl) {
+        this.currentProduct = { id, name, price, description, stock, imageUrl };
 
         document.getElementById('detailName').textContent = name;
         document.getElementById('detailPrice').textContent = price;

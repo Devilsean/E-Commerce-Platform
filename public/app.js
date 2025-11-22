@@ -382,7 +382,7 @@ class App {
             <div class="product-card" onclick="app.router.navigate('/product/${p.id}')">
                 ${tagHtml}
                 <div class="product-image">
-                    ${p.image_url || p.main_image ? `<img src="${p.image_url || p.main_image}" alt="${p.name}" onerror="this.parentElement.innerHTML='📦'">` : '📦'}
+                    ${p.image_url || p.main_image ? `<img src="${p.image_url || p.main_image}" alt="${p.name}" onerror="this.parentElement.innerHTML='📦'" onclick="event.stopPropagation(); openImageViewer('${p.image_url || p.main_image}')" style="cursor: zoom-in;">` : '📦'}
                 </div>
                 <div class="product-info">
                     <h3>${p.name}</h3>
@@ -504,7 +504,7 @@ class App {
         container.innerHTML = products.map(p => `
             <div class="product-card" onclick="app.router.navigate('/product/${p.id}')">
                 <div class="product-image">
-                    ${p.image_url || p.main_image ? `<img src="${p.image_url || p.main_image}" alt="${p.name}" onerror="this.parentElement.innerHTML='📦'">` : '📦'}
+                    ${p.image_url || p.main_image ? `<img src="${p.image_url || p.main_image}" alt="${p.name}" onerror="this.parentElement.innerHTML='📦'" onclick="event.stopPropagation(); openImageViewer('${p.image_url || p.main_image}')" style="cursor: zoom-in;">` : '📦'}
                 </div>
                 <div class="product-info">
                     <h3>${p.name}</h3>
@@ -603,7 +603,7 @@ class App {
                     <button class="btn" onclick="history.back()">← 返回</button>
                     <div class="detail-container">
                         <div class="detail-image">
-                            ${product.main_image ? `<img src="${product.main_image}" alt="${product.name}" onerror="this.parentElement.innerHTML='📦'" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">` : '📦'}
+                            ${product.main_image ? `<img src="${product.main_image}" alt="${product.name}" onerror="this.parentElement.innerHTML='📦'" onclick="openImageViewer('${product.main_image}')" style="width:100%;height:100%;object-fit:cover;border-radius:8px;cursor:zoom-in;">` : '📦'}
                         </div>
                         <div class="detail-info">
                             <h1>${product.name}</h1>
