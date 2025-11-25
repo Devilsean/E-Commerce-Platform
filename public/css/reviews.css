@@ -47,7 +47,7 @@
 .score-number {
     font-size: 42px;
     font-weight: 800;
-    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -92,7 +92,7 @@
 
 .bar-fill {
     height: 100%;
-    background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+    background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
     border-radius: var(--radius-full);
     transition: width 0.5s ease;
 }

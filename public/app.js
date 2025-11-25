@@ -77,19 +77,19 @@ class App {
             content.innerHTML = `
                 ${isSearching ? `
                 <div class="filter-header">
-                    <h2>🔍 搜索结果: "${searchKeyword}"</h2>
+                    <h2><svg width="20" height="20" class="icon" aria-hidden="true"><use xlink:href="#icon-search"></use></svg> 搜索结果: "${searchKeyword}"</h2>
                     <button class="btn btn-sm" onclick="app.renderHome()">清除搜索</button>
                 </div>
                 ` : ''}
                 ${isCategory ? `
                 <div class="filter-header">
-                    <h2>📁 分类: ${categoryName}</h2>
+                    <h2><svg width="20" height="20" class="icon" aria-hidden="true"><use xlink:href="#icon-folder"></use></svg> 分类: ${categoryName}</h2>
                     <button class="btn btn-sm" onclick="app.renderHome()">查看全部</button>
                 </div>
                 ` : ''}
                 <div class="main-layout">
                     <aside class="category-sidebar">
-                        <h3>📂 商品分类</h3>
+                        <h3><svg width="20" height="20" class="icon" aria-hidden="true"><use xlink:href="#icon-folder"></use></svg> 商品分类</h3>
                         <div id="category-list" class="category-list">
                             <div class="loading-text">加载中...</div>
                         </div>
@@ -97,7 +97,7 @@ class App {
                     <div class="products-section">
                         <div class="section">
                             <div class="section-header-with-sort">
-                                <h2>${isSearching ? '📦 相关商品' : '📦 分类商品'}</h2>
+                                <h2><svg width="20" height="20" class="icon" aria-hidden="true"><use xlink:href="#icon-box"></use></svg> ${isSearching ? '相关商品' : '分类商品'}</h2>
                                 <div class="sort-controls">
                                     <label>排序：</label>
                                     <select id="sortSelect" class="sort-select" onchange="app.handleSortChange(this.value)">
@@ -127,31 +127,40 @@ class App {
             <!-- Hero Banner 轮播区 -->
             <div class="hero-banner">
                 <div class="hero-slider" id="heroSlider">
-                    <div class="hero-slide active" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                    <div class="hero-slide active" style="background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);">
                         <div class="hero-content">
-                            <h1>🎉 欢迎来到精品商城</h1>
-                            <p>发现优质好物，享受购物乐趣</p>
+                            <h1>欢迎来到精品商城</h1>
+                            <p>发现优质好物，享受购物乐趣<br>品质保证，售后无忧</p>
                             <button class="btn btn-lg hero-btn" onclick="document.getElementById('all-products').scrollIntoView({behavior:'smooth'})">
                                 立即选购 →
                             </button>
                         </div>
-                    </div>
-                    <div class="hero-slide" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
-                        <div class="hero-content">
-                            <h1>🔥 热卖爆款</h1>
-                            <p>精选好物，限时特惠</p>
-                            <button class="btn btn-lg hero-btn" onclick="document.getElementById('hot-products').scrollIntoView({behavior:'smooth'})">
-                                查看热卖 →
-                            </button>
+                        <div class="hero-image">
+                            <svg width="180" height="180" class="icon" aria-hidden="true"><use xlink:href="#icon-shopping-bag"></use></svg>
                         </div>
                     </div>
-                    <div class="hero-slide" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                    <div class="hero-slide" style="background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);">
                         <div class="hero-content">
-                            <h1>✨ 新品上架</h1>
-                            <p>每日上新，惊喜不断</p>
-                            <button class="btn btn-lg hero-btn" onclick="document.getElementById('new-products').scrollIntoView({behavior:'smooth'})">
-                                发现新品 →
+                            <h1>精选好物</h1>
+                            <p>严选优质商品<br>为您带来更好的购物体验</p>
+                            <button class="btn btn-lg hero-btn" onclick="document.getElementById('all-products').scrollIntoView({behavior:'smooth'})">
+                                立即选购 →
                             </button>
+                        </div>
+                        <div class="hero-image">
+                            <svg width="180" height="180" class="icon" aria-hidden="true"><use xlink:href="#icon-gift"></use></svg>
+                        </div>
+                    </div>
+                    <div class="hero-slide" style="background: linear-gradient(135deg, #718096 0%, #4a5568 100%);">
+                        <div class="hero-content">
+                            <h1>快速配送</h1>
+                            <p>全国包邮，快速送达<br>让您尽快收到心仪商品</p>
+                            <button class="btn btn-lg hero-btn" onclick="document.getElementById('all-products').scrollIntoView({behavior:'smooth'})">
+                                立即选购 →
+                            </button>
+                        </div>
+                        <div class="hero-image">
+                            <svg width="180" height="180" class="icon" aria-hidden="true"><use xlink:href="#icon-truck"></use></svg>
                         </div>
                     </div>
                 </div>
@@ -164,76 +173,10 @@ class App {
                 <button class="hero-arrow hero-next" onclick="app.nextSlide()">›</button>
             </div>
 
-            <!-- 快捷分类入口 -->
-            <div class="quick-categories section">
-                <h2 class="section-title-center">🏷️ 热门分类</h2>
-                <div id="quick-category-list" class="quick-category-grid">
-                    <div class="loading-text">加载中...</div>
-                </div>
-            </div>
-
-            <!-- 促销活动区 -->
-            <div class="promo-section">
-                <div class="promo-card promo-hot">
-                    <div class="promo-icon">🔥</div>
-                    <div class="promo-info">
-                        <h3>限时热卖</h3>
-                        <p>爆款商品限时抢购</p>
-                    </div>
-                    <button class="btn btn-sm" onclick="document.getElementById('hot-products').scrollIntoView({behavior:'smooth'})">去看看</button>
-                </div>
-                <div class="promo-card promo-new">
-                    <div class="promo-icon">✨</div>
-                    <div class="promo-info">
-                        <h3>新品首发</h3>
-                        <p>每日上新好物</p>
-                    </div>
-                    <button class="btn btn-sm" onclick="document.getElementById('new-products').scrollIntoView({behavior:'smooth'})">去看看</button>
-                </div>
-                <div class="promo-card promo-discount">
-                    <div class="promo-icon">💰</div>
-                    <div class="promo-info">
-                        <h3>超值特惠</h3>
-                        <p>精选低价好物</p>
-                    </div>
-                    <button class="btn btn-sm" onclick="document.getElementById('all-products').scrollIntoView({behavior:'smooth'})">去看看</button>
-                </div>
-                <div class="promo-card promo-quality">
-                    <div class="promo-icon">👑</div>
-                    <div class="promo-info">
-                        <h3>品质保证</h3>
-                        <p>正品保障售后无忧</p>
-                    </div>
-                    <button class="btn btn-sm" onclick="document.getElementById('all-products').scrollIntoView({behavior:'smooth'})">去看看</button>
-                </div>
-            </div>
-
-            <!-- 热卖商品区 -->
-            <div class="section" id="hot-products">
-                <div class="section-header">
-                    <h2>🔥 热卖爆款</h2>
-                    <span class="section-subtitle">销量最高的人气商品</span>
-                </div>
-                <div id="hot-products-container" class="products-grid products-grid-4">
-                    <div class="loading-text">加载中...</div>
-                </div>
-            </div>
-
-            <!-- 新品上架区 -->
-            <div class="section" id="new-products">
-                <div class="section-header">
-                    <h2>✨ 新品上架</h2>
-                    <span class="section-subtitle">最新上架的优质商品</span>
-                </div>
-                <div id="new-products-container" class="products-grid products-grid-4">
-                    <div class="loading-text">加载中...</div>
-                </div>
-            </div>
-
             <!-- 主内容区：分类 + 全部商品 -->
             <div class="main-layout" id="all-products">
                 <aside class="category-sidebar">
-                    <h3>📂 商品分类</h3>
+                    <h3><svg width="20" height="20" class="icon" aria-hidden="true"><use xlink:href="#icon-folder"></use></svg> 商品分类</h3>
                     <div id="category-list" class="category-list">
                         <div class="loading-text">加载中...</div>
                     </div>
@@ -241,7 +184,7 @@ class App {
                 <div class="products-section">
                     <div class="section">
                         <div class="section-header-with-sort">
-                            <h2>📦 全部商品</h2>
+                            <h2><svg width="20" height="20" class="icon" aria-hidden="true"><use xlink:href="#icon-box"></use></svg> 全部商品</h2>
                             <div class="sort-controls">
                                 <label>排序：</label>
                                 <select id="sortSelect" class="sort-select" onchange="app.handleSortChange(this.value)">
@@ -264,9 +207,6 @@ class App {
 
         // 加载各区块数据
         this.loadCategories();
-        this.loadQuickCategories();
-        this.loadHotProducts();
-        this.loadNewProducts();
         this.loadProductsWithSort();
         this.startHeroSlider();
     }
@@ -319,7 +259,7 @@ class App {
 
             container.innerHTML = categories.slice(0, 8).map(c => `
                 <div class="quick-category-item" onclick="app.selectCategory(${c.id}, '${c.name}')">
-                    <div class="quick-category-icon">${c.icon || '📦'}</div>
+                    <div class="quick-category-icon">${c.icon || '<svg width="32" height="32" class="icon" aria-hidden="true"><use xlink:href="#icon-box"></use></svg>'}</div>
                     <span class="quick-category-name">${c.name}</span>
                 </div>
             `).join('');
@@ -384,7 +324,7 @@ class App {
             <div class="product-card" onclick="app.router.navigate('/product/${p.id}')">
                 ${tagHtml}
                 <div class="product-image">
-                    ${p.image_url || p.main_image ? `<img src="${p.image_url || p.main_image}" alt="${p.name}" onerror="this.parentElement.innerHTML='📦'" onclick="event.stopPropagation(); openImageViewer('${p.image_url || p.main_image}')" style="cursor: zoom-in;">` : '📦'}
+                    ${p.image_url || p.main_image ? `<img src="${p.image_url || p.main_image}" alt="${p.name}" onerror="this.parentElement.innerHTML='<svg width=\\'72\\' height=\\'72\\' class=\\'icon\\' aria-hidden=\\'true\\'><use xlink:href=\\'#icon-box\\'></use></svg>'" onclick="event.stopPropagation(); openImageViewer('${p.image_url || p.main_image}')" style="cursor: zoom-in;">` : '<svg width="72" height="72" class="icon" aria-hidden="true"><use xlink:href="#icon-box"></use></svg>'}
                 </div>
                 <div class="product-info">
                     <h3>${p.name}</h3>
@@ -415,13 +355,13 @@ class App {
 
             container.innerHTML = `
                 <div class="category-item ${!this.currentCategory ? 'active' : ''}" onclick="app.renderHome()">
-                    <span class="category-icon">🏠</span>
+                    <span class="category-icon"><svg width="20" height="20" class="icon" aria-hidden="true"><use xlink:href="#icon-home"></use></svg></span>
                     <span>全部商品</span>
                 </div>
                 ${categories.map(c => `
                     <div class="category-item ${this.currentCategory == c.id ? 'active' : ''}"
                          onclick="app.selectCategory(${c.id}, '${c.name}')">
-                        <span class="category-icon">${c.icon || '📦'}</span>
+                        <span class="category-icon">${c.icon || '<svg width="20" height="20" class="icon" aria-hidden="true"><use xlink:href="#icon-box"></use></svg>'}</span>
                         <span>${c.name}</span>
                     </div>
                 `).join('')}
@@ -506,7 +446,7 @@ class App {
         container.innerHTML = products.map(p => `
             <div class="product-card" onclick="app.router.navigate('/product/${p.id}')">
                 <div class="product-image">
-                    ${p.image_url || p.main_image ? `<img src="${p.image_url || p.main_image}" alt="${p.name}" onerror="this.parentElement.innerHTML='📦'" onclick="event.stopPropagation(); openImageViewer('${p.image_url || p.main_image}')" style="cursor: zoom-in;">` : '📦'}
+                    ${p.image_url || p.main_image ? `<img src="${p.image_url || p.main_image}" alt="${p.name}" onerror="this.parentElement.innerHTML='<svg width=\\'72\\' height=\\'72\\' class=\\'icon\\' aria-hidden=\\'true\\'><use xlink:href=\\'#icon-box\\'></use></svg>'" onclick="event.stopPropagation(); openImageViewer('${p.image_url || p.main_image}')" style="cursor: zoom-in;">` : '<svg width="72" height="72" class="icon" aria-hidden="true"><use xlink:href="#icon-box"></use></svg>'}
                 </div>
                 <div class="product-info">
                     <h3>${p.name}</h3>
@@ -540,7 +480,7 @@ class App {
             container.innerHTML = products.map(p => `
                 <div class="product-card" onclick="app.router.navigate('/product/${p.id}')">
                     <div class="product-image">
-                        ${p.image_url ? `<img src="${p.image_url}" alt="${p.name}" onerror="this.parentElement.innerHTML='📦'">` : '📦'}
+                        ${p.image_url ? `<img src="${p.image_url}" alt="${p.name}" onerror="this.parentElement.innerHTML='<svg width=\\'72\\' height=\\'72\\' class=\\'icon\\' aria-hidden=\\'true\\'><use xlink:href=\\'#icon-box\\'></use></svg>'">` : '<svg width="72" height="72" class="icon" aria-hidden="true"><use xlink:href="#icon-box"></use></svg>'}
                     </div>
                     <div class="product-info">
                         <h3>${p.name}</h3>
@@ -574,7 +514,7 @@ class App {
             container.innerHTML = displayProducts.map(p => `
                 <div class="product-card" onclick="app.router.navigate('/product/${p.id}')">
                     <div class="product-image">
-                        ${p.image_url ? `<img src="${p.image_url}" alt="${p.name}" onerror="this.parentElement.innerHTML='📦'">` : '📦'}
+                        ${p.image_url ? `<img src="${p.image_url}" alt="${p.name}" onerror="this.parentElement.innerHTML='<svg width=\\'72\\' height=\\'72\\' class=\\'icon\\' aria-hidden=\\'true\\'><use xlink:href=\\'#icon-box\\'></use></svg>'">` : '<svg width="72" height="72" class="icon" aria-hidden="true"><use xlink:href="#icon-box"></use></svg>'}
                     </div>
                     <div class="product-info">
                         <h3>${p.name}</h3>
@@ -599,6 +539,9 @@ class App {
 
         try {
             const product = await utils.request(`/guest/product/${id}`);
+
+            // 记录浏览历史
+            Store.addBrowsingHistory(product);
 
             // 处理图片数组
             const images = [];
@@ -630,10 +573,10 @@ class App {
                             <div class="detail-main-image">
                                 ${images.length > 0 ? `
                                     <img id="mainProductImage" src="${images[0]}" alt="${product.name}"
-                                         onerror="this.parentElement.innerHTML='<div class=\\'image-placeholder\\'>📦</div>'"
+                                         onerror="this.parentElement.innerHTML='<div class=\\'image-placeholder\\'><svg width=\\'120\\' height=\\'120\\' class=\\'icon\\' aria-hidden=\\'true\\'><use xlink:href=\\'#icon-box\\'></use></svg></div>'"
                                          onclick="openImageGallery(${JSON.stringify(images).replace(/"/g, '&quot;')}, 0)"
                                          style="cursor:zoom-in;">
-                                ` : '<div class="image-placeholder">📦</div>'}
+                                ` : '<div class="image-placeholder"><svg width="120" height="120" class="icon" aria-hidden="true"><use xlink:href="#icon-box"></use></svg></div>'}
                             </div>
                             ${images.length > 1 ? `
                                 <div class="detail-image-thumbnails">
@@ -642,7 +585,7 @@ class App {
                                              onclick="app.switchProductImage('${img}', ${idx})"
                                              data-index="${idx}">
                                             <img src="${img}" alt="图片${idx + 1}"
-                                                 onerror="this.parentElement.innerHTML='📦'">
+                                                 onerror="this.parentElement.innerHTML='<svg width=\\'40\\' height=\\'40\\' class=\\'icon\\' aria-hidden=\\'true\\'><use xlink:href=\\'#icon-box\\'></use></svg>'">
                                         </div>
                                     `).join('')}
                                 </div>
@@ -673,16 +616,16 @@ class App {
                             <!-- 商品信息 -->
                             <div class="detail-info-list">
                                 <div class="info-item">
-                                    <span class="info-label">📦 库存</span>
+                                    <span class="info-label"><svg width="16" height="16" class="icon" aria-hidden="true"><use xlink:href="#icon-box"></use></svg> 库存</span>
                                     <span class="info-value ${product.stock < 10 ? 'text-danger' : ''}">${product.stock} 件${product.stock < 10 ? ' (库存紧张)' : ''}</span>
                                 </div>
                                 <div class="info-item">
-                                    <span class="info-label">🔥 销量</span>
+                                    <span class="info-label"><svg width="16" height="16" class="icon" aria-hidden="true"><use xlink:href="#icon-fire"></use></svg> 销量</span>
                                     <span class="info-value">${product.sales || 0} 件</span>
                                 </div>
                                 ${product.category_name ? `
                                     <div class="info-item">
-                                        <span class="info-label">🏷️ 分类</span>
+                                        <span class="info-label"><svg width="16" height="16" class="icon" aria-hidden="true"><use xlink:href="#icon-tag"></use></svg> 分类</span>
                                         <span class="info-value">${product.category_name}</span>
                                     </div>
                                 ` : ''}
@@ -690,7 +633,7 @@ class App {
                             
                             <!-- 商品描述 -->
                             <div class="detail-description">
-                                <h3>📝 商品描述</h3>
+                                <h3><svg width="18" height="18" class="icon" aria-hidden="true"><use xlink:href="#icon-note"></use></svg> 商品描述</h3>
                                 <p>${product.description || '优质商品，品质保证'}</p>
                             </div>
                             
@@ -710,11 +653,11 @@ class App {
                                     <button class="btn btn-primary btn-lg btn-block"
                                             onclick="app.addToCart(${product.id}, document.getElementById('quantity').value)"
                                             ${product.stock < 1 ? 'disabled' : ''}>
-                                        <span>🛒</span> ${product.stock < 1 ? '已售罄' : '加入购物车'}
+                                        <svg width="20" height="20" class="icon" aria-hidden="true"><use xlink:href="#icon-cart"></use></svg> ${product.stock < 1 ? '已售罄' : '加入购物车'}
                                     </button>
                                     <button class="btn btn-outline btn-lg btn-block"
                                             onclick="ReviewService.showReviewModal(${product.id}, '${product.name.replace(/'/g, "\\'")}')">
-                                        <span>✍️</span> 写评价
+                                        <svg width="20" height="20" class="icon" aria-hidden="true"><use xlink:href="#icon-write"></use></svg> 写评价
                                     </button>
                                 </div>
                             </div>
@@ -722,19 +665,19 @@ class App {
                             <!-- 服务保障 -->
                             <div class="detail-services">
                                 <div class="service-item">
-                                    <span class="service-icon">✅</span>
+                                    <span class="service-icon"><svg width="18" height="18" class="icon" aria-hidden="true"><use xlink:href="#icon-check"></use></svg></span>
                                     <span class="service-text">正品保证</span>
                                 </div>
                                 <div class="service-item">
-                                    <span class="service-icon">🚚</span>
+                                    <span class="service-icon"><svg width="18" height="18" class="icon" aria-hidden="true"><use xlink:href="#icon-truck"></use></svg></span>
                                     <span class="service-text">快速配送</span>
                                 </div>
                                 <div class="service-item">
-                                    <span class="service-icon">🔄</span>
+                                    <span class="service-icon"><svg width="18" height="18" class="icon" aria-hidden="true"><use xlink:href="#icon-refresh"></use></svg></span>
                                     <span class="service-text">7天退换</span>
                                 </div>
                                 <div class="service-item">
-                                    <span class="service-icon">💳</span>
+                                    <span class="service-icon"><svg width="18" height="18" class="icon" aria-hidden="true"><use xlink:href="#icon-credit-card"></use></svg></span>
                                     <span class="service-text">安全支付</span>
                                 </div>
                             </div>
@@ -751,7 +694,7 @@ class App {
                         <div class="tabs-content">
                             <div id="tab-details" class="tab-pane active">
                                 <div class="detail-content">
-                                    <h3>📋 详细信息</h3>
+                                    <h3><svg width="20" height="20" class="icon" aria-hidden="true"><use xlink:href="#icon-order"></use></svg> 详细信息</h3>
                                     <p>${product.description || '优质商品，品质保证'}</p>
                                     ${images.length > 0 ? `
                                         <div class="detail-images-grid">
@@ -870,11 +813,11 @@ class App {
         if (this.cart.length === 0) {
             content.innerHTML = `
                 <div class="empty-state">
-                    <div class="empty-icon">🛒</div>
+                    <div class="empty-icon"><svg width="96" height="96" class="icon" aria-hidden="true"><use xlink:href="#icon-cart"></use></svg></div>
                     <h3>购物车是空的</h3>
                     <p>快去挑选心仪的商品吧</p>
                     <button class="btn btn-primary btn-lg" onclick="window.location.hash = '/';">
-                        <span>🛍️</span> 去购物
+                        <svg width="20" height="20" class="icon" aria-hidden="true"><use xlink:href="#icon-shopping-bag"></use></svg> 去购物
                     </button>
                 </div>
             `;
@@ -887,7 +830,7 @@ class App {
         content.innerHTML = `
             <div class="section">
                 <div class="cart-header">
-                    <h2>🛒 购物车</h2>
+                    <h2><svg width="24" height="24" class="icon" aria-hidden="true"><use xlink:href="#icon-cart"></use></svg> 购物车</h2>
                     <div class="cart-info">
                         <span class="cart-count">共 ${itemCount} 件商品</span>
                         <button class="btn btn-sm" onclick="app.clearCart()">清空购物车</button>
@@ -906,7 +849,7 @@ class App {
                         <div class="cart-table-row">
                             <div class="col-product">
                                 <div class="product-mini">
-                                    <div class="product-mini-img">📦</div>
+                                    <div class="product-mini-img"><svg width="40" height="40" class="icon" aria-hidden="true"><use xlink:href="#icon-box"></use></svg></div>
                                     <div class="product-mini-info">
                                         <h4>${item.name}</h4>
                                         <p class="product-mini-desc">${item.description || '优质商品'}</p>
@@ -930,7 +873,7 @@ class App {
                             </div>
                             <div class="col-action">
                                 <button class="btn-link btn-danger" onclick="app.removeFromCart(${index})">
-                                    🗑️ 删除
+                                    <svg width="16" height="16" class="icon" aria-hidden="true"><use xlink:href="#icon-delete"></use></svg> 删除
                                 </button>
                             </div>
                         </div>
@@ -952,7 +895,7 @@ class App {
                             <span class="price-large">¥${total.toFixed(2)}</span>
                         </div>
                         <button class="btn btn-primary btn-lg btn-block" onclick="app.checkout()">
-                            💳 立即结算
+                            <svg width="20" height="20" class="icon" aria-hidden="true"><use xlink:href="#icon-credit-card"></use></svg> 立即结算
                         </button>
                     </div>
                 </div>
@@ -976,7 +919,7 @@ class App {
                     description: product.description,
                     quantity: parseInt(quantity)
                 });
-                utils.showToast('✅ 已加入购物车', 'success');
+                utils.showToast('已加入购物车', 'success');
             }
 
             localStorage.setItem('cart', JSON.stringify(this.cart));
@@ -1071,10 +1014,10 @@ class App {
 
         content.innerHTML = `
             <div class="checkout-container">
-                <h2>📋 确认订单</h2>
-                
+                <h2><svg width="24" height="24" class="icon" aria-hidden="true"><use xlink:href="#icon-order"></use></svg> 确认订单</h2>
+
                 <div class="checkout-section">
-                    <h3>📍 收货信息</h3>
+                    <h3><svg width="20" height="20" class="icon" aria-hidden="true"><use xlink:href="#icon-location"></use></svg> 收货信息</h3>
                     <form id="checkoutForm" class="address-form">
                         <div class="form-group">
                             <label>收货人姓名 <span class="label-required">*</span></label>
@@ -1096,11 +1039,11 @@ class App {
                 </div>
 
                 <div class="checkout-section">
-                    <h3>📦 商品清单</h3>
+                    <h3><svg width="20" height="20" class="icon" aria-hidden="true"><use xlink:href="#icon-box"></use></svg> 商品清单</h3>
                     <div class="checkout-items">
                         ${this.cart.map(item => `
                             <div class="checkout-item">
-                                <div class="product-mini-img">📦</div>
+                                <div class="product-mini-img"><svg width="40" height="40" class="icon" aria-hidden="true"><use xlink:href="#icon-box"></use></svg></div>
                                 <div class="product-mini-info">
                                     <h4>${item.name}</h4>
                                     <p>¥${item.price} × ${item.quantity}</p>
@@ -1174,7 +1117,7 @@ class App {
         modal.innerHTML = `
             <div class="modal-content">
                 <div class="modal-header">
-                    <h3>💳 扫码支付</h3>
+                    <h3><svg width="24" height="24" class="icon" aria-hidden="true"><use xlink:href="#icon-credit-card"></use></svg> 扫码支付</h3>
                 </div>
                 <div class="modal-body" style="text-align: center; padding: 40px;">
                     <div style="margin-bottom: 20px;">
@@ -1182,8 +1125,8 @@ class App {
                         <p style="font-size: 32px; font-weight: 800; color: var(--danger); margin: 10px 0;">¥${amount}</p>
                     </div>
                     
-                    <div style="width: 200px; height: 200px; margin: 20px auto; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 80px;">
-                        📱
+                    <div style="width: 200px; height: 200px; margin: 20px auto; background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                        <svg width="80" height="80" class="icon" style="color: white;" aria-hidden="true"><use xlink:href="#icon-phone"></use></svg>
                     </div>
                     
                     <p style="margin: 20px 0; color: var(--text-secondary);">请使用微信或支付宝扫码支付</p>
@@ -1204,6 +1147,9 @@ class App {
             modal.remove();
 
             if (success) {
+                // 记录购买日志
+                Store.logPurchaseToServer(orderId, this.cart);
+
                 // 清空购物车
                 this.cart = [];
                 localStorage.removeItem('cart');
@@ -1227,7 +1173,7 @@ class App {
         const content = document.getElementById('main-content');
         content.innerHTML = `
             <div class="section">
-                <h2>📦 我的订单</h2>
+                <h2><svg width="24" height="24" class="icon" aria-hidden="true"><use xlink:href="#icon-order"></use></svg> 我的订单</h2>
                 
                 <div class="order-tabs">
                     <button class="order-tab active" onclick="app.filterOrders(null)">全部订单</button>
@@ -1278,21 +1224,21 @@ class App {
                     <form onsubmit="app.handleLogin(event)" class="auth-form">
                         <div class="form-group">
                             <label>
-                                <span class="label-icon">👥</span>
+                                <span class="label-icon"><svg width="16" height="16" class="icon" aria-hidden="true"><use xlink:href="#icon-user"></use></svg></span>
                                 <span>用户类型</span>
                             </label>
                             <div class="radio-group-modern">
                                 <label class="radio-card">
                                     <input type="radio" name="userType" value="1" checked>
                                     <div class="radio-content">
-                                        <span class="radio-icon">👤</span>
+                                        <span class="radio-icon"><svg width="20" height="20" class="icon" aria-hidden="true"><use xlink:href="#icon-user"></use></svg></span>
                                         <span class="radio-text">普通用户</span>
                                     </div>
                                 </label>
                                 <label class="radio-card">
                                     <input type="radio" name="userType" value="2">
                                     <div class="radio-content">
-                                        <span class="radio-icon">🏪</span>
+                                        <span class="radio-icon"><svg width="20" height="20" class="icon" aria-hidden="true"><use xlink:href="#icon-merchant"></use></svg></span>
                                         <span class="radio-text">商家</span>
                                     </div>
                                 </label>
@@ -1301,7 +1247,7 @@ class App {
                         
                         <div class="form-group">
                             <label>
-                                <span class="label-icon">📧</span>
+                                <span class="label-icon"><svg width="16" height="16" class="icon" aria-hidden="true"><use xlink:href="#icon-email"></use></svg></span>
                                 <span>账号</span>
                             </label>
                             <input type="text" name="account" placeholder="请输入用户名/手机号/邮箱" required class="form-input">
@@ -1309,14 +1255,14 @@ class App {
                         
                         <div class="form-group">
                             <label>
-                                <span class="label-icon">🔒</span>
+                                <span class="label-icon"><svg width="16" height="16" class="icon" aria-hidden="true"><use xlink:href="#icon-lock"></use></svg></span>
                                 <span>密码</span>
                             </label>
                             <input type="password" name="password" placeholder="请输入密码" required class="form-input">
                         </div>
                         
                         <button type="submit" class="btn btn-primary btn-block btn-lg">
-                            <span>🚀</span> 立即登录
+                            <svg width="20" height="20" class="icon" aria-hidden="true"><use xlink:href="#icon-rocket"></use></svg> 立即登录
                         </button>
                     </form>
                     
@@ -1362,7 +1308,7 @@ class App {
             <div class="auth-container">
                 <div class="auth-box auth-box-large">
                     <div class="auth-header">
-                        <div class="auth-icon">📝</div>
+                        <div class="auth-icon"><svg width="48" height="48" class="icon" aria-hidden="true"><use xlink:href="#icon-note"></use></svg></div>
                         <h2>创建账号</h2>
                         <p>加入精品商城，享受优质服务</p>
                     </div>
@@ -1370,14 +1316,14 @@ class App {
                     <form onsubmit="app.handleRegister(event)" class="auth-form">
                         <div class="form-group">
                             <label>
-                                <span class="label-icon">👥</span>
+                                <span class="label-icon"><svg width="16" height="16" class="icon" aria-hidden="true"><use xlink:href="#icon-user"></use></svg></span>
                                 <span>用户类型</span>
                             </label>
                             <div class="radio-group-modern">
                                 <label class="radio-card">
                                     <input type="radio" name="userType" value="1" checked>
                                     <div class="radio-content">
-                                        <span class="radio-icon">👤</span>
+                                        <span class="radio-icon"><svg width="20" height="20" class="icon" aria-hidden="true"><use xlink:href="#icon-user"></use></svg></span>
                                         <span class="radio-text">普通用户</span>
                                         <span class="radio-desc">购物、下单、评价</span>
                                     </div>
@@ -1385,7 +1331,7 @@ class App {
                                 <label class="radio-card">
                                     <input type="radio" name="userType" value="2">
                                     <div class="radio-content">
-                                        <span class="radio-icon">🏪</span>
+                                        <span class="radio-icon"><svg width="20" height="20" class="icon" aria-hidden="true"><use xlink:href="#icon-merchant"></use></svg></span>
                                         <span class="radio-text">商家</span>
                                         <span class="radio-desc">发布商品、管理订单</span>
                                     </div>
@@ -1396,7 +1342,7 @@ class App {
                         <div class="form-row">
                             <div class="form-group">
                                 <label>
-                                    <span class="label-icon">👤</span>
+                                    <span class="label-icon"><svg width="16" height="16" class="icon" aria-hidden="true"><use xlink:href="#icon-user"></use></svg></span>
                                     <span>用户名</span>
                                 </label>
                                 <input type="text" name="username" placeholder="请输入用户名" required class="form-input">
@@ -1404,7 +1350,7 @@ class App {
                             
                             <div class="form-group">
                                 <label>
-                                    <span class="label-icon">🔒</span>
+                                    <span class="label-icon"><svg width="16" height="16" class="icon" aria-hidden="true"><use xlink:href="#icon-lock"></use></svg></span>
                                     <span>密码</span>
                                 </label>
                                 <input type="password" name="password" placeholder="6位以上" required minlength="6" class="form-input">
@@ -1414,7 +1360,7 @@ class App {
                         <div class="form-row">
                             <div class="form-group">
                                 <label>
-                                    <span class="label-icon">📱</span>
+                                    <span class="label-icon"><svg width="16" height="16" class="icon" aria-hidden="true"><use xlink:href="#icon-phone"></use></svg></span>
                                     <span>手机号</span>
                                 </label>
                                 <input type="tel" name="phone" placeholder="请输入手机号" pattern="[0-9]{11}" class="form-input">
@@ -1422,7 +1368,7 @@ class App {
                             
                             <div class="form-group">
                                 <label>
-                                    <span class="label-icon">📧</span>
+                                    <span class="label-icon"><svg width="16" height="16" class="icon" aria-hidden="true"><use xlink:href="#icon-email"></use></svg></span>
                                     <span>邮箱</span>
                                 </label>
                                 <input type="email" name="email" placeholder="请输入邮箱" class="form-input">
@@ -1434,7 +1380,7 @@ class App {
                         </div>
                         
                         <button type="submit" class="btn btn-primary btn-block btn-lg">
-                            <span>✨</span> 立即注册
+                            <svg width="20" height="20" class="icon" aria-hidden="true"><use xlink:href="#icon-star"></use></svg> 立即注册
                         </button>
                     </form>
                     
@@ -1753,7 +1699,7 @@ class App {
         const form = document.getElementById('productForm');
         if (form) form.reset();
         document.getElementById('productId').value = '';
-        document.getElementById('modalTitle').textContent = '➕ 添加商品';
+        document.getElementById('modalTitle').textContent = '添加商品';
         const preview = document.getElementById('mainImagePreview');
         if (preview) preview.innerHTML = '<div class="image-preview-placeholder">暂无图片</div>';
         await this.loadCategoryOptions();
@@ -1770,7 +1716,7 @@ class App {
             const defaultId = selectedId || (otherCategory ? otherCategory.id : null);
 
             select.innerHTML = categories.map(c =>
-                `<option value="${c.id}" ${defaultId == c.id ? 'selected' : ''}>${c.icon || '📦'} ${c.name}</option>`
+                `<option value="${c.id}" ${defaultId == c.id ? 'selected' : ''}>${c.name}</option>`
             ).join('');
         } catch (error) {
             select.innerHTML = '<option value="">加载分类失败</option>';
@@ -1813,7 +1759,7 @@ class App {
 
             await this.loadCategoryOptions(product.categoryId);
             this.updateImagePreview();
-            document.getElementById('modalTitle').textContent = '✏️ 编辑商品';
+            document.getElementById('modalTitle').textContent = '编辑商品';
             document.getElementById('productModal').style.display = 'flex';
         } catch (error) {
             // Error handled

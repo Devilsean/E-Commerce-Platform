@@ -29,13 +29,13 @@ const ProductService = {
         container.innerHTML = products.map(product => `
             <div class="product-card" onclick="ProductService.showProductDetail(${product.id}, '${escapeHtml(product.name)}', ${product.price}, '${escapeHtml(product.description || '优质商品，品质保证')}', ${product.stock || 100}, '${product.image_url || ''}')">
                 <div class="product-image">
-                    ${product.image_url ? `<img src="${product.image_url}" alt="${escapeHtml(product.name)}" style="width:100%;height:100%;object-fit:cover;" onclick="event.stopPropagation(); openImageViewer('${product.image_url}')">` : '📦'}
+                    ${product.image_url ? `<img src="${product.image_url}" alt="${escapeHtml(product.name)}" style="width:100%;height:100%;object-fit:cover;" onclick="event.stopPropagation(); openImageViewer('${product.image_url}')">` : '<svg width="72" height="72" class="icon" aria-hidden="true"><use xlink:href="#icon-box"></use></svg>'}
                 </div>
                 <div>
                     <div class="product-name">${escapeHtml(product.name)}</div>
                     <div class="product-price">¥${product.price}</div>
                     <button class="btn btn-primary btn-block" onclick="event.stopPropagation(); ProductService.addToCart(${product.id}, '${escapeHtml(product.name)}', ${product.price})">
-                        🛒 加入购物车
+                        <svg width="16" height="16" class="icon" aria-hidden="true"><use xlink:href="#icon-cart"></use></svg> 加入购物车
                     </button>
                 </div>
             </div>

@@ -5,6 +5,7 @@
 
 @import url('./variables.css');
 @import url('./base.css');
+@import url('./icons-support.css');
 @import url('./navbar.css');
 @import url('./buttons.css');
 @import url('./hero.css');

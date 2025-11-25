@@ -180,19 +180,19 @@
 }
 
 .promo-hot {
-    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a24 100%);
+    background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
 }
 
 .promo-new {
-    background: linear-gradient(135deg, #a29bfe 0%, #6c5ce7 100%);
+    background: linear-gradient(135deg, #718096 0%, #4a5568 100%);
 }
 
 .promo-discount {
-    background: linear-gradient(135deg, #55efc4 0%, #00b894 100%);
+    background: linear-gradient(135deg, #a0aec0 0%, #718096 100%);
 }
 
 .promo-quality {
-    background: linear-gradient(135deg, #fdcb6e 0%, #f39c12 100%);
+    background: linear-gradient(135deg, #cbd5e0 0%, #a0aec0 100%);
 }
 
 .promo-icon {

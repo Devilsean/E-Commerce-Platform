@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>样式测试页面</title>
+    <link rel="stylesheet" href="css/main.css">
+</head>
+
+<body>
+    <div style="padding: 20px;">
+        <h1>CSS样式测试页面</h1>
+
+        <h2>1. 按钮测试</h2>
+        <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+            <button class="btn">默认按钮</button>
+            <button class="btn btn-primary">主要按钮</button>
+            <button class="btn btn-secondary">次要按钮</button>
+        </div>
+
+        <h2>2. 信任区块测试</h2>
+        <div class="trust-section">
+            <div class="trust-grid">
+                <div class="trust-item">
+                    <div class="trust-icon">
+                        <svg class="icon" style="width:24px;height:24px;" viewBox="0 0 24 24">
+                            <path fill="currentColor"
+                                d="M12 1L3 5v6c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V5l-9-4zm-2 16l-4-4 1.41-1.41L10 14.17l6.59-6.59L18 9l-8 8z" />
+                        </svg>
+                    </div>
+                    <div class="trust-content">
+                        <div class="trust-title">正品保障</div>
+                        <div class="trust-desc">100%正品保证</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <h2>3. 产品卡片测试</h2>
+        <div class="products-grid" style="max-width: 800px;">
+            <div class="product-card">
+                <div class="product-image" style="background: #f0f0f0;">
+                    <div style="padding: 40px; text-align: center;">产品图片</div>
+                </div>
+                <div class="product-info">
+                    <h3>测试产品</h3>
+                    <p class="product-desc">这是一个测试产品描述</p>
+                    <div class="product-footer">
+                        <span class="price">99.00</span>
+                        <button class="btn btn-sm btn-primary">加入购物车</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <h2>4. 个人中心侧边栏测试</h2>
+        <div class="profile-container" style="max-width: 1000px; height: 400px;">
+            <div class="profile-sidebar">
+                <div class="profile-user">
+                    <div class="user-avatar">
+                        <div class="avatar-placeholder">👤</div>
+                    </div>
+                    <div class="user-name">测试用户</div>
+                    <div class="user-role">普通用户</div>
+                </div>
+                <div class="profile-nav">
+                    <div class="nav-section">
+                        <div class="nav-item active">我的订单</div>
+                        <div class="nav-item">个人信息</div>
+                    </div>
+                </div>
+            </div>
+            <div class="profile-content">
+                <div class="content-header">
+                    <h2 class="content-title">个人中心</h2>
+                </div>
+                <p>这是内容区域</p>
+            </div>
+        </div>
+
+        <div style="margin-top: 40px; padding: 20px; background: #f0f0f0; border: 1px solid #ddd;">
+            <h3>检查项目:</h3>
+            <ul>
+                <li>按钮应该有4px圆角(border-radius: 4px)</li>
+                <li>信任区块应该有黑色图标背景</li>
+                <li>产品价格应该是红色(#FF3B30)</li>
+                <li>个人中心侧边栏应该紧贴左侧,无间隙</li>
+                <li>激活的导航项应该有黑色背景</li>
+                <li>所有边框应该是1px宽度</li>
+            </ul>
+            <p><strong>如果看不到这些效果,请按 Ctrl+Shift+R (Windows/Linux) 或 Cmd+Shift+R (Mac) 强制刷新页面清除缓存</strong></p>
+        </div>
+    </div>
+</body>
+
+</html>

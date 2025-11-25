@@ -5,9 +5,13 @@ import com.ecommerce.common.Result;
 import com.ecommerce.entity.Order;
 import com.ecommerce.entity.OrderItem;
 import com.ecommerce.entity.Product;
+import com.ecommerce.entity.UserBrowseLog;
+import com.ecommerce.entity.UserPurchaseLog;
 import com.ecommerce.mapper.OrderItemMapper;
 import com.ecommerce.mapper.OrderMapper;
 import com.ecommerce.mapper.ProductMapper;
+import com.ecommerce.mapper.UserBrowseLogMapper;
+import com.ecommerce.mapper.UserPurchaseLogMapper;
 import com.ecommerce.utils.JwtUtil;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,6 +41,12 @@ public class MerchantController {
 
     @Autowired
     private OrderItemMapper orderItemMapper;
+
+    @Autowired
+    private UserBrowseLogMapper browseLogMapper;
+
+    @Autowired
+    private UserPurchaseLogMapper purchaseLogMapper;
 
     /**
      * 从请求头中提取并验证Token，返回商家ID
@@ -455,6 +465,36 @@ public class MerchantController {
             case 5: return "已取消";
             default: return "未知";
         }
+    }
+
+    /**
+     * 获取客户浏览日志
+     */
+    @GetMapping("/logs/browse")
+    public Result<List<UserBrowseLog>> getBrowseLogs(@RequestHeader(value = "Authorization", required = false) String authHeader,
+                                                      @RequestParam(defaultValue = "100") Integer limit) {
+        Long merchantId = getMerchantIdFromToken(authHeader);
+        if (merchantId == null) {
+            return Result.error("无权限访问，请以商家身份登录");
+        }
+        
+        List<UserBrowseLog> logs = browseLogMapper.getMerchantProductBrowseLog(merchantId, limit);
+        return Result.success(logs);
+    }
+
+    /**
+     * 获取客户购买日志
+     */
+    @GetMapping("/logs/purchase")
+    public Result<List<UserPurchaseLog>> getPurchaseLogs(@RequestHeader(value = "Authorization", required = false) String authHeader,
+                                                          @RequestParam(defaultValue = "100") Integer limit) {
+        Long merchantId = getMerchantIdFromToken(authHeader);
+        if (merchantId == null) {
+            return Result.error("无权限访问，请以商家身份登录");
+        }
+        
+        List<UserPurchaseLog> logs = purchaseLogMapper.getMerchantPurchaseLog(merchantId, limit);
+        return Result.success(logs);
     }
 
     /**

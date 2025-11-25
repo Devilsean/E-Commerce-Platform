@@ -1,0 +1,121 @@
+/* ==================== SVG图标支持样式 ==================== */
+
+/* 基础图标样式 */
+.icon {
+    display: inline-block;
+    vertical-align: middle;
+    fill: currentColor;
+    transition: var(--transition);
+}
+
+/* 图标容器 */
+.icon-wrapper {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* 导航栏图标 */
+.nav-brand .icon {
+    margin-right: 8px;
+}
+
+.nav-search-btn .icon {
+    pointer-events: none;
+}
+
+/* Hero区域图标 */
+.hero-image .icon {
+    opacity: 0.9;
+    color: white;
+}
+
+/* 分类图标 */
+.category-icon .icon,
+.quick-category-icon .icon {
+    display: block;
+}
+
+/* 商品卡片图标 */
+.product-image .icon {
+    opacity: 0.3;
+}
+
+/* 按钮中的图标 */
+.btn .icon {
+    margin-right: 6px;
+    vertical-align: middle;
+}
+
+.btn-sm .icon {
+    width: 16px;
+    height: 16px;
+}
+
+.btn-lg .icon {
+    width: 20px;
+    height: 20px;
+}
+
+/* 标签图标 */
+.label-icon .icon {
+    margin-right: 6px;
+}
+
+/* 统计卡片图标 */
+.stat-icon .icon,
+.order-stat-card .stat-icon .icon {
+    display: block;
+}
+
+/* 设置项图标 */
+.setting-icon .icon {
+    display: block;
+}
+
+/* 服务图标 */
+.service-icon .icon {
+    display: block;
+}
+
+/* 空状态图标 */
+.empty-icon .icon,
+.empty-icon-small .icon {
+    opacity: 0.4;
+    display: block;
+    margin: 0 auto;
+}
+
+/* 认证页面图标 */
+.auth-icon .icon {
+    display: block;
+}
+
+.radio-icon .icon {
+    display: block;
+}
+
+/* 产品元数据图标 */
+.meta-item .icon {
+    margin-right: 4px;
+    vertical-align: middle;
+}
+
+/* 信息标签图标 */
+.info-label .icon {
+    margin-right: 6px;
+    vertical-align: middle;
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+    .hero-image .icon {
+        width: 120px;
+        height: 120px;
+    }
+
+    .stat-icon .icon {
+        width: 24px;
+        height: 24px;
+    }
+}

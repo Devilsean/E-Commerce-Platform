@@ -9,11 +9,11 @@ const CartService = {
         if (this.cart.length === 0) {
             content.innerHTML = `
                 <div class="empty-state">
-                    <div class="empty-icon">🛒</div>
+                    <div class="empty-icon"><svg width="96" height="96" class="icon" aria-hidden="true"><use xlink:href="#icon-cart"></use></svg></div>
                     <h3>购物车是空的</h3>
                     <p>快去挑选心仪的商品吧</p>
                     <button class="btn btn-primary btn-lg" onclick="window.location.hash='/'">
-                        <span>🛍️</span> 去购物
+                        <svg width="20" height="20" class="icon" aria-hidden="true"><use xlink:href="#icon-shopping-bag"></use></svg> 去购物
                     </button>
                 </div>
             `;
@@ -26,7 +26,7 @@ const CartService = {
         content.innerHTML = `
             <div class="section">
                 <div class="cart-header">
-                    <h2>🛒 购物车</h2>
+                    <h2><svg width="24" height="24" class="icon" aria-hidden="true"><use xlink:href="#icon-cart"></use></svg> 购物车</h2>
                     <div class="cart-info">
                         <span class="cart-count">共 ${itemCount} 件商品</span>
                         <button class="btn btn-sm" onclick="CartService.clearCart()">清空购物车</button>
@@ -45,7 +45,7 @@ const CartService = {
                         <div class="cart-table-row">
                             <div class="col-product">
                                 <div class="product-mini">
-                                    <div class="product-mini-img">📦</div>
+                                    <div class="product-mini-img"><svg width="40" height="40" class="icon" aria-hidden="true"><use xlink:href="#icon-box"></use></svg></div>
                                     <div class="product-mini-info">
                                         <h4>${item.name}</h4>
                                         <p class="product-mini-desc">${item.description || '优质商品'}</p>
@@ -69,7 +69,7 @@ const CartService = {
                             </div>
                             <div class="col-action">
                                 <button class="btn-link btn-danger" onclick="CartService.removeItem(${index})">
-                                    🗑️ 删除
+                                    <svg width="16" height="16" class="icon" aria-hidden="true"><use xlink:href="#icon-delete"></use></svg> 删除
                                 </button>
                             </div>
                         </div>
@@ -91,7 +91,7 @@ const CartService = {
                             <span class="price-large">¥${total.toFixed(2)}</span>
                         </div>
                         <button class="btn btn-primary btn-lg btn-block" onclick="CartService.checkout()">
-                            💳 立即结算
+                            <svg width="20" height="20" class="icon" aria-hidden="true"><use xlink:href="#icon-credit-card"></use></svg> 立即结算
                         </button>
                     </div>
                 </div>
@@ -116,7 +116,7 @@ const CartService = {
                     description: product.description,
                     quantity: parseInt(quantity)
                 });
-                utils.showToast('✅ 已加入购物车', 'success');
+                utils.showToast('已加入购物车', 'success');
             }
 
             this.saveCart();

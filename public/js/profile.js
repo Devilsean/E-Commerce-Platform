@@ -48,13 +48,13 @@ const ProfileService = {
                 <div class="profile-header">
                     <div class="profile-banner">
                         <div class="profile-avatar-large">
-                            ${isMerchant ? '🏪' : '👤'}
+                            <svg width="64" height="64" class="icon" aria-hidden="true"><use xlink:href="#icon-${isMerchant ? 'merchant' : 'user'}"></use></svg>
                         </div>
                         <div class="profile-header-info">
                             <h2>${currentUser.username || '用户'}</h2>
                             <p class="profile-subtitle">${currentUser.email || currentUser.phone || '未设置联系方式'}</p>
                             <span class="badge badge-${isMerchant ? 'merchant' : 'user'}">
-                                ${isMerchant ? '🏪 商家账号' : '👤 普通用户'}
+                                <svg width="16" height="16" class="icon" aria-hidden="true"><use xlink:href="#icon-${isMerchant ? 'merchant' : 'user'}"></use></svg> ${isMerchant ? '商家账号' : '普通用户'}
                             </span>
                         </div>
                     </div>
@@ -79,33 +79,33 @@ const ProfileService = {
                 <!-- 订单统计 -->
                 <div class="profile-section">
                     <div class="section-title">
-                        <h3>📋 我的订单</h3>
+                        <h3><svg width="18" height="18" class="icon" aria-hidden="true"><use xlink:href="#icon-order"></use></svg> 我的订单</h3>
                         <a href="#/orders" class="view-all">查看全部 →</a>
                     </div>
                     <div class="order-stats-grid">
                         <div class="order-stat-card" onclick="window.location.hash = '/orders'; setTimeout(() => { if(window.app && window.app.loadOrders) window.app.loadOrders(0); }, 200);" style="cursor: pointer;">
-                            <div class="stat-icon">💰</div>
+                            <div class="stat-icon"><svg width="32" height="32" class="icon" aria-hidden="true"><use xlink:href="#icon-money"></use></svg></div>
                             <div class="stat-info">
                                 <div class="stat-number" id="pendingCount">0</div>
                                 <div class="stat-label">待付款</div>
                             </div>
                         </div>
                         <div class="order-stat-card" onclick="window.location.hash = '/orders'; setTimeout(() => { if(window.app && window.app.loadOrders) window.app.loadOrders(1); }, 200);" style="cursor: pointer;">
-                            <div class="stat-icon">📦</div>
+                            <div class="stat-icon"><svg width="32" height="32" class="icon" aria-hidden="true"><use xlink:href="#icon-box"></use></svg></div>
                             <div class="stat-info">
                                 <div class="stat-number" id="paidCount">0</div>
                                 <div class="stat-label">待发货</div>
                             </div>
                         </div>
                         <div class="order-stat-card" onclick="window.location.hash = '/orders'; setTimeout(() => { if(window.app && window.app.loadOrders) window.app.loadOrders(3); }, 200);" style="cursor: pointer;">
-                            <div class="stat-icon">🚚</div>
+                            <div class="stat-icon"><svg width="32" height="32" class="icon" aria-hidden="true"><use xlink:href="#icon-truck"></use></svg></div>
                             <div class="stat-info">
                                 <div class="stat-number" id="shippedCount">0</div>
                                 <div class="stat-label">待收货</div>
                             </div>
                         </div>
                         <div class="order-stat-card" onclick="window.location.hash = '/orders'; setTimeout(() => { if(window.app && window.app.loadOrders) window.app.loadOrders(4); }, 200);" style="cursor: pointer;">
-                            <div class="stat-icon">✅</div>
+                            <div class="stat-icon"><svg width="32" height="32" class="icon" aria-hidden="true"><use xlink:href="#icon-check"></use></svg></div>
                             <div class="stat-info">
                                 <div class="stat-number" id="completedCount">0</div>
                                 <div class="stat-label">已完成</div>
@@ -114,10 +114,21 @@ const ProfileService = {
                     </div>
                 </div>
 
+                <!-- 浏览历史 -->
+                <div class="profile-section">
+                    <div class="section-title">
+                        <h3><svg width="18" height="18" class="icon" aria-hidden="true"><use xlink:href="#icon-time"></use></svg> 浏览历史</h3>
+                        <button class="btn btn-sm" onclick="ProfileService.clearBrowsingHistory()">清空历史</button>
+                    </div>
+                    <div id="browsingHistory">
+                        <div class="loading-text">加载中...</div>
+                    </div>
+                </div>
+
                 <!-- 收货地址 -->
                 <div class="profile-section">
                     <div class="section-title">
-                        <h3>📍 收货地址</h3>
+                        <h3><svg width="18" height="18" class="icon" aria-hidden="true"><use xlink:href="#icon-location"></use></svg> 收货地址</h3>
                         <button class="btn btn-primary btn-sm" onclick="ProfileService.showAddAddressModal()">
                             + 新增地址
                         </button>
@@ -130,11 +141,11 @@ const ProfileService = {
                 <!-- 账户设置 -->
                 <div class="profile-section">
                     <div class="section-title">
-                        <h3>⚙️ 账户设置</h3>
+                        <h3><svg width="18" height="18" class="icon" aria-hidden="true"><use xlink:href="#icon-settings"></use></svg> 账户设置</h3>
                     </div>
                     <div class="settings-list">
                         <div class="setting-item" onclick="ProfileService.showEditProfileModal()">
-                            <div class="setting-icon">👤</div>
+                            <div class="setting-icon"><svg width="24" height="24" class="icon" aria-hidden="true"><use xlink:href="#icon-user"></use></svg></div>
                             <div class="setting-info">
                                 <h4>个人信息</h4>
                                 <p>修改昵称、联系方式等基本信息</p>
@@ -142,7 +153,7 @@ const ProfileService = {
                             <button class="btn btn-sm">编辑</button>
                         </div>
                         <div class="setting-item" onclick="ProfileService.showChangePasswordModal()">
-                            <div class="setting-icon">🔒</div>
+                            <div class="setting-icon"><svg width="24" height="24" class="icon" aria-hidden="true"><use xlink:href="#icon-lock"></use></svg></div>
                             <div class="setting-info">
                                 <h4>安全设置</h4>
                                 <p>修改密码、绑定手机号</p>
@@ -150,7 +161,7 @@ const ProfileService = {
                             <button class="btn btn-sm">设置</button>
                         </div>
                         <div class="setting-item" onclick="ProfileService.showAccountStats()">
-                            <div class="setting-icon">📊</div>
+                            <div class="setting-icon"><svg width="24" height="24" class="icon" aria-hidden="true"><use xlink:href="#icon-order"></use></svg></div>
                             <div class="setting-info">
                                 <h4>账户统计</h4>
                                 <p>查看消费记录和订单历史</p>
@@ -170,32 +181,32 @@ const ProfileService = {
                 <!-- 商家统计 -->
                 <div class="profile-section">
                     <div class="section-title">
-                        <h3>📊 店铺数据</h3>
+                        <h3><svg width="18" height="18" class="icon" aria-hidden="true"><use xlink:href="#icon-order"></use></svg> 店铺数据</h3>
                     </div>
                     <div class="order-stats-grid">
                         <div class="order-stat-card">
-                            <div class="stat-icon">📦</div>
+                            <div class="stat-icon"><svg width="32" height="32" class="icon" aria-hidden="true"><use xlink:href="#icon-box"></use></svg></div>
                             <div class="stat-info">
                                 <div class="stat-number" id="merchantProductCount">0</div>
                                 <div class="stat-label">商品总数</div>
                             </div>
                         </div>
                         <div class="order-stat-card">
-                            <div class="stat-icon">🔥</div>
+                            <div class="stat-icon"><svg width="32" height="32" class="icon" aria-hidden="true"><use xlink:href="#icon-fire"></use></svg></div>
                             <div class="stat-info">
                                 <div class="stat-number" id="merchantTotalSales">0</div>
                                 <div class="stat-label">总销量</div>
                             </div>
                         </div>
                         <div class="order-stat-card">
-                            <div class="stat-icon">💰</div>
+                            <div class="stat-icon"><svg width="32" height="32" class="icon" aria-hidden="true"><use xlink:href="#icon-money"></use></svg></div>
                             <div class="stat-info">
                                 <div class="stat-number" id="merchantRevenue">¥0</div>
                                 <div class="stat-label">总收入</div>
                             </div>
                         </div>
                         <div class="order-stat-card">
-                            <div class="stat-icon">⭐</div>
+                            <div class="stat-icon"><svg width="32" height="32" class="icon" aria-hidden="true"><use xlink:href="#icon-star"></use></svg></div>
                             <div class="stat-info">
                                 <div class="stat-number" id="merchantRating">5.0</div>
                                 <div class="stat-label">店铺评分</div>
@@ -204,14 +215,39 @@ const ProfileService = {
                     </div>
                 </div>
 
+                <!-- 客户行为日志 -->
+                <div class="profile-section">
+                    <div class="section-title">
+                        <h3><svg width="18" height="18" class="icon" aria-hidden="true"><use xlink:href="#icon-order"></use></svg> 客户行为日志</h3>
+                    </div>
+                    <div class="settings-list">
+                        <div class="setting-item" onclick="ProfileService.showBrowsingLogs()">
+                            <div class="setting-icon"><svg width="20" height="20" class="icon" aria-hidden="true"><use xlink:href="#icon-time"></use></svg></div>
+                            <div class="setting-info">
+                                <h4>浏览日志</h4>
+                                <p>查看客户浏览商品的记录</p>
+                            </div>
+                            <button class="btn btn-sm">查看</button>
+                        </div>
+                        <div class="setting-item" onclick="ProfileService.showPurchaseLogs()">
+                            <div class="setting-icon"><svg width="20" height="20" class="icon" aria-hidden="true"><use xlink:href="#icon-shopping-bag"></use></svg></div>
+                            <div class="setting-info">
+                                <h4>购买日志</h4>
+                                <p>查看客户购买商品的记录</p>
+                            </div>
+                            <button class="btn btn-sm">查看</button>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- 快捷操作 -->
                 <div class="profile-section">
                     <div class="section-title">
-                        <h3>⚡ 快捷操作</h3>
+                        <h3><svg width="18" height="18" class="icon" aria-hidden="true"><use xlink:href="#icon-star"></use></svg> 快捷操作</h3>
                     </div>
                     <div class="settings-list">
                         <div class="setting-item">
-                            <div class="setting-icon">📦</div>
+                            <div class="setting-icon"><svg width="24" height="24" class="icon" aria-hidden="true"><use xlink:href="#icon-box"></use></svg></div>
                             <div class="setting-info">
                                 <h4>商品管理</h4>
                                 <p>查看和管理店铺商品</p>
@@ -219,7 +255,7 @@ const ProfileService = {
                             <button class="btn btn-sm btn-primary" onclick="event.stopPropagation(); window.location.hash = '/merchant';">进入</button>
                         </div>
                         <div class="setting-item" onclick="showMessage('订单管理功能开发中...', 'info')">
-                            <div class="setting-icon">📋</div>
+                            <div class="setting-icon"><svg width="24" height="24" class="icon" aria-hidden="true"><use xlink:href="#icon-order"></use></svg></div>
                             <div class="setting-info">
                                 <h4>订单管理</h4>
                                 <p>处理客户订单和发货</p>
@@ -227,7 +263,7 @@ const ProfileService = {
                             <button class="btn btn-sm">查看</button>
                         </div>
                         <div class="setting-item" onclick="showMessage('数据分析功能开发中...', 'info')">
-                            <div class="setting-icon">📈</div>
+                            <div class="setting-icon"><svg width="24" height="24" class="icon" aria-hidden="true"><use xlink:href="#icon-order"></use></svg></div>
                             <div class="setting-info">
                                 <h4>数据分析</h4>
                                 <p>查看销售趋势和热门商品</p>
@@ -260,8 +296,67 @@ const ProfileService = {
 
             // 加载收货地址
             await this.loadAddresses();
+
+            // 加载浏览历史
+            this.loadBrowsingHistory();
         } catch (error) {
             console.error('加载用户统计失败:', error);
+        }
+    },
+
+    // 加载浏览历史
+    loadBrowsingHistory() {
+        const container = document.getElementById('browsingHistory');
+        if (!container) return;
+
+        const history = Store.getBrowsingHistory();
+
+        if (history.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state-small">
+                    <div class="empty-icon-small"><svg width="56" height="56" class="icon" aria-hidden="true"><use xlink:href="#icon-time"></use></svg></div>
+                    <p>还没有浏览记录</p>
+                    <button class="btn btn-primary btn-sm" onclick="window.location.hash = '/';">
+                        去逛逛
+                    </button>
+                </div>
+            `;
+            return;
+        }
+
+        // 只显示最近10条
+        const recentHistory = history.slice(0, 10);
+
+        container.innerHTML = `
+            <div class="products-grid" style="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));">
+                ${recentHistory.map(item => `
+                    <div class="product-card" onclick="app.router.navigate('/product/${item.id}')" style="cursor: pointer;">
+                        <div class="product-image">
+                            ${item.image ? `<img src="${item.image}" alt="${item.name}" onerror="this.parentElement.innerHTML='<svg width=\\'72\\' height=\\'72\\' class=\\'icon\\' aria-hidden=\\'true\\'><use xlink:href=\\'#icon-box\\'></use></svg>'" style="width:100%;height:100%;object-fit:cover;">` : '<svg width="72" height="72" class="icon" aria-hidden="true"><use xlink:href="#icon-box"></use></svg>'}
+                        </div>
+                        <div class="product-info">
+                            <h3 style="font-size: 14px;">${item.name}</h3>
+                            <p class="product-desc" style="font-size: 12px;">${item.description || '优质商品'}</p>
+                            <div class="product-footer">
+                                <span class="price">¥${item.price}</span>
+                                <button class="btn btn-sm btn-primary" onclick="event.stopPropagation(); Store.removeBrowsingHistory(${item.id}); ProfileService.loadBrowsingHistory();">
+                                    <svg width="14" height="14" class="icon" aria-hidden="true"><use xlink:href="#icon-delete"></use></svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+            ${history.length > 10 ? `<p style="text-align: center; margin-top: 16px; color: var(--text-secondary); font-size: 13px;">仅显示最近10条浏览记录</p>` : ''}
+        `;
+    },
+
+    // 清空浏览历史
+    clearBrowsingHistory() {
+        if (confirm('确定要清空所有浏览历史吗？')) {
+            Store.clearBrowsingHistory();
+            this.loadBrowsingHistory();
+            showMessage('浏览历史已清空', 'success');
         }
     },
 
@@ -308,7 +403,7 @@ const ProfileService = {
             } else {
                 container.innerHTML = `
                     <div class="empty-orders">
-                        <div class="empty-orders-icon">📦</div>
+                        <div class="empty-orders-icon"><svg width="56" height="56" class="icon" aria-hidden="true"><use xlink:href="#icon-box"></use></svg></div>
                         <div class="empty-orders-text">暂无${ORDER_STATUS_TEXT[status]}订单</div>
                         <button class="btn btn-primary" onclick="Router.navigate('products')">去购物</button>
                     </div>
@@ -371,19 +466,19 @@ const ProfileService = {
 
         switch (order.status) {
             case ORDER_STATUS.PENDING:
-                actions.push(`<button class="btn btn-primary btn-small" onclick="ProfileService.payOrder(${order.id})">💳 立即支付</button>`);
+                actions.push(`<button class="btn btn-primary btn-small" onclick="ProfileService.payOrder(${order.id})"><svg width="16" height="16" class="icon" aria-hidden="true"><use xlink:href="#icon-credit-card"></use></svg> 立即支付</button>`);
                 actions.push(`<button class="btn btn-small" onclick="ProfileService.cancelOrder(${order.id})">取消订单</button>`);
                 break;
             case ORDER_STATUS.PAID:
-                actions.push(`<button class="btn btn-small" onclick="showMessage('商家正在备货中...', 'success')">📦 查看物流</button>`);
+                actions.push(`<button class="btn btn-small" onclick="showMessage('商家正在备货中...', 'success')"><svg width="16" height="16" class="icon" aria-hidden="true"><use xlink:href="#icon-box"></use></svg> 查看物流</button>`);
                 break;
             case ORDER_STATUS.SHIPPED:
-                actions.push(`<button class="btn btn-primary btn-small" onclick="ProfileService.confirmReceipt(${order.id})">✅ 确认收货</button>`);
-                actions.push(`<button class="btn btn-small" onclick="showMessage('物流信息功能开发中...', 'success')">📦 查看物流</button>`);
+                actions.push(`<button class="btn btn-primary btn-small" onclick="ProfileService.confirmReceipt(${order.id})"><svg width="16" height="16" class="icon" aria-hidden="true"><use xlink:href="#icon-check"></use></svg> 确认收货</button>`);
+                actions.push(`<button class="btn btn-small" onclick="showMessage('物流信息功能开发中...', 'success')"><svg width="16" height="16" class="icon" aria-hidden="true"><use xlink:href="#icon-box"></use></svg> 查看物流</button>`);
                 break;
             case ORDER_STATUS.COMPLETED:
-                actions.push(`<button class="btn btn-small" onclick="showMessage('评价功能开发中...', 'success')">⭐ 评价</button>`);
-                actions.push(`<button class="btn btn-small" onclick="showMessage('再次购买功能开发中...', 'success')">🔄 再次购买</button>`);
+                actions.push(`<button class="btn btn-small" onclick="showMessage('评价功能开发中...', 'success')"><svg width="16" height="16" class="icon" aria-hidden="true"><use xlink:href="#icon-star"></use></svg> 评价</button>`);
+                actions.push(`<button class="btn btn-small" onclick="showMessage('再次购买功能开发中...', 'success')"><svg width="16" height="16" class="icon" aria-hidden="true"><use xlink:href="#icon-refresh"></use></svg> 再次购买</button>`);
                 break;
         }
 
@@ -418,7 +513,7 @@ const ProfileService = {
     // 支付订单
     payOrder(orderId) {
         if (confirm('确认支付此订单吗？')) {
-            showMessage('支付成功！订单已提交给商家 🎉', 'success');
+            showMessage('支付成功！订单已提交给商家', 'success');
             setTimeout(() => {
                 this.loadOrders(Store.getOrderFilter());
             }, 1500);
@@ -438,7 +533,7 @@ const ProfileService = {
     // 确认收货
     confirmReceipt(orderId) {
         if (confirm('确认已收到商品吗？')) {
-            showMessage('确认收货成功！感谢您的购买 🎉', 'success');
+            showMessage('确认收货成功！感谢您的购买', 'success');
             setTimeout(() => {
                 this.loadOrders(Store.getOrderFilter());
             }, 1500);
@@ -456,7 +551,7 @@ const ProfileService = {
         if (addresses.length === 0) {
             container.innerHTML = `
                 <div class="empty-state-small">
-                    <div class="empty-icon-small">📍</div>
+                    <div class="empty-icon-small"><svg width="56" height="56" class="icon" aria-hidden="true"><use xlink:href="#icon-location"></use></svg></div>
                     <p>还没有收货地址</p>
                     <button class="btn btn-primary btn-sm" onclick="ProfileService.showAddAddressModal()">
                         添加地址
@@ -531,7 +626,7 @@ const ProfileService = {
         modal.innerHTML = `
             <div class="modal-content">
                 <div class="modal-header">
-                    <h3>📍 新增收货地址</h3>
+                    <h3><svg width="20" height="20" class="icon" aria-hidden="true"><use xlink:href="#icon-location"></use></svg> 新增收货地址</h3>
                     <button class="modal-close" onclick="this.closest('.modal').remove()">×</button>
                 </div>
                 <form onsubmit="ProfileService.handleAddAddress(event)">
@@ -594,7 +689,7 @@ const ProfileService = {
         modal.innerHTML = `
             <div class="modal-content">
                 <div class="modal-header">
-                    <h3>👤 编辑个人信息</h3>
+                    <h3><svg width="20" height="20" class="icon" aria-hidden="true"><use xlink:href="#icon-user"></use></svg> 编辑个人信息</h3>
                     <button class="modal-close" onclick="this.closest('.modal').remove()">×</button>
                 </div>
                 <form onsubmit="ProfileService.handleEditProfile(event)">
@@ -657,7 +752,7 @@ const ProfileService = {
         modal.innerHTML = `
             <div class="modal-content">
                 <div class="modal-header">
-                    <h3>🔒 修改密码</h3>
+                    <h3><svg width="20" height="20" class="icon" aria-hidden="true"><use xlink:href="#icon-lock"></use></svg> 修改密码</h3>
                     <button class="modal-close" onclick="this.closest('.modal').remove()">×</button>
                 </div>
                 <form onsubmit="ProfileService.handleChangePassword(event)">
@@ -721,7 +816,7 @@ const ProfileService = {
         modal.innerHTML = `
             <div class="modal-content">
                 <div class="modal-header">
-                    <h3>📊 账户统计</h3>
+                    <h3><svg width="20" height="20" class="icon" aria-hidden="true"><use xlink:href="#icon-order"></use></svg> 账户统计</h3>
                     <button class="modal-close" onclick="this.closest('.modal').remove()">×</button>
                 </div>
                 <div style="padding: 20px;">
@@ -761,6 +856,156 @@ const ProfileService = {
         if (confirm('确定要删除此地址吗？')) {
             showMessage('地址删除成功', 'success');
             this.loadAddresses();
+        }
+    },
+
+    // 显示浏览日志
+    async showBrowsingLogs() {
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.style.display = 'flex';
+        modal.innerHTML = `
+            <div class="modal-content modal-large">
+                <div class="modal-header">
+                    <h3><svg width="20" height="20" class="icon" aria-hidden="true"><use xlink:href="#icon-time"></use></svg> 客户浏览日志</h3>
+                    <button class="modal-close" onclick="this.closest('.modal').remove()">×</button>
+                </div>
+                <div class="modal-body" style="padding: 20px; max-height: 500px; overflow-y: auto;">
+                    <div id="browsingLogsContent">
+                        <div class="loading-text">加载中...</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" onclick="this.closest('.modal').remove()">关闭</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+
+        // 从后端API加载浏览日志数据
+        try {
+            const logs = await utils.request('/merchant/logs/browse?limit=50');
+            const content = document.getElementById('browsingLogsContent');
+            if (!content) return;
+
+            if (!logs || logs.length === 0) {
+                content.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: var(--text-secondary);">
+                        <svg width="64" height="64" class="icon" aria-hidden="true"><use xlink:href="#icon-time"></use></svg>
+                        <p style="margin-top: 16px;">暂无浏览日志</p>
+                    </div>
+                `;
+                return;
+            }
+
+            content.innerHTML = `
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="background: var(--bg-secondary); text-align: left;">
+                            <th style="padding: 12px; border-bottom: 2px solid var(--border-light);">商品名称</th>
+                            <th style="padding: 12px; border-bottom: 2px solid var(--border-light);">价格</th>
+                            <th style="padding: 12px; border-bottom: 2px solid var(--border-light);">浏览时间</th>
+                            <th style="padding: 12px; border-bottom: 2px solid var(--border-light);">IP地址</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${logs.map(log => `
+                            <tr style="border-bottom: 1px solid var(--border-light);">
+                                <td style="padding: 12px;">${log.productName || '未知商品'}</td>
+                                <td style="padding: 12px;">¥${log.productPrice || 0}</td>
+                                <td style="padding: 12px;">${new Date(log.browseTime).toLocaleString('zh-CN')}</td>
+                                <td style="padding: 12px; font-size: 12px; color: var(--text-secondary);">${log.ipAddress || '-'}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        } catch (error) {
+            const content = document.getElementById('browsingLogsContent');
+            if (content) {
+                content.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: var(--text-secondary);">
+                        <svg width="64" height="64" class="icon" aria-hidden="true"><use xlink:href="#icon-time"></use></svg>
+                        <p style="margin-top: 16px;">加载失败，请稍后重试</p>
+                    </div>
+                `;
+            }
+        }
+    },
+
+    // 显示购买日志
+    async showPurchaseLogs() {
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.style.display = 'flex';
+        modal.innerHTML = `
+            <div class="modal-content modal-large">
+                <div class="modal-header">
+                    <h3><svg width="20" height="20" class="icon" aria-hidden="true"><use xlink:href="#icon-shopping-bag"></use></svg> 客户购买日志</h3>
+                    <button class="modal-close" onclick="this.closest('.modal').remove()">×</button>
+                </div>
+                <div class="modal-body" style="padding: 20px; max-height: 500px; overflow-y: auto;">
+                    <div id="purchaseLogsContent">
+                        <div class="loading-text">加载中...</div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" onclick="this.closest('.modal').remove()">关闭</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+
+        // 从后端API加载购买日志数据
+        try {
+            const logs = await utils.request('/merchant/logs/purchase?limit=50');
+            const content = document.getElementById('purchaseLogsContent');
+            if (!content) return;
+
+            if (!logs || logs.length === 0) {
+                content.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: var(--text-secondary);">
+                        <svg width="64" height="64" class="icon" aria-hidden="true"><use xlink:href="#icon-shopping-bag"></use></svg>
+                        <p style="margin-top: 16px;">暂无购买日志</p>
+                    </div>
+                `;
+                return;
+            }
+
+            content.innerHTML = `
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="background: var(--bg-secondary); text-align: left;">
+                            <th style="padding: 12px; border-bottom: 2px solid var(--border-light);">订单ID</th>
+                            <th style="padding: 12px; border-bottom: 2px solid var(--border-light);">商品数量</th>
+                            <th style="padding: 12px; border-bottom: 2px solid var(--border-light);">订单金额</th>
+                            <th style="padding: 12px; border-bottom: 2px solid var(--border-light);">购买时间</th>
+                            <th style="padding: 12px; border-bottom: 2px solid var(--border-light);">IP地址</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${logs.map(log => `
+                            <tr style="border-bottom: 1px solid var(--border-light);">
+                                <td style="padding: 12px;">#${log.orderId}</td>
+                                <td style="padding: 12px;">${log.itemCount || 0} 件</td>
+                                <td style="padding: 12px; color: var(--danger); font-weight: 600;">¥${log.totalAmount || 0}</td>
+                                <td style="padding: 12px;">${new Date(log.purchaseTime).toLocaleString('zh-CN')}</td>
+                                <td style="padding: 12px; font-size: 12px; color: var(--text-secondary);">${log.ipAddress || '-'}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+        } catch (error) {
+            const content = document.getElementById('purchaseLogsContent');
+            if (content) {
+                content.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: var(--text-secondary);">
+                        <svg width="64" height="64" class="icon" aria-hidden="true"><use xlink:href="#icon-shopping-bag"></use></svg>
+                        <p style="margin-top: 16px;">加载失败，请稍后重试</p>
+                    </div>
+                `;
+            }
         }
     }
 };

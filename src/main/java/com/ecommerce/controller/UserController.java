@@ -2,6 +2,10 @@ package com.ecommerce.controller;
 
 import com.ecommerce.common.Result;
 import com.ecommerce.entity.User;
+import com.ecommerce.entity.UserBrowseLog;
+import com.ecommerce.entity.UserPurchaseLog;
+import com.ecommerce.mapper.UserBrowseLogMapper;
+import com.ecommerce.mapper.UserPurchaseLogMapper;
 import com.ecommerce.service.UserService;
 import com.ecommerce.utils.JwtUtil;
 import lombok.Data;
@@ -9,11 +13,14 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,6 +40,12 @@ public class UserController {
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
+
+    @Autowired
+    private UserBrowseLogMapper browseLogMapper;
+
+    @Autowired
+    private UserPurchaseLogMapper purchaseLogMapper;
 
     /**
      * 用户注册
@@ -243,6 +256,111 @@ public class UserController {
         }
     }
 
+    /**
+     * 记录用户浏览日志
+     */
+    @PostMapping("/log/browse")
+    public Result<Void> logBrowse(@RequestHeader("Authorization") String token,
+                                   @Valid @RequestBody BrowseLogRequest request,
+                                   HttpServletRequest httpRequest) {
+        if (token.startsWith("Bearer ")) {
+            token = token.substring(7);
+        }
+        
+        Long userId = jwtUtil.getUserIdFromToken(token);
+        
+        try {
+            // 获取商品信息
+            String sql = "SELECT name, price FROM product WHERE id = ?";
+            Map<String, Object> product = jdbcTemplate.queryForMap(sql, request.getProductId());
+            
+            // 创建浏览日志
+            UserBrowseLog log = new UserBrowseLog();
+            log.setUserId(userId);
+            log.setProductId(request.getProductId());
+            log.setProductName((String) product.get("name"));
+            log.setProductPrice((BigDecimal) product.get("price"));
+            log.setBrowseTime(LocalDateTime.now());
+            log.setIpAddress(getClientIp(httpRequest));
+            log.setUserAgent(httpRequest.getHeader("User-Agent"));
+            log.setCreateTime(LocalDateTime.now());
+            
+            browseLogMapper.insert(log);
+            return Result.success("浏览日志记录成功");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Result.error("记录失败：" + e.getMessage());
+        }
+    }
+
+    /**
+     * 记录用户购买日志
+     */
+    @PostMapping("/log/purchase")
+    public Result<Void> logPurchase(@RequestHeader("Authorization") String token,
+                                     @Valid @RequestBody PurchaseLogRequest request,
+                                     HttpServletRequest httpRequest) {
+        if (token.startsWith("Bearer ")) {
+            token = token.substring(7);
+        }
+        
+        Long userId = jwtUtil.getUserIdFromToken(token);
+        
+        try {
+            // 获取订单信息
+            String sql = "SELECT total_amount FROM `order` WHERE id = ?";
+            Map<String, Object> order = jdbcTemplate.queryForMap(sql, request.getOrderId());
+            
+            // 创建购买日志
+            UserPurchaseLog log = new UserPurchaseLog();
+            log.setUserId(userId);
+            log.setOrderId(request.getOrderId());
+            log.setTotalAmount((BigDecimal) order.get("total_amount"));
+            log.setItemCount(request.getItems() != null ? request.getItems().size() : 0);
+            log.setPurchaseTime(LocalDateTime.now());
+            log.setIpAddress(getClientIp(httpRequest));
+            log.setCreateTime(LocalDateTime.now());
+            
+            purchaseLogMapper.insert(log);
+            return Result.success("购买日志记录成功");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Result.error("记录失败：" + e.getMessage());
+        }
+    }
+
+    /**
+     * 获取用户浏览历史
+     */
+    @GetMapping("/browse-history")
+    public Result<List<UserBrowseLog>> getBrowseHistory(@RequestHeader("Authorization") String token,
+                                                         @RequestParam(defaultValue = "50") Integer limit) {
+        if (token.startsWith("Bearer ")) {
+            token = token.substring(7);
+        }
+        
+        Long userId = jwtUtil.getUserIdFromToken(token);
+        List<UserBrowseLog> logs = browseLogMapper.getRecentBrowseLog(userId, limit);
+        return Result.success(logs);
+    }
+
+    /**
+     * 获取客户端IP地址
+     */
+    private String getClientIp(HttpServletRequest request) {
+        String ip = request.getHeader("X-Forwarded-For");
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getHeader("Proxy-Client-IP");
+        }
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getHeader("WL-Proxy-Client-IP");
+        }
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getRemoteAddr();
+        }
+        return ip;
+    }
+
     // ========== 请求DTO类 ==========
 
     @Data
@@ -315,5 +433,23 @@ public class UserController {
         private String content;
         
         private String images;
+    }
+
+    @Data
+    static class BrowseLogRequest {
+        @NotNull(message = "商品ID不能为空")
+        private Long productId;
+        
+        private String timestamp;
+    }
+
+    @Data
+    static class PurchaseLogRequest {
+        @NotNull(message = "订单ID不能为空")
+        private Long orderId;
+        
+        private List<Map<String, Object>> items;
+        
+        private String timestamp;
     }
 }

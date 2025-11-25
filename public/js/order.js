@@ -266,7 +266,7 @@ const OrderService = {
         if (!orders || orders.length === 0) {
             container.innerHTML = `
                 <div class="empty-state-small">
-                    <div class="empty-icon-small">📦</div>
+                    <div class="empty-icon-small"><svg width="56" height="56" class="icon" aria-hidden="true"><use xlink:href="#icon-box"></use></svg></div>
                     <p>暂无订单</p>
                     <button class="btn btn-primary" onclick="app.router.navigate('/')">去购物</button>
                 </div>
@@ -287,7 +287,7 @@ const OrderService = {
                     ${order.items.map(item => `
                         <div class="order-item">
                             <div class="order-item-image">
-                                ${item.productImage ? `<img src="${item.productImage}" alt="${item.productName}">` : '📦'}
+                                ${item.productImage ? `<img src="${item.productImage}" alt="${item.productName}">` : '<svg width="40" height="40" class="icon" aria-hidden="true"><use xlink:href="#icon-box"></use></svg>'}
                             </div>
                             <div class="order-item-info">
                                 <h4>${item.productName}</h4>
@@ -355,7 +355,7 @@ const OrderService = {
         modal.innerHTML = `
             <div class="modal-content modal-large">
                 <div class="modal-header">
-                    <h3>📋 订单详情</h3>
+                    <h3><svg width="20" height="20" class="icon" aria-hidden="true"><use xlink:href="#icon-order"></use></svg> 订单详情</h3>
                     <button class="modal-close" onclick="document.getElementById('orderDetailModal').remove()">×</button>
                 </div>
                 <div class="modal-body">
@@ -419,7 +419,7 @@ const OrderService = {
                             ${order.items.map(item => `
                                 <div class="order-item-detail">
                                     <div class="item-image">
-                                        ${item.productImage ? `<img src="${item.productImage}" alt="${item.productName}">` : '📦'}
+                                        ${item.productImage ? `<img src="${item.productImage}" alt="${item.productName}">` : '<svg width="40" height="40" class="icon" aria-hidden="true"><use xlink:href="#icon-box"></use></svg>'}
                                     </div>
                                     <div class="item-info">
                                         <h5>${item.productName}</h5>
