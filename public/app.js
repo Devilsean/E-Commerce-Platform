@@ -1012,24 +1012,30 @@ class App {
         const total = this.cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
         const content = document.getElementById('main-content');
 
+        // 获取用户默认信息
+        const defaultPhone = user.phone || '';
+        const defaultAddress = user.defaultAddress || '';
+        const defaultName = user.username || '';
+
         content.innerHTML = `
             <div class="checkout-container">
                 <h2><svg width="24" height="24" class="icon" aria-hidden="true"><use xlink:href="#icon-order"></use></svg> 确认订单</h2>
 
                 <div class="checkout-section">
                     <h3><svg width="20" height="20" class="icon" aria-hidden="true"><use xlink:href="#icon-location"></use></svg> 收货信息</h3>
+                    ${defaultPhone || defaultAddress ? '<div class="form-hint" style="margin-bottom: 12px;">💡 已自动填充您的默认信息，可修改</div>' : ''}
                     <form id="checkoutForm" class="address-form">
                         <div class="form-group">
                             <label>收货人姓名 <span class="label-required">*</span></label>
-                            <input type="text" name="receiverName" required class="form-input" placeholder="请输入收货人姓名">
+                            <input type="text" name="receiverName" value="${defaultName}" required class="form-input" placeholder="请输入收货人姓名">
                         </div>
                         <div class="form-group">
                             <label>联系电话 <span class="label-required">*</span></label>
-                            <input type="tel" name="receiverPhone" required class="form-input" placeholder="请输入联系电话" pattern="[0-9]{11}">
+                            <input type="tel" name="receiverPhone" value="${defaultPhone}" required class="form-input" placeholder="请输入联系电话" pattern="[0-9]{11}">
                         </div>
                         <div class="form-group">
                             <label>收货地址 <span class="label-required">*</span></label>
-                            <textarea name="receiverAddress" required class="form-input" rows="3" placeholder="请输入详细收货地址"></textarea>
+                            <textarea name="receiverAddress" required class="form-input" rows="3" placeholder="请输入详细收货地址">${defaultAddress}</textarea>
                         </div>
                         <div class="form-group">
                             <label>订单备注</label>

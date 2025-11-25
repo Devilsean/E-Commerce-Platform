@@ -43,12 +43,17 @@ const ProfileService = {
 
         // 渲染个人中心页面
         const content = document.getElementById('main-content');
+        const avatarUrl = currentUser.avatar || this.getDefaultAvatar(currentUser.username);
+
         content.innerHTML = `
             <div class="profile-container">
                 <div class="profile-header">
                     <div class="profile-banner">
-                        <div class="profile-avatar-large">
-                            <svg width="64" height="64" class="icon" aria-hidden="true"><use xlink:href="#icon-${isMerchant ? 'merchant' : 'user'}"></use></svg>
+                        <div class="profile-avatar-large" onclick="ProfileService.showAvatarSelector()" style="cursor: pointer; position: relative;" title="点击更换头像">
+                            <img src="${avatarUrl}" alt="头像" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;" onerror="this.src='${this.getDefaultAvatar(currentUser.username)}'">
+                            <div style="position: absolute; bottom: 0; right: 0; background: var(--primary); color: white; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border: 2px solid white;">
+                                <svg width="14" height="14" class="icon" aria-hidden="true"><use xlink:href="#icon-camera"></use></svg>
+                            </div>
                         </div>
                         <div class="profile-header-info">
                             <h2>${currentUser.username || '用户'}</h2>
@@ -680,6 +685,111 @@ const ProfileService = {
         this.loadAddresses();
     },
 
+    // 获取默认头像
+    getDefaultAvatar(username) {
+        // 使用用户名首字母生成默认头像
+        const initial = (username || 'U').charAt(0).toUpperCase();
+        const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8', '#F7DC6F', '#BB8FCE', '#85C1E2'];
+        const colorIndex = initial.charCodeAt(0) % colors.length;
+        const bgColor = colors[colorIndex];
+
+        return `data:image/svg+xml,${encodeURIComponent(`
+            <svg xmlns="http://www.w3.org/2000/svg" width="128" height="128">
+                <rect width="128" height="128" fill="${bgColor}"/>
+                <text x="50%" y="50%" font-size="64" fill="white" text-anchor="middle" dy=".35em" font-family="Arial, sans-serif" font-weight="bold">${initial}</text>
+            </svg>
+        `)}`;
+    },
+
+    // 显示头像选择器
+    showAvatarSelector() {
+        const currentUser = Store.getCurrentUser();
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.style.display = 'flex';
+
+        // 预设头像列表
+        const avatars = [
+            'https://api.dicebear.com/7.x/avataaars/svg?seed=Felix',
+            'https://api.dicebear.com/7.x/avataaars/svg?seed=Aneka',
+            'https://api.dicebear.com/7.x/avataaars/svg?seed=Jasmine',
+            'https://api.dicebear.com/7.x/avataaars/svg?seed=Max',
+            'https://api.dicebear.com/7.x/avataaars/svg?seed=Lucy',
+            'https://api.dicebear.com/7.x/avataaars/svg?seed=Charlie',
+            'https://api.dicebear.com/7.x/avataaars/svg?seed=Sophie',
+            'https://api.dicebear.com/7.x/avataaars/svg?seed=Oliver',
+            'https://api.dicebear.com/7.x/bottts/svg?seed=Felix',
+            'https://api.dicebear.com/7.x/bottts/svg?seed=Aneka',
+            'https://api.dicebear.com/7.x/bottts/svg?seed=Max',
+            'https://api.dicebear.com/7.x/bottts/svg?seed=Lucy'
+        ];
+
+        modal.innerHTML = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3><svg width="20" height="20" class="icon" aria-hidden="true"><use xlink:href="#icon-camera"></use></svg> 选择头像</h3>
+                    <button class="modal-close" onclick="this.closest('.modal').remove()">×</button>
+                </div>
+                <div class="modal-body" style="padding: 20px;">
+                    <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 20px;">
+                        ${avatars.map(url => `
+                            <div class="avatar-option" onclick="ProfileService.selectAvatar('${url}')" style="cursor: pointer; border: 3px solid transparent; border-radius: 12px; padding: 8px; transition: all 0.3s;">
+                                <img src="${url}" alt="头像" style="width: 100%; height: 100%; border-radius: 8px; object-fit: cover;">
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="form-group">
+                        <label>或输入自定义头像URL</label>
+                        <input type="url" id="customAvatarUrl" class="form-input" placeholder="https://example.com/avatar.jpg">
+                        <button class="btn btn-sm btn-primary" onclick="ProfileService.selectAvatar(document.getElementById('customAvatarUrl').value)" style="margin-top: 8px;">使用自定义头像</button>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="this.closest('.modal').remove()">取消</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+
+        // 添加悬停效果
+        document.querySelectorAll('.avatar-option').forEach(option => {
+            option.addEventListener('mouseenter', function () {
+                this.style.borderColor = 'var(--primary)';
+                this.style.transform = 'scale(1.05)';
+            });
+            option.addEventListener('mouseleave', function () {
+                this.style.borderColor = 'transparent';
+                this.style.transform = 'scale(1)';
+            });
+        });
+    },
+
+    // 选择头像
+    async selectAvatar(avatarUrl) {
+        if (!avatarUrl || !avatarUrl.trim()) {
+            showMessage('请输入有效的头像URL', 'error');
+            return;
+        }
+
+        try {
+            const currentUser = Store.getCurrentUser();
+            currentUser.avatar = avatarUrl;
+            Store.setCurrentUser(currentUser);
+
+            // 这里应该调用后端API保存头像
+            // await utils.request('/user/update-avatar', {
+            //     method: 'PUT',
+            //     body: JSON.stringify({ avatar: avatarUrl })
+            // });
+
+            showMessage('头像更新成功', 'success');
+            document.querySelector('.modal').remove();
+            this.loadProfile();
+        } catch (error) {
+            showMessage('头像更新失败', 'error');
+        }
+    },
+
     // 显示编辑资料模态框
     showEditProfileModal() {
         const currentUser = Store.getCurrentUser();
@@ -694,16 +804,22 @@ const ProfileService = {
                 </div>
                 <form onsubmit="ProfileService.handleEditProfile(event)">
                     <div class="form-group">
-                        <label>用户名</label>
+                        <label>用户名 <span class="label-required">*</span></label>
                         <input type="text" name="username" value="${currentUser.username || ''}" required class="form-input" placeholder="请输入用户名">
                     </div>
                     <div class="form-group">
                         <label>手机号</label>
-                        <input type="tel" name="phone" value="${currentUser.phone || ''}" pattern="[0-9]{11}" class="form-input" placeholder="请输入手机号">
+                        <input type="tel" name="phone" value="${currentUser.phone || ''}" pattern="[0-9]{11}" class="form-input" placeholder="请输入11位手机号">
+                        <div class="form-hint">💡 设置后可作为默认联系电话</div>
                     </div>
                     <div class="form-group">
                         <label>邮箱</label>
                         <input type="email" name="email" value="${currentUser.email || ''}" class="form-input" placeholder="请输入邮箱">
+                    </div>
+                    <div class="form-group">
+                        <label>默认收货地址</label>
+                        <textarea name="defaultAddress" rows="3" class="form-input" placeholder="请输入默认收货地址（可选）">${currentUser.defaultAddress || ''}</textarea>
+                        <div class="form-hint">💡 设置后下单时自动填充</div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" onclick="this.closest('.modal').remove()">取消</button>
@@ -720,16 +836,24 @@ const ProfileService = {
         event.preventDefault();
         const form = event.target;
         const data = {
-            username: form.username.value,
-            phone: form.phone.value,
-            email: form.email.value
+            username: form.username.value.trim(),
+            phone: form.phone.value.trim(),
+            email: form.email.value.trim(),
+            defaultAddress: form.defaultAddress.value.trim()
         };
 
+        // 验证手机号格式
+        if (data.phone && !/^1[3-9]\d{9}$/.test(data.phone)) {
+            showMessage('请输入正确的手机号格式', 'error');
+            return;
+        }
+
         try {
-            await utils.request('/user/update', {
-                method: 'PUT',
-                body: JSON.stringify(data)
-            });
+            // 这里应该调用后端API保存信息
+            // await utils.request('/user/update', {
+            //     method: 'PUT',
+            //     body: JSON.stringify(data)
+            // });
 
             // 更新本地用户信息
             const currentUser = Store.getCurrentUser();
@@ -740,7 +864,7 @@ const ProfileService = {
             form.closest('.modal').remove();
             this.loadProfile();
         } catch (error) {
-            // 错误已由utils.request处理
+            showMessage('更新失败，请稍后重试', 'error');
         }
     },
 

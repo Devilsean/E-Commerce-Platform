@@ -404,7 +404,7 @@
 /* ==================== Toast提示 ==================== */
 .toast {
     position: fixed;
-    top: 24px;
+    bottom: 24px;
     right: 24px;
     padding: 16px 24px;
     background: var(--white);
@@ -412,7 +412,7 @@
     box-shadow: var(--shadow-xl);
     z-index: 3000;
     opacity: 0;
-    transform: translateX(400px);
+    transform: translateY(100px);
     transition: var(--transition);
     border-left: 4px solid var(--primary);
     min-width: 300px;
@@ -420,7 +420,7 @@
 
 .toast.show {
     opacity: 1;
-    transform: translateX(0);
+    transform: translateY(0);
 }
 
 .toast-success {
