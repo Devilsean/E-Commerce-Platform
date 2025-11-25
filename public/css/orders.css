@@ -453,3 +453,293 @@
         font-size: 13px;
     }
 }
+
+/* ==================== 商家订单管理样式 ==================== */
+
+/* 商家管理标签页 */
+.merchant-tabs {
+    display: flex;
+    gap: 12px;
+    margin: 24px 0;
+    border-bottom: 2px solid var(--border-light);
+}
+
+.merchant-tab {
+    padding: 12px 24px;
+    background: transparent;
+    border: none;
+    border-bottom: 3px solid transparent;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.merchant-tab:hover {
+    color: var(--primary);
+    background: var(--bg-secondary);
+}
+
+.merchant-tab.active {
+    color: var(--primary);
+    border-bottom-color: var(--primary);
+}
+
+.merchant-tab-content {
+    display: none;
+}
+
+.merchant-tab-content.active {
+    display: block;
+}
+
+/* 统计卡片网格 */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 24px;
+}
+
+.stat-card {
+    background: linear-gradient(135deg, var(--white) 0%, var(--bg-secondary) 100%);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    box-shadow: var(--shadow);
+    border: 1px solid var(--border-light);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    transition: var(--transition);
+}
+
+.stat-card:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-2px);
+}
+
+.stat-icon {
+    font-size: 36px;
+    width: 60px;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    border-radius: var(--radius-lg);
+    flex-shrink: 0;
+}
+
+.stat-info {
+    flex: 1;
+}
+
+.stat-label {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+}
+
+.stat-value {
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--text);
+}
+
+/* 订单地址信息 */
+.order-address {
+    flex: 1;
+    padding: 16px;
+    background: var(--bg-secondary);
+    border-radius: var(--radius);
+}
+
+.address-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+}
+
+.address-detail {
+    font-size: 14px;
+    color: var(--text);
+    line-height: 1.6;
+}
+
+/* 订单汇总信息 */
+.order-summary {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    min-width: 200px;
+}
+
+.summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+}
+
+.summary-row .amount {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--danger);
+}
+
+/* 订单项样式优化 */
+.order-item .item-info {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.order-item .item-name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+}
+
+.order-item .item-spec {
+    font-size: 13px;
+    color: var(--text-secondary);
+}
+
+.order-item .item-total {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--primary);
+}
+
+/* 物流信息样式 */
+.logistics-info {
+    padding: 20px;
+    background: var(--bg-secondary);
+    border-radius: var(--radius);
+    margin-bottom: 16px;
+}
+
+.info-row {
+    display: flex;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border-light);
+}
+
+.info-row:last-child {
+    border-bottom: none;
+}
+
+.info-label {
+    flex: 0 0 100px;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.info-value {
+    flex: 1;
+    color: var(--text);
+}
+
+/* 订单详情网格 */
+.detail-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 16px;
+}
+
+.detail-item {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.detail-item.full-width {
+    grid-column: 1 / -1;
+}
+
+.detail-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.detail-value {
+    font-size: 14px;
+    color: var(--text);
+}
+
+.detail-value.amount {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--danger);
+}
+
+/* 订单状态样式扩展 */
+.status-pending {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+.status-paid {
+    background: #dbeafe;
+    color: #2563eb;
+}
+
+.status-processing {
+    background: #e0e7ff;
+    color: #6366f1;
+}
+
+.status-shipped {
+    background: #ddd6fe;
+    color: #7c3aed;
+}
+
+.status-completed {
+    background: #d1fae5;
+    color: #059669;
+}
+
+.status-cancelled {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+/* 响应式优化 */
+@media (max-width: 768px) {
+    .merchant-tabs {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .merchant-tab {
+        white-space: nowrap;
+    }
+
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .order-footer {
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .order-summary {
+        min-width: auto;
+        width: 100%;
+    }
+
+    .detail-grid {
+        grid-template-columns: 1fr;
+    }
+}

@@ -240,10 +240,10 @@ const ProfileService = {
                     </div>
                 </div>
 
-                <!-- 快捷操作 -->
+                <!-- 管理中心 -->
                 <div class="profile-section">
                     <div class="section-title">
-                        <h3><svg width="18" height="18" class="icon" aria-hidden="true"><use xlink:href="#icon-star"></use></svg> 快捷操作</h3>
+                        <h3><svg width="18" height="18" class="icon" aria-hidden="true"><use xlink:href="#icon-star"></use></svg> 管理中心</h3>
                     </div>
                     <div class="settings-list">
                         <div class="setting-item">
@@ -254,13 +254,13 @@ const ProfileService = {
                             </div>
                             <button class="btn btn-sm btn-primary" onclick="event.stopPropagation(); window.location.hash = '/merchant';">进入</button>
                         </div>
-                        <div class="setting-item" onclick="showMessage('订单管理功能开发中...', 'info')">
+                        <div class="setting-item">
                             <div class="setting-icon"><svg width="24" height="24" class="icon" aria-hidden="true"><use xlink:href="#icon-order"></use></svg></div>
                             <div class="setting-info">
                                 <h4>订单管理</h4>
                                 <p>处理客户订单和发货</p>
                             </div>
-                            <button class="btn btn-sm">查看</button>
+                            <button class="btn btn-sm btn-primary" onclick="event.stopPropagation(); window.location.hash = '/merchant';">进入</button>
                         </div>
                         <div class="setting-item" onclick="showMessage('数据分析功能开发中...', 'info')">
                             <div class="setting-icon"><svg width="24" height="24" class="icon" aria-hidden="true"><use xlink:href="#icon-order"></use></svg></div>

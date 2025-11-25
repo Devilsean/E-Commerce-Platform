@@ -1523,26 +1523,57 @@ class App {
     renderMerchantSection() {
         return `
             <div class="section">
-                <div class="section-header">
-                    <h3>📦 商品管理</h3>
-                    <button class="btn btn-primary" onclick="app.showAddProductModal()">+ 添加商品</button>
+                <h2><svg width="24" height="24" class="icon" aria-hidden="true"><use xlink:href="#icon-merchant"></use></svg> 商家管理中心</h2>
+                
+                <!-- 统计数据 -->
+                <div id="merchant-stats-grid" class="stats-grid">
+                    <div class="loading-text">加载统计数据...</div>
                 </div>
-                <div id="merchant-stats" class="stats-grid">
-                    <div class="stat-card">
-                        <h4>商品总数</h4>
-                        <div class="stat-value" id="totalProducts">0</div>
+                
+                <!-- 标签页导航 -->
+                <div class="merchant-tabs">
+                    <button class="merchant-tab active" onclick="app.switchMerchantTab('products')">
+                        <svg width="18" height="18" class="icon" aria-hidden="true"><use xlink:href="#icon-box"></use></svg>
+                        商品管理
+                    </button>
+                    <button class="merchant-tab" onclick="app.switchMerchantTab('orders')">
+                        <svg width="18" height="18" class="icon" aria-hidden="true"><use xlink:href="#icon-order"></use></svg>
+                        订单管理
+                    </button>
+                </div>
+                
+                <!-- 商品管理标签页 -->
+                <div id="merchant-tab-products" class="merchant-tab-content active">
+                    <div class="section-header">
+                        <h3><svg width="20" height="20" class="icon" aria-hidden="true"><use xlink:href="#icon-box"></use></svg> 我的商品</h3>
+                        <button class="btn btn-primary" onclick="app.showAddProductModal()">
+                            <svg width="18" height="18" class="icon" aria-hidden="true"><use xlink:href="#icon-plus"></use></svg>
+                            添加商品
+                        </button>
                     </div>
-                    <div class="stat-card">
-                        <h4>总销量</h4>
-                        <div class="stat-value" id="totalSales">0</div>
-                    </div>
-                    <div class="stat-card">
-                        <h4>总收入</h4>
-                        <div class="stat-value" id="totalRevenue">¥0</div>
+                    <div id="merchant-products" class="products-list">
+                        <div class="loading-text">加载中...</div>
                     </div>
                 </div>
-                <div id="merchant-products" class="products-list">
-                    <div class="loading-text">加载中...</div>
+                
+                <!-- 订单管理标签页 -->
+                <div id="merchant-tab-orders" class="merchant-tab-content">
+                    <div class="section-header">
+                        <h3><svg width="20" height="20" class="icon" aria-hidden="true"><use xlink:href="#icon-order"></use></svg> 订单列表</h3>
+                    </div>
+                    
+                    <div class="order-tabs">
+                        <button class="order-tab active" onclick="MerchantService.filterMerchantOrders(null)">全部订单</button>
+                        <button class="order-tab" onclick="MerchantService.filterMerchantOrders(0)">待支付</button>
+                        <button class="order-tab" onclick="MerchantService.filterMerchantOrders(1)">已支付</button>
+                        <button class="order-tab" onclick="MerchantService.filterMerchantOrders(3)">已发货</button>
+                        <button class="order-tab" onclick="MerchantService.filterMerchantOrders(4)">已完成</button>
+                        <button class="order-tab" onclick="MerchantService.filterMerchantOrders(5)">已取消</button>
+                    </div>
+                    
+                    <div id="merchant-orders-list">
+                        <div class="loading-text">加载中...</div>
+                    </div>
                 </div>
             </div>
 
@@ -1643,16 +1674,8 @@ class App {
         try {
             const products = await utils.request('/merchant/products');
 
-            // 计算统计数据
-            const totalProducts = products.length;
-            const totalSales = products.reduce((sum, p) => sum + (p.sales || 0), 0);
-            const totalRevenue = products.reduce((sum, p) => sum + (p.price * (p.sales || 0)), 0);
-
-            document.getElementById('totalProducts').textContent = totalProducts;
-            document.getElementById('totalSales').textContent = totalSales;
-            document.getElementById('totalRevenue').textContent = '¥' + totalRevenue.toFixed(2);
-
             const container = document.getElementById('merchant-products');
+            if (!container) return;
             if (products.length === 0) {
                 container.innerHTML = `
                     <div class="empty-state-small">
@@ -1842,6 +1865,26 @@ class App {
         }
     }
 
+    // 切换商家管理标签页
+    switchMerchantTab(tabName) {
+        // 更新标签按钮状态
+        document.querySelectorAll('.merchant-tab').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        event.target.classList.add('active');
+
+        // 更新内容面板
+        document.querySelectorAll('.merchant-tab-content').forEach(content => {
+            content.classList.remove('active');
+        });
+        document.getElementById(`merchant-tab-${tabName}`).classList.add('active');
+
+        // 加载对应数据
+        if (tabName === 'orders') {
+            MerchantService.loadMerchantOrders();
+        }
+    }
+
     // 渲染商家管理页面
     renderMerchantManagement() {
         const user = utils.getUserInfo();
@@ -1853,6 +1896,9 @@ class App {
 
         const content = document.getElementById('main-content');
         content.innerHTML = this.renderMerchantSection();
+
+        // 加载统计数据和商品数据
+        MerchantService.loadMerchantStats();
         this.loadMerchantData();
     }
 
