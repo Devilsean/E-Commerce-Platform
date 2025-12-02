@@ -1,0 +1,131 @@
+/* ==================== 图片加载优化 ==================== */
+
+/* 图片容器基础样式 */
+.product-image,
+.cart-item-image,
+.order-item-image,
+.detail-main-image,
+.thumbnail {
+    position: relative;
+    background: var(--bg-tertiary);
+}
+
+/* 图片加载状态 */
+.product-image img,
+.cart-item-image img,
+.order-item-image img,
+.detail-main-image img,
+.thumbnail img {
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+}
+
+.product-image img.loaded,
+.cart-item-image img.loaded,
+.order-item-image img.loaded,
+.detail-main-image img.loaded,
+.thumbnail img.loaded {
+    opacity: 1;
+}
+
+/* 图片加载占位符 */
+.image-loading {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-tertiary);
+}
+
+.image-loading::after {
+    content: '';
+    width: 32px;
+    height: 32px;
+    border: 3px solid var(--border-light);
+    border-top-color: var(--accent-500);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+/* 图片错误状态 */
+.image-error {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg-tertiary);
+    color: var(--text-tertiary);
+}
+
+/* 防止图片闪烁 */
+img {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+}
+
+/* 懒加载图片 */
+img[loading="lazy"] {
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+}
+
+img[loading="lazy"].loaded {
+    opacity: 1;
+}
+
+/* 图片预加载动画 */
+@keyframes imageLoad {
+    0% {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+.image-fade-in {
+    animation: imageLoad 0.3s ease-out;
+}
+
+/* 骨架屏 */
+.skeleton {
+    background: linear-gradient(90deg,
+            var(--bg-tertiary) 25%,
+            var(--bg-secondary) 50%,
+            var(--bg-tertiary) 75%);
+    background-size: 200% 100%;
+    animation: skeleton-loading 1.5s ease-in-out infinite;
+}
+
+@keyframes skeleton-loading {
+    0% {
+        background-position: 200% 0;
+    }
+
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+.skeleton-image {
+    width: 100%;
+    height: 100%;
+    border-radius: inherit;
+}
+
+.skeleton-text {
+    height: 16px;
+    border-radius: var(--radius-sm);
+    margin-bottom: var(--spacing-sm);
+}
+
+.skeleton-text:last-child {
+    margin-bottom: 0;
+    width: 60%;
+}

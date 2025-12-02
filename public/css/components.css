@@ -180,19 +180,19 @@
 }
 
 .promo-hot {
-    background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+    background: var(--bg-secondary);
 }
 
 .promo-new {
-    background: linear-gradient(135deg, #718096 0%, #4a5568 100%);
+    background: var(--bg-secondary);
 }
 
 .promo-discount {
-    background: linear-gradient(135deg, #a0aec0 0%, #718096 100%);
+    background: var(--bg-secondary);
 }
 
 .promo-quality {
-    background: linear-gradient(135deg, #cbd5e0 0%, #a0aec0 100%);
+    background: var(--bg-secondary);
 }
 
 .promo-icon {
@@ -278,8 +278,8 @@
 }
 
 .category-item.active {
-    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-    color: white;
+    background: var(--bg-secondary);
+    color: balck;
     box-shadow: var(--shadow);
 }
 

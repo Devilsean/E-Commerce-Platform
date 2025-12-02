@@ -62,7 +62,7 @@
 .product-mini-img {
     width: 70px;
     height: 70px;
-    background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+    background: var(--bg-secondary);
     border-radius: var(--radius);
     display: flex;
     align-items: center;

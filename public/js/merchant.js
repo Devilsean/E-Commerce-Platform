@@ -445,28 +445,28 @@ const MerchantService = {
             if (statsContainer) {
                 statsContainer.innerHTML = `
                     <div class="stat-card">
-                        <div class="stat-icon">📦</div>
+                        <div class="stat-icon"></div>
                         <div class="stat-info">
                             <div class="stat-label">商品总数</div>
                             <div class="stat-value">${stats.totalProducts || 0}</div>
                         </div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-icon">🔥</div>
+                        <div class="stat-icon"></div>
                         <div class="stat-info">
                             <div class="stat-label">总销量</div>
                             <div class="stat-value">${stats.totalSales || 0}</div>
                         </div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-icon">💰</div>
+                        <div class="stat-icon"></div>
                         <div class="stat-info">
                             <div class="stat-label">总收入</div>
                             <div class="stat-value">¥${(stats.totalRevenue || 0).toFixed(2)}</div>
                         </div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-icon">📊</div>
+                        <div class="stat-icon"></div>
                         <div class="stat-info">
                             <div class="stat-label">库存总量</div>
                             <div class="stat-value">${stats.totalStock || 0}</div>

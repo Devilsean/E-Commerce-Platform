@@ -17,7 +17,15 @@ class App {
 
     initRoutes() {
         this.router.register('/', () => this.renderHome());
-        this.router.register('/product', (params) => this.renderProductDetail(params[0]));
+        this.router.register('/product', (params) => {
+            // 使用新的 ProductDetailService 来渲染商品详情页
+            if (typeof ProductDetailService !== 'undefined') {
+                ProductDetailService.render(params[0]);
+            } else {
+                // 降级到旧版本
+                this.renderProductDetail(params[0]);
+            }
+        });
         this.router.register('/cart', () => this.renderCart());
         this.router.register('/checkout', () => this.renderCheckout());
         this.router.register('/orders', () => this.renderOrders());
@@ -1222,7 +1230,7 @@ class App {
             <div class="auth-container">
                 <div class="auth-box">
                     <div class="auth-header">
-                        <div class="auth-icon">🔐</div>
+                        <div class="auth-icon"></div>
                         <h2>欢迎登录</h2>
                         <p>登录精品商城，开启购物之旅</p>
                     </div>
@@ -1451,28 +1459,28 @@ class App {
                     </div>
                     <div class="order-stats-grid">
                         <div class="order-stat-card">
-                            <div class="stat-icon">💰</div>
+                            <div class="stat-icon"></div>
                             <div class="stat-info">
                                 <div class="stat-number">0</div>
                                 <div class="stat-label">待付款</div>
                             </div>
                         </div>
                         <div class="order-stat-card">
-                            <div class="stat-icon">📦</div>
+                            <div class="stat-icon"></div>
                             <div class="stat-info">
                                 <div class="stat-number">0</div>
                                 <div class="stat-label">待发货</div>
                             </div>
                         </div>
                         <div class="order-stat-card">
-                            <div class="stat-icon">🚚</div>
+                            <div class="stat-icon"></div>
                             <div class="stat-info">
                                 <div class="stat-number">0</div>
                                 <div class="stat-label">待收货</div>
                             </div>
                         </div>
                         <div class="order-stat-card">
-                            <div class="stat-icon">✅</div>
+                            <div class="stat-icon"></div>
                             <div class="stat-info">
                                 <div class="stat-number">0</div>
                                 <div class="stat-label">已完成</div>
@@ -1483,11 +1491,11 @@ class App {
 
                 <div class="profile-section">
                     <div class="section-title">
-                        <h3>⚙️ 账户设置</h3>
+                        <h3> 账户设置</h3>
                     </div>
                     <div class="settings-list">
                         <div class="setting-item">
-                            <div class="setting-icon">👤</div>
+                            <div class="setting-icon"></div>
                             <div class="setting-info">
                                 <h4>个人信息</h4>
                                 <p>修改头像、昵称等基本信息</p>
@@ -1495,7 +1503,7 @@ class App {
                             <button class="btn btn-sm">编辑</button>
                         </div>
                         <div class="setting-item">
-                            <div class="setting-icon">🔒</div>
+                            <div class="setting-icon"></div>
                             <div class="setting-info">
                                 <h4>安全设置</h4>
                                 <p>修改密码、绑定手机号</p>
@@ -1503,7 +1511,7 @@ class App {
                             <button class="btn btn-sm">设置</button>
                         </div>
                         <div class="setting-item">
-                            <div class="setting-icon">📍</div>
+                            <div class="setting-icon"></div>
                             <div class="setting-info">
                                 <h4>收货地址</h4>
                                 <p>管理收货地址信息</p>
@@ -1515,7 +1523,7 @@ class App {
 
                 <div class="profile-section">
                     <div class="empty-state-small">
-                        <div class="empty-icon-small">📦</div>
+                        <div class="empty-icon-small"></div>
                         <p>暂无订单记录</p>
                         <button class="btn btn-primary" onclick="window.location.hash = '/';">
                             去购物
@@ -1704,14 +1712,14 @@ class App {
                         <h4>${p.name}</h4>
                         <p class="product-item-desc">${p.description || '暂无描述'}</p>
                         <div class="product-item-meta">
-                            <span class="meta-item">💰 ¥${p.price}</span>
-                            <span class="meta-item">📦 库存 ${p.stock}</span>
-                            <span class="meta-item">🔥 销量 ${p.sales || 0}</span>
+                            <span class="meta-item"> ¥${p.price}</span>
+                            <span class="meta-item"> 库存 ${p.stock}</span>
+                            <span class="meta-item"> 销量 ${p.sales || 0}</span>
                         </div>
                     </div>
                     <div class="product-item-actions">
-                        <button class="btn btn-sm" onclick="app.editProduct(${p.id})">✏️ 编辑</button>
-                        <button class="btn btn-sm btn-danger" onclick="app.deleteProduct(${p.id})">🗑️ 删除</button>
+                        <button class="btn btn-sm" onclick="app.editProduct(${p.id})"> 编辑</button>
+                        <button class="btn btn-sm btn-danger" onclick="app.deleteProduct(${p.id})"> 删除</button>
                     </div>
                 </div>
             `).join('');

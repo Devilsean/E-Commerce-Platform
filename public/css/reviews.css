@@ -47,10 +47,7 @@
 .score-number {
     font-size: 42px;
     font-weight: 800;
-    background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    color: var(--text-primary);
 }
 
 .score-stars {
@@ -84,7 +81,7 @@
 .bar-track {
     flex: 1;
     height: 10px;
-    background: var(--bg-secondary);
+    color: var(--text-primary);
     border-radius: var(--radius-full);
     overflow: hidden;
     max-width: 220px;
@@ -92,7 +89,7 @@
 
 .bar-fill {
     height: 100%;
-    background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);
+    color: var(--text-primary);
     border-radius: var(--radius-full);
     transition: width 0.5s ease;
 }
@@ -128,7 +125,7 @@
 }
 
 .filter-btn.active {
-    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    color: var(--text-primary);
     color: white;
     border-color: transparent;
 }
@@ -141,7 +138,7 @@
 
 .review-item {
     padding: 24px;
-    background: var(--bg-secondary);
+    color: var(--text-primary);
     border-radius: var(--radius);
     transition: var(--transition);
 }
@@ -167,7 +164,7 @@
     width: 48px;
     height: 48px;
     border-radius: 50%;
-    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    color: var(--text-primary);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -278,7 +275,7 @@
 }
 
 .page-btn.active {
-    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    color: var(--text-primary);
     color: white;
     border-color: transparent;
 }
@@ -315,7 +312,7 @@
 
 .review-product-name {
     padding: 12px 18px;
-    background: var(--bg-secondary);
+    color: var(--text-primary);
     border-radius: var(--radius);
     font-weight: 600;
 }
@@ -427,7 +424,7 @@
 }
 
 .review-action-btn:hover {
-    background: var(--bg-secondary);
+    color: var(--text-primary);
     color: var(--primary);
 }
 

@@ -1,0 +1,842 @@
+/* ==================== 页面布局样式 ==================== */
+
+/* 页面容器 */
+.page-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: var(--spacing-6) var(--spacing-6);
+}
+
+/* 页面头部 */
+.page-header {
+    margin-bottom: var(--spacing-8);
+    padding-bottom: var(--spacing-6);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.page-header-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--spacing-4);
+}
+
+.page-title {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-3);
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0;
+}
+
+.page-header-actions {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-3);
+}
+
+/* ==================== 购物车页面 ==================== */
+
+.cart-layout {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: var(--spacing-6);
+    align-items: start;
+}
+
+.cart-items-section {
+    min-width: 0;
+}
+
+.cart-summary-section {
+    position: sticky;
+    top: var(--spacing-6);
+}
+
+/* 数据表格 */
+.data-table {
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+}
+
+.data-table-header {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr 100px;
+    gap: var(--spacing-4);
+    padding: var(--spacing-4) var(--spacing-5);
+    background: var(--background-secondary);
+    border-bottom: 1px solid var(--border-color);
+    font-weight: 600;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.data-table-body {
+    display: flex;
+    flex-direction: column;
+}
+
+.data-table-row {
+    display: grid;
+    grid-template-columns: 2fr 1fr 1fr 1fr 100px;
+    gap: var(--spacing-4);
+    padding: var(--spacing-5);
+    border-bottom: 1px solid var(--border-color);
+    transition: background-color var(--transition-base);
+}
+
+.data-table-row:last-child {
+    border-bottom: none;
+}
+
+.data-table-row:hover {
+    background: var(--background-secondary);
+}
+
+.data-col {
+    display: flex;
+    align-items: center;
+}
+
+.data-col-product {
+    min-width: 0;
+}
+
+.data-col-price,
+.data-col-quantity,
+.data-col-total {
+    justify-content: center;
+}
+
+.data-col-actions {
+    justify-content: flex-end;
+}
+
+/* 商品单元格 */
+.product-cell {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-4);
+    min-width: 0;
+}
+
+.product-cell-image {
+    flex-shrink: 0;
+    width: 64px;
+    height: 64px;
+    border-radius: var(--radius-md);
+    background: var(--background-secondary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-tertiary);
+}
+
+.product-cell-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.product-cell-title {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 var(--spacing-1) 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.product-cell-desc {
+    font-size: 0.8125rem;
+    color: var(--text-secondary);
+    margin: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* 价格文本 */
+.price-text {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.price-text.price-bold {
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--primary);
+}
+
+/* 摘要卡片 */
+.summary-card {
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+}
+
+.summary-card-title {
+    padding: var(--spacing-5);
+    margin: 0;
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.summary-card-body {
+    padding: var(--spacing-5);
+}
+
+.summary-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--spacing-3) 0;
+}
+
+.summary-label {
+    font-size: 0.9375rem;
+    color: var(--text-secondary);
+}
+
+.summary-value {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.summary-value.summary-free {
+    color: var(--success);
+}
+
+.summary-divider {
+    height: 1px;
+    background: var(--border-color);
+    margin: var(--spacing-4) 0;
+}
+
+.summary-item.summary-total {
+    padding-top: var(--spacing-4);
+}
+
+.summary-item.summary-total .summary-label {
+    font-size: 1.0625rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.summary-value-large {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: var(--primary);
+}
+
+.summary-card-footer {
+    padding: var(--spacing-5);
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-3);
+}
+
+/* 信息卡片 */
+.info-card {
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-color);
+    padding: var(--spacing-4);
+    margin-top: var(--spacing-4);
+}
+
+.info-card-item {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2);
+    padding: var(--spacing-2) 0;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.info-card-item svg {
+    color: var(--primary);
+}
+
+/* ==================== 结算页面 ==================== */
+
+.checkout-layout {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: var(--spacing-6);
+    align-items: start;
+}
+
+.checkout-main {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-6);
+}
+
+.checkout-sidebar {
+    position: sticky;
+    top: var(--spacing-6);
+}
+
+/* 卡片组件 */
+.card {
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+}
+
+.card-header {
+    padding: var(--spacing-5);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.card-title {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2);
+    margin: 0 0 var(--spacing-1) 0;
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.card-subtitle {
+    font-size: 0.8125rem;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.card-body {
+    padding: var(--spacing-6);
+}
+
+/* 现代表单 */
+.form-modern .form-row {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-4);
+}
+
+.form-modern .form-group {
+    margin-bottom: var(--spacing-5);
+}
+
+.form-label {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: var(--spacing-2);
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.label-text {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-1);
+}
+
+.label-required {
+    color: var(--danger);
+    margin-left: var(--spacing-1);
+}
+
+.label-optional {
+    font-size: 0.75rem;
+    font-weight: 400;
+    color: var(--text-tertiary);
+}
+
+/* 结算商品列表 */
+.checkout-items-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-4);
+}
+
+.checkout-item-card {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-4);
+    padding: var(--spacing-4);
+    background: var(--background-secondary);
+    border-radius: var(--radius-md);
+}
+
+.checkout-item-image {
+    flex-shrink: 0;
+    width: 56px;
+    height: 56px;
+    border-radius: var(--radius-md);
+    background: var(--surface);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--text-tertiary);
+}
+
+.checkout-item-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.checkout-item-title {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 0 0 var(--spacing-1) 0;
+}
+
+.checkout-item-meta {
+    font-size: 0.8125rem;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.checkout-item-total {
+    flex-shrink: 0;
+}
+
+/* ==================== 订单页面 ==================== */
+
+.tabs-container {
+    background: var(--surface);
+    border-radius: var(--radius-lg);
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+}
+
+.tabs-nav {
+    display: flex;
+    border-bottom: 1px solid var(--border-color);
+    background: var(--background-secondary);
+    overflow-x: auto;
+}
+
+.tab-item {
+    flex: 1;
+    min-width: 120px;
+    padding: var(--spacing-4) var(--spacing-5);
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    transition: all var(--transition-base);
+    font-size: 0.9375rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+}
+
+.tab-item:hover {
+    background: var(--surface);
+    color: var(--text-primary);
+}
+
+.tab-item.active {
+    background: var(--surface);
+    border-bottom-color: var(--primary);
+    color: var(--primary);
+    font-weight: 600;
+}
+
+.tab-label {
+    display: block;
+}
+
+.orders-list {
+    padding: var(--spacing-6);
+    min-height: 400px;
+}
+
+/* 加载状态 */
+.loading-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-12) var(--spacing-6);
+    color: var(--text-secondary);
+}
+
+.loading-state p {
+    margin-top: var(--spacing-4);
+    font-size: 0.9375rem;
+}
+
+/* ==================== 认证页面 ==================== */
+
+.auth-page {
+    min-height: calc(100vh - 200px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-8) var(--spacing-4);
+    background: var(--bg-secondary) 0%, var(--background) 100%);
+}
+
+.auth-container {
+    width: 100%;
+    max-width: 480px;
+}
+
+.auth-card {
+    background: var(--surface);
+    border-radius: var(--radius-xl);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-xl);
+    overflow: hidden;
+}
+
+.auth-card-wide {
+    max-width: 640px;
+}
+
+.auth-card-header {
+    padding: var(--spacing-8) var(--spacing-6) var(--spacing-6);
+    text-align: center;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.auth-logo {
+    width: 80px;
+    height: 80px;
+    margin: 0 auto var(--spacing-4);
+    border-radius: var(--radius-full);
+    background: var(--bg-secondary) 0%, var(--primary-dark) 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+}
+
+.auth-title {
+    font-size: 1.75rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin: 0 0 var(--spacing-2) 0;
+}
+
+.auth-subtitle {
+    font-size: 0.9375rem;
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.auth-form {
+    padding: var(--spacing-6);
+}
+
+.auth-form .form-group {
+    margin-bottom: var(--spacing-5);
+}
+
+.auth-card-footer {
+    padding: var(--spacing-5) var(--spacing-6);
+    background: var(--background-secondary);
+    border-top: 1px solid var(--border-color);
+    text-align: center;
+}
+
+.auth-footer-text {
+    margin: 0;
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+.auth-link {
+    color: var(--primary);
+    text-decoration: none;
+    font-weight: 600;
+    transition: color var(--transition-base);
+}
+
+.auth-link:hover {
+    color: var(--primary-dark);
+    text-decoration: underline;
+}
+
+/* 单选按钮组 - 水平布局 */
+.radio-group-horizontal {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-3);
+}
+
+.radio-option {
+    position: relative;
+    cursor: pointer;
+}
+
+.radio-option input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.radio-box {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-3);
+    padding: var(--spacing-4);
+    background: var(--background-secondary);
+    border: 2px solid var(--border-color);
+    border-radius: var(--radius-md);
+    transition: all var(--transition-base);
+}
+
+.radio-option:hover .radio-box {
+    border-color: var(--primary-light);
+    background: var(--surface);
+}
+
+.radio-option input[type="radio"]:checked+.radio-box {
+    border-color: var(--primary);
+    background: var(--primary-lightest);
+}
+
+.radio-label {
+    font-size: 0.9375rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.radio-option-detailed .radio-box {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--spacing-2);
+}
+
+.radio-option-detailed .radio-content {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-1);
+}
+
+.radio-desc {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    font-weight: 400;
+}
+
+/* 带图标的输入框 */
+.input-with-icon {
+    position: relative;
+}
+
+.input-icon {
+    position: absolute;
+    left: var(--spacing-4);
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-tertiary);
+    pointer-events: none;
+}
+
+.input-with-icon .form-input {
+    padding-left: calc(var(--spacing-4) * 2 + 18px);
+}
+
+/* 表单提示 */
+.form-notice {
+    display: flex;
+    align-items: center;
+    gap: var(--spacing-2);
+    padding: var(--spacing-3) var(--spacing-4);
+    background: var(--background-secondary);
+    border-radius: var(--radius-md);
+    font-size: 0.8125rem;
+    color: var(--text-secondary);
+    margin-bottom: var(--spacing-5);
+}
+
+.form-notice svg {
+    flex-shrink: 0;
+    color: var(--primary);
+}
+
+/* ==================== 空状态 ==================== */
+
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: var(--spacing-16) var(--spacing-6);
+    text-align: center;
+}
+
+.empty-state-icon {
+    margin-bottom: var(--spacing-6);
+    color: var(--text-tertiary);
+}
+
+.empty-state-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 0 0 var(--spacing-3) 0;
+}
+
+.empty-state-text {
+    font-size: 1rem;
+    color: var(--text-secondary);
+    margin: 0 0 var(--spacing-6) 0;
+}
+
+/* ==================== 徽章 ==================== */
+
+.badge {
+    display: inline-flex;
+    align-items: center;
+    padding: var(--spacing-1) var(--spacing-3);
+    border-radius: var(--radius-full);
+    font-size: 0.8125rem;
+    font-weight: 600;
+    line-height: 1;
+}
+
+.badge-primary {
+    background: var(--primary-lightest);
+    color: var(--primary);
+}
+
+/* ==================== 按钮图标 ==================== */
+
+.btn-icon {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--border-color);
+    background: var(--surface);
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    transition: all var(--transition-base);
+    color: var(--text-secondary);
+}
+
+.btn-icon:hover {
+    background: var(--background-secondary);
+    border-color: var(--primary-light);
+    color: var(--primary);
+}
+
+.btn-icon-danger:hover {
+    background: var(--danger-lightest);
+    border-color: var(--danger);
+    color: var(--danger);
+}
+
+/* ==================== 响应式设计 ==================== */
+
+@media (max-width: 1024px) {
+
+    .cart-layout,
+    .checkout-layout {
+        grid-template-columns: 1fr;
+    }
+
+    .cart-summary-section,
+    .checkout-sidebar {
+        position: static;
+    }
+
+    .data-table-header,
+    .data-table-row {
+        grid-template-columns: 2fr 1fr 1fr 1fr 80px;
+        gap: var(--spacing-2);
+        padding: var(--spacing-4);
+    }
+}
+
+@media (max-width: 768px) {
+    .page-container {
+        padding: var(--spacing-4);
+    }
+
+    .page-header-content {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .data-table-header {
+        display: none;
+    }
+
+    .data-table-row {
+        grid-template-columns: 1fr;
+        gap: var(--spacing-4);
+    }
+
+    .data-col {
+        justify-content: flex-start !important;
+    }
+
+    .data-col::before {
+        content: attr(data-label);
+        font-weight: 600;
+        color: var(--text-secondary);
+        margin-right: var(--spacing-2);
+        font-size: 0.8125rem;
+    }
+
+    .tabs-nav {
+        flex-wrap: nowrap;
+    }
+
+    .tab-item {
+        min-width: 100px;
+        font-size: 0.875rem;
+        padding: var(--spacing-3) var(--spacing-4);
+    }
+
+    .form-modern .form-row {
+        grid-template-columns: 1fr;
+    }
+
+    .radio-group-horizontal {
+        grid-template-columns: 1fr;
+    }
+
+    .auth-card-wide {
+        max-width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .page-title {
+        font-size: 1.5rem;
+    }
+
+    .summary-value-large {
+        font-size: 1.5rem;
+    }
+
+    .auth-title {
+        font-size: 1.5rem;
+    }
+
+    .product-cell {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .product-cell-image {
+        width: 100%;
+        height: 120px;
+    }
+}

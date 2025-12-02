@@ -33,10 +33,7 @@
 .auth-header h2 {
     font-size: 32px;
     margin-bottom: 12px;
-    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    color: var(--text-primary);
     font-weight: 800;
 }
 

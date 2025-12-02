@@ -7,7 +7,7 @@ const AuthService = {
             <div class="auth-container">
                 <div class="auth-box">
                     <div class="auth-header">
-                        <div class="auth-icon">🔐</div>
+                        <div class="auth-icon"></div>
                         <h2>欢迎登录</h2>
                         <p>登录精品商城，开启购物之旅</p>
                     </div>
@@ -15,21 +15,21 @@ const AuthService = {
                     <form onsubmit="AuthService.handleLogin(event)" class="auth-form">
                         <div class="form-group">
                             <label>
-                                <span class="label-icon">👥</span>
+                                <span class="label-icon"></span>
                                 <span>用户类型</span>
                             </label>
                             <div class="radio-group-modern">
                                 <label class="radio-card">
                                     <input type="radio" name="userType" value="1" checked>
                                     <div class="radio-content">
-                                        <span class="radio-icon">👤</span>
+                                        <span class="radio-icon"></span>
                                         <span class="radio-text">普通用户</span>
                                     </div>
                                 </label>
                                 <label class="radio-card">
                                     <input type="radio" name="userType" value="2">
                                     <div class="radio-content">
-                                        <span class="radio-icon">🏪</span>
+                                        <span class="radio-icon"></span>
                                         <span class="radio-text">商家</span>
                                     </div>
                                 </label>
@@ -38,7 +38,7 @@ const AuthService = {
                         
                         <div class="form-group">
                             <label>
-                                <span class="label-icon">📧</span>
+                                <span class="label-icon"></span>
                                 <span>账号</span>
                             </label>
                             <input type="text" name="account" placeholder="请输入用户名/手机号/邮箱" required class="form-input">
@@ -46,14 +46,14 @@ const AuthService = {
                         
                         <div class="form-group">
                             <label>
-                                <span class="label-icon">🔒</span>
+                                <span class="label-icon"></span>
                                 <span>密码</span>
                             </label>
                             <input type="password" name="password" placeholder="请输入密码" required class="form-input">
                         </div>
                         
                         <button type="submit" class="btn btn-primary btn-block btn-lg">
-                            <span>🚀</span> 立即登录
+                            <span></span> 立即登录
                         </button>
                     </form>
                     
@@ -103,7 +103,7 @@ const AuthService = {
             <div class="auth-container">
                 <div class="auth-box auth-box-large">
                     <div class="auth-header">
-                        <div class="auth-icon">📝</div>
+                        <div class="auth-icon"></div>
                         <h2>创建账号</h2>
                         <p>加入精品商城，享受优质服务</p>
                     </div>
@@ -111,14 +111,14 @@ const AuthService = {
                     <form onsubmit="AuthService.handleRegister(event)" class="auth-form">
                         <div class="form-group">
                             <label>
-                                <span class="label-icon">👥</span>
+                                <span class="label-icon"></span>
                                 <span>用户类型</span>
                             </label>
                             <div class="radio-group-modern">
                                 <label class="radio-card">
                                     <input type="radio" name="userType" value="1" checked>
                                     <div class="radio-content">
-                                        <span class="radio-icon">👤</span>
+                                        <span class="radio-icon"></span>
                                         <span class="radio-text">普通用户</span>
                                         <span class="radio-desc">购物、下单、评价</span>
                                     </div>
@@ -126,7 +126,7 @@ const AuthService = {
                                 <label class="radio-card">
                                     <input type="radio" name="userType" value="2">
                                     <div class="radio-content">
-                                        <span class="radio-icon">🏪</span>
+                                        <span class="radio-icon"></span>
                                         <span class="radio-text">商家</span>
                                         <span class="radio-desc">发布商品、管理订单</span>
                                     </div>
@@ -137,7 +137,7 @@ const AuthService = {
                         <div class="form-row">
                             <div class="form-group">
                                 <label>
-                                    <span class="label-icon">👤</span>
+                                    <span class="label-icon"></span>
                                     <span>用户名</span>
                                 </label>
                                 <input type="text" name="username" placeholder="请输入用户名" required class="form-input">
@@ -145,7 +145,7 @@ const AuthService = {
                             
                             <div class="form-group">
                                 <label>
-                                    <span class="label-icon">🔒</span>
+                                    <span class="label-icon"></span>
                                     <span>密码</span>
                                 </label>
                                 <input type="password" name="password" placeholder="6位以上" required minlength="6" class="form-input">
@@ -155,7 +155,7 @@ const AuthService = {
                         <div class="form-row">
                             <div class="form-group">
                                 <label>
-                                    <span class="label-icon">📱</span>
+                                    <span class="label-icon"></span>
                                     <span>手机号</span>
                                 </label>
                                 <input type="tel" name="phone" placeholder="请输入手机号" pattern="[0-9]{11}" class="form-input">
@@ -163,7 +163,7 @@ const AuthService = {
                             
                             <div class="form-group">
                                 <label>
-                                    <span class="label-icon">📧</span>
+                                    <span class="label-icon"></span>
                                     <span>邮箱</span>
                                 </label>
                                 <input type="email" name="email" placeholder="请输入邮箱" class="form-input">
@@ -171,11 +171,11 @@ const AuthService = {
                         </div>
                         
                         <div class="form-tips">
-                            <p>📌 注册即表示同意用户协议和隐私政策</p>
+                            <p> 注册即表示同意用户协议和隐私政策</p>
                         </div>
                         
                         <button type="submit" class="btn btn-primary btn-block btn-lg">
-                            <span>✨</span> 立即注册
+                            <span></span> 立即注册
                         </button>
                     </form>
                     

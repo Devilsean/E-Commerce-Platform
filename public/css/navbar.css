@@ -20,10 +20,7 @@
 .nav-brand {
     font-size: 26px;
     font-weight: 800;
-    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    color: var(--text-primary);
     cursor: pointer;
     transition: var(--transition);
 }
@@ -59,7 +56,7 @@
     padding: 12px 28px;
     border: none;
     border-radius: 0 var(--radius-full) var(--radius-full) 0;
-    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    background: var(--primary);
     color: white;
     cursor: pointer;
     transition: var(--transition);
@@ -93,7 +90,7 @@
 }
 
 .nav-link.active {
-    background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+    background: var(--primary);
     color: white;
     box-shadow: var(--shadow);
 }
