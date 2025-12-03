@@ -135,47 +135,10 @@ class App {
             <!-- Hero Banner 轮播区 -->
             <div class="hero-banner">
                 <div class="hero-slider" id="heroSlider">
-                    <div class="hero-slide active" style="background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);">
-                        <div class="hero-content">
-                            <h1>欢迎来到精品商城</h1>
-                            <p>发现优质好物，享受购物乐趣<br>品质保证，售后无忧</p>
-                            <button class="btn btn-lg hero-btn" onclick="document.getElementById('all-products').scrollIntoView({behavior:'smooth'})">
-                                立即选购 →
-                            </button>
-                        </div>
-                        <div class="hero-image">
-                            <svg width="180" height="180" class="icon" aria-hidden="true"><use xlink:href="#icon-shopping-bag"></use></svg>
-                        </div>
-                    </div>
-                    <div class="hero-slide" style="background: linear-gradient(135deg, #4a5568 0%, #2d3748 100%);">
-                        <div class="hero-content">
-                            <h1>精选好物</h1>
-                            <p>严选优质商品<br>为您带来更好的购物体验</p>
-                            <button class="btn btn-lg hero-btn" onclick="document.getElementById('all-products').scrollIntoView({behavior:'smooth'})">
-                                立即选购 →
-                            </button>
-                        </div>
-                        <div class="hero-image">
-                            <svg width="180" height="180" class="icon" aria-hidden="true"><use xlink:href="#icon-gift"></use></svg>
-                        </div>
-                    </div>
-                    <div class="hero-slide" style="background: linear-gradient(135deg, #718096 0%, #4a5568 100%);">
-                        <div class="hero-content">
-                            <h1>快速配送</h1>
-                            <p>全国包邮，快速送达<br>让您尽快收到心仪商品</p>
-                            <button class="btn btn-lg hero-btn" onclick="document.getElementById('all-products').scrollIntoView({behavior:'smooth'})">
-                                立即选购 →
-                            </button>
-                        </div>
-                        <div class="hero-image">
-                            <svg width="180" height="180" class="icon" aria-hidden="true"><use xlink:href="#icon-truck"></use></svg>
-                        </div>
-                    </div>
+                    <!-- 轮播图将通过JS动态加载 -->
                 </div>
-                <div class="hero-dots">
-                    <span class="hero-dot active" onclick="app.goToSlide(0)"></span>
-                    <span class="hero-dot" onclick="app.goToSlide(1)"></span>
-                    <span class="hero-dot" onclick="app.goToSlide(2)"></span>
+                <div class="hero-dots" id="heroDots">
+                    <!-- 指示点将通过JS动态生成 -->
                 </div>
                 <button class="hero-arrow hero-prev" onclick="app.prevSlide()">‹</button>
                 <button class="hero-arrow hero-next" onclick="app.nextSlide()">›</button>
@@ -216,14 +179,113 @@ class App {
         // 加载各区块数据
         this.loadCategories();
         this.loadProductsWithSort();
-        this.startHeroSlider();
+        this.loadHeroSlides();
     }
 
     // 轮播图控制
     currentSlide = 0;
     slideInterval = null;
+    heroProducts = [];
+
+    async loadHeroSlides() {
+        try {
+            // 定义轮播图内容 - 使用简洁的背景色和固定矢量图
+            const slides = [
+                {
+                    title: '欢迎来到精品商城',
+                    subtitle: '发现优质好物，享受购物乐趣',
+                    description: '品质保证 · 售后无忧 · 全国包邮',
+                    imageUrl: 'https://cdn.pixabay.com/photo/2017/09/14/21/06/online-2750410_1280.png'
+                },
+                {
+                    title: '精选好物推荐',
+                    subtitle: '严选优质商品',
+                    description: '为您带来更好的购物体验',
+                    imageUrl: 'https://cdn.pixabay.com/photo/2024/05/28/07/31/ai-generated-8793075_1280.png'
+                },
+                {
+                    title: '限时特惠',
+                    subtitle: '快速配送，全国包邮',
+                    description: '让您尽快收到心仪商品',
+                    imageUrl: 'https://cdn.pixabay.com/photo/2025/06/23/15/16/ai-generated-9676121_1280.png'
+                }
+            ];
+
+            // 渲染轮播图
+            const slider = document.getElementById('heroSlider');
+            if (slider) {
+                slider.innerHTML = slides.map((slide, index) => `
+                    <div class="hero-slide ${index === 0 ? 'active' : ''}" style="background: ${slide.bgColor};">
+                        <div class="hero-content">
+                            <div class="hero-text-wrapper">
+                                <h1>${slide.title}</h1>
+                                <p class="hero-subtitle">${slide.subtitle}</p>
+                                <p class="hero-description">${slide.description}</p>
+                                <button class="btn btn-lg hero-btn" onclick="document.getElementById('all-products').scrollIntoView({behavior:'smooth'})">
+                                    立即选购 →
+                                </button>
+                            </div>
+                        </div>
+                        <div class="hero-product">
+                            <div class="hero-image-display">
+                                <img src="${slide.imageUrl}" alt="${slide.title}" onerror="this.src='https://cdn.pixabay.com/photo/2014/05/21/13/25/shopping-cart-349544_1280.png'">
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+            }
+
+            // 渲染指示点
+            const dots = document.getElementById('heroDots');
+            if (dots) {
+                dots.innerHTML = slides.map((_, index) =>
+                    `<span class="hero-dot ${index === 0 ? 'active' : ''}" onclick="app.goToSlide(${index})"></span>`
+                ).join('');
+            }
+
+            // 启动自动轮播
+            this.startHeroSlider();
+        } catch (error) {
+            console.error('Load hero slides error:', error);
+            // 如果加载失败，显示默认轮播图
+            this.loadDefaultHeroSlides();
+        }
+    }
+
+    loadDefaultHeroSlides() {
+        const slider = document.getElementById('heroSlider');
+        if (slider) {
+            slider.innerHTML = `
+                <div class="hero-slide active" style="background: #f8f9fa;">
+                    <div class="hero-content">
+                        <div class="hero-text-wrapper">
+                            <h1>欢迎来到精品商城</h1>
+                            <p class="hero-subtitle">发现优质好物，享受购物乐趣</p>
+                            <p class="hero-description">品质保证 · 售后无忧 · 全国包邮</p>
+                            <button class="btn btn-lg hero-btn" onclick="document.getElementById('all-products').scrollIntoView({behavior:'smooth'})">
+                                立即选购 →
+                            </button>
+                        </div>
+                    </div>
+                    <div class="hero-product">
+                        <div class="hero-placeholder">
+                            <img src="https://cdn.pixabay.com/photo/2014/05/21/13/25/shopping-cart-349544_1280.png" alt="购物车" style="width: 180px; height: auto; opacity: 0.6;">
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        const dots = document.getElementById('heroDots');
+        if (dots) {
+            dots.innerHTML = '<span class="hero-dot active" onclick="app.goToSlide(0)"></span>';
+        }
+    }
 
     startHeroSlider() {
+        // 清除之前的定时器
+        if (this.slideInterval) {
+            clearInterval(this.slideInterval);
+        }
         this.slideInterval = setInterval(() => this.nextSlide(), 5000);
     }
 

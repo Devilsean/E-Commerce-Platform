@@ -46,28 +46,28 @@ const ProfileService = {
         const avatarUrl = currentUser.avatar || this.getDefaultAvatar(currentUser.username);
 
         content.innerHTML = `
-            <div class="profile-container">
-                <div class="profile-header">
-                    <div class="profile-banner">
-                        <div class="profile-avatar-large" onclick="ProfileService.showAvatarSelector()" style="cursor: pointer; position: relative;" title="点击更换头像">
-                            <img src="${avatarUrl}" alt="头像" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;" onerror="this.src='${this.getDefaultAvatar(currentUser.username)}'">
-                            <div style="position: absolute; bottom: 0; right: 0; background: var(--primary); color: white; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border: 2px solid white;">
-                                <svg width="14" height="14" class="icon" aria-hidden="true"><use xlink:href="#icon-camera"></use></svg>
-                            </div>
-                        </div>
-                        <div class="profile-header-info">
-                            <h2>${currentUser.username || '用户'}</h2>
-                            <p class="profile-subtitle">${currentUser.email || currentUser.phone || '未设置联系方式'}</p>
-                            <span class="badge badge-${isMerchant ? 'merchant' : 'user'}">
-                                <svg width="16" height="16" class="icon" aria-hidden="true"><use xlink:href="#icon-${isMerchant ? 'merchant' : 'user'}"></use></svg> ${isMerchant ? '商家账号' : '普通用户'}
-                            </span>
-                        </div>
+    <div class="profile-container">
+        <div class="profile-header">
+            <div class="profile-banner" style="background-color: #fafafa; padding: 20px 16px; border-radius: 8px;">
+                <div class="profile-avatar-large" onclick="ProfileService.showAvatarSelector()" style="cursor: pointer; position: relative;" title="点击更换头像">
+                    <img src="${avatarUrl}" alt="头像" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;" onerror="this.src='${this.getDefaultAvatar(currentUser.username)}'">
+                    <div style="position: absolute; bottom: 0; right: 0; background: var(--primary); color: white; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; border: 2px solid white;">
+                        <svg width="14" height="14" class="icon" aria-hidden="true"><use xlink:href="#icon-camera"></use></svg>
                     </div>
                 </div>
-
-                ${isMerchant ? this.renderMerchantContent() : this.renderUserContent()}
+                <div class="profile-header-info">
+                    <h2>${currentUser.username || '用户'}</h2>
+                    <p class="profile-subtitle">${currentUser.email || currentUser.phone || '未设置联系方式'}</p>
+                    <span class="badge badge-${isMerchant ? 'merchant' : 'user'}">
+                        <svg width="16" height="16" class="icon" aria-hidden="true"><use xlink:href="#icon-${isMerchant ? 'merchant' : 'user'}"></use></svg> ${isMerchant ? '商家账号' : '普通用户'}
+                    </span>
+                </div>
             </div>
-        `;
+        </div>
+
+        ${isMerchant ? this.renderMerchantContent() : this.renderUserContent()}
+    </div>
+`;
 
         // 加载对应数据
         if (isMerchant) {
@@ -345,7 +345,7 @@ const ProfileService = {
                             <div class="product-footer">
                                 <span class="price">¥${item.price}</span>
                                 <button class="btn btn-sm btn-primary" onclick="event.stopPropagation(); Store.removeBrowsingHistory(${item.id}); ProfileService.loadBrowsingHistory();">
-                                    <svg width="14" height="14" class="icon" aria-hidden="true"><use xlink:href="#icon-delete"></use></svg>
+                                    <svg width="14" height="14" class="icon" aria-hidden="true"><use xlink:href="#icon-delete"></use></svg>删除
                                 </button>
                             </div>
                         </div>
