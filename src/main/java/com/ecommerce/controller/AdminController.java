@@ -1,10 +1,11 @@
 package com.ecommerce.controller;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.ecommerce.common.Result;
-import com.ecommerce.entity.User;
-import com.ecommerce.entity.Merchant;
-import com.ecommerce.entity.Product;
-import com.ecommerce.entity.Order;
+import com.ecommerce.entity.*;
+import com.ecommerce.mapper.*;
+import com.ecommerce.service.UserLogService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
@@ -18,6 +19,21 @@ public class AdminController {
     private static final Map<Long, Merchant> merchantStore = new ConcurrentHashMap<>();
     private static final Map<Long, Product> productStore = new ConcurrentHashMap<>();
     private static final Map<Long, Order> orderStore = new ConcurrentHashMap<>();
+
+    @Autowired
+    private UserMapper userMapper;
+
+    @Autowired
+    private OrderMapper orderMapper;
+
+    @Autowired
+    private UserBrowseLogMapper browseLogMapper;
+
+    @Autowired
+    private UserPurchaseLogMapper purchaseLogMapper;
+
+    @Autowired
+    private UserLogService userLogService;
 
     // 用户管理
     @GetMapping("/users")
@@ -135,5 +151,151 @@ public class AdminController {
         categories.add(cat2);
         
         return Result.success(categories);
+    }
+
+    // 客户管理 - 获取所有用户列表
+    @GetMapping("/customers")
+    public Result<List<Map<String, Object>>> getCustomers(@RequestParam(required = false) String keyword) {
+        try {
+            LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
+            if (keyword != null && !keyword.trim().isEmpty()) {
+                wrapper.and(w -> w.like(User::getUsername, keyword)
+                        .or().like(User::getPhone, keyword)
+                        .or().like(User::getEmail, keyword));
+            }
+            wrapper.orderByDesc(User::getCreateTime);
+            
+            List<User> users = userMapper.selectList(wrapper);
+            List<Map<String, Object>> result = new ArrayList<>();
+            
+            for (User user : users) {
+                Map<String, Object> userMap = new HashMap<>();
+                userMap.put("id", user.getId());
+                userMap.put("username", user.getUsername());
+                userMap.put("phone", user.getPhone());
+                userMap.put("email", user.getEmail());
+                userMap.put("userType", user.getUserType());
+                userMap.put("status", user.getStatus());
+                userMap.put("createTime", user.getCreateTime());
+                
+                // 统计用户订单数
+                LambdaQueryWrapper<Order> orderWrapper = new LambdaQueryWrapper<>();
+                orderWrapper.eq(Order::getUserId, user.getId());
+                Long orderCount = orderMapper.selectCount(orderWrapper);
+                userMap.put("orderCount", orderCount);
+                
+                // 统计浏览次数
+                Long browseCount = browseLogMapper.selectCount(
+                    new LambdaQueryWrapper<UserBrowseLog>().eq(UserBrowseLog::getUserId, user.getId())
+                );
+                userMap.put("browseCount", browseCount);
+                
+                result.add(userMap);
+            }
+            
+            return Result.success(result);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Result.error("获取客户列表失败：" + e.getMessage());
+        }
+    }
+
+    // 获取指定用户的浏览日志
+    @GetMapping("/customers/{userId}/browse-logs")
+    public Result<List<UserBrowseLog>> getCustomerBrowseLogs(
+            @PathVariable Long userId,
+            @RequestParam(defaultValue = "50") Integer limit) {
+        try {
+            List<UserBrowseLog> logs = browseLogMapper.getRecentBrowseLog(userId, limit);
+            return Result.success(logs);
+        } catch (Exception e) {
+            return Result.error("获取浏览日志失败：" + e.getMessage());
+        }
+    }
+
+    // 获取指定用户的购买日志
+    @GetMapping("/customers/{userId}/purchase-logs")
+    public Result<List<Map<String, Object>>> getCustomerPurchaseLogs(
+            @PathVariable Long userId,
+            @RequestParam(defaultValue = "50") Integer limit) {
+        try {
+            List<Map<String, Object>> logs = userLogService.getUserPurchaseHistory(userId, limit);
+            return Result.success(logs);
+        } catch (Exception e) {
+            return Result.error("获取购买日志失败：" + e.getMessage());
+        }
+    }
+
+    // 获取指定用户的统计信息
+    @GetMapping("/customers/{userId}/stats")
+    public Result<Map<String, Object>> getCustomerStats(@PathVariable Long userId) {
+        try {
+            Map<String, Object> stats = new HashMap<>();
+            
+            // 浏览统计
+            Map<String, Object> browseStats = userLogService.getUserBrowseStats(userId);
+            stats.put("browseStats", browseStats);
+            
+            // 购买统计
+            Map<String, Object> purchaseStats = userLogService.getUserPurchaseStats(userId);
+            stats.put("purchaseStats", purchaseStats);
+            
+            // 订单统计
+            LambdaQueryWrapper<Order> orderWrapper = new LambdaQueryWrapper<>();
+            orderWrapper.eq(Order::getUserId, userId);
+            List<Order> orders = orderMapper.selectList(orderWrapper);
+            
+            Map<String, Object> orderStats = new HashMap<>();
+            orderStats.put("totalOrders", orders.size());
+            orderStats.put("pendingOrders", orders.stream().filter(o -> o.getStatus() == 0).count());
+            orderStats.put("completedOrders", orders.stream().filter(o -> o.getStatus() == 4).count());
+            orderStats.put("cancelledOrders", orders.stream().filter(o -> o.getStatus() == 5).count());
+            stats.put("orderStats", orderStats);
+            
+            return Result.success(stats);
+        } catch (Exception e) {
+            return Result.error("获取用户统计失败：" + e.getMessage());
+        }
+    }
+
+    // 获取所有浏览日志（分页）
+    @GetMapping("/logs/browse")
+    public Result<List<UserBrowseLog>> getAllBrowseLogs(
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "50") Integer pageSize) {
+        try {
+            // 简单实现，实际应使用分页插件
+            List<UserBrowseLog> allLogs = browseLogMapper.selectList(
+                new LambdaQueryWrapper<UserBrowseLog>().orderByDesc(UserBrowseLog::getBrowseTime)
+            );
+            
+            int start = (page - 1) * pageSize;
+            int end = Math.min(start + pageSize, allLogs.size());
+            List<UserBrowseLog> logs = start < allLogs.size() ? allLogs.subList(start, end) : new ArrayList<>();
+            
+            return Result.success(logs);
+        } catch (Exception e) {
+            return Result.error("获取浏览日志失败：" + e.getMessage());
+        }
+    }
+
+    // 获取所有购买日志（分页）
+    @GetMapping("/logs/purchase")
+    public Result<List<UserPurchaseLog>> getAllPurchaseLogs(
+            @RequestParam(defaultValue = "1") Integer page,
+            @RequestParam(defaultValue = "50") Integer pageSize) {
+        try {
+            List<UserPurchaseLog> allLogs = purchaseLogMapper.selectList(
+                new LambdaQueryWrapper<UserPurchaseLog>().orderByDesc(UserPurchaseLog::getPurchaseTime)
+            );
+            
+            int start = (page - 1) * pageSize;
+            int end = Math.min(start + pageSize, allLogs.size());
+            List<UserPurchaseLog> logs = start < allLogs.size() ? allLogs.subList(start, end) : new ArrayList<>();
+            
+            return Result.success(logs);
+        } catch (Exception e) {
+            return Result.error("获取购买日志失败：" + e.getMessage());
+        }
     }
 }

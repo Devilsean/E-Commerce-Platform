@@ -220,28 +220,31 @@ const ProfileService = {
                     </div>
                 </div>
 
-                <!-- 客户行为日志 -->
+                <!-- 客户浏览日志 -->
                 <div class="profile-section">
                     <div class="section-title">
-                        <h3><svg width="18" height="18" class="icon" aria-hidden="true"><use xlink:href="#icon-order"></use></svg> 客户行为日志</h3>
+                        <h3><svg width="18" height="18" class="icon" aria-hidden="true"><use xlink:href="#icon-time"></use></svg> 客户浏览日志</h3>
+                        <button class="btn btn-sm" onclick="ProfileService.refreshBrowsingLogs()">
+                            <svg width="16" height="16" class="icon" aria-hidden="true"><use xlink:href="#icon-refresh"></use></svg>
+                            刷新
+                        </button>
                     </div>
-                    <div class="settings-list">
-                        <div class="setting-item" onclick="ProfileService.showBrowsingLogs()">
-                            <div class="setting-icon"><svg width="20" height="20" class="icon" aria-hidden="true"><use xlink:href="#icon-time"></use></svg></div>
-                            <div class="setting-info">
-                                <h4>浏览日志</h4>
-                                <p>查看客户浏览商品的记录</p>
-                            </div>
-                            <button class="btn btn-sm">查看</button>
-                        </div>
-                        <div class="setting-item" onclick="ProfileService.showPurchaseLogs()">
-                            <div class="setting-icon"><svg width="20" height="20" class="icon" aria-hidden="true"><use xlink:href="#icon-shopping-bag"></use></svg></div>
-                            <div class="setting-info">
-                                <h4>购买日志</h4>
-                                <p>查看客户购买商品的记录</p>
-                            </div>
-                            <button class="btn btn-sm">查看</button>
-                        </div>
+                    <div id="merchantBrowsingLogs">
+                        <div class="loading-text">加载中...</div>
+                    </div>
+                </div>
+
+                <!-- 客户购买日志 -->
+                <div class="profile-section">
+                    <div class="section-title">
+                        <h3><svg width="18" height="18" class="icon" aria-hidden="true"><use xlink:href="#icon-shopping-bag"></use></svg> 客户购买日志</h3>
+                        <button class="btn btn-sm" onclick="ProfileService.refreshPurchaseLogs()">
+                            <svg width="16" height="16" class="icon" aria-hidden="true"><use xlink:href="#icon-refresh"></use></svg>
+                            刷新
+                        </button>
+                    </div>
+                    <div id="merchantPurchaseLogs">
+                        <div class="loading-text">加载中...</div>
                     </div>
                 </div>
 
@@ -380,9 +383,157 @@ const ProfileService = {
             document.getElementById('merchantProductCount').textContent = totalProducts;
             document.getElementById('merchantTotalSales').textContent = totalSales;
             document.getElementById('merchantRevenue').textContent = '¥' + totalRevenue.toFixed(2);
+
+            // 加载客户行为日志
+            this.loadMerchantBrowsingLogs();
+            this.loadMerchantPurchaseLogs();
         } catch (error) {
             console.error('加载商家统计失败:', error);
         }
+    },
+
+    // 加载商家浏览日志
+    async loadMerchantBrowsingLogs() {
+        const container = document.getElementById('merchantBrowsingLogs');
+        if (!container) return;
+
+        try {
+            const logs = await utils.request('/merchant/logs/browse?limit=20');
+            console.log('浏览日志数据:', logs);
+
+            if (!logs || logs.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state-small">
+                        <svg width="56" height="56" class="icon" aria-hidden="true"><use xlink:href="#icon-time"></use></svg>
+                        <p>暂无浏览日志</p>
+                        <p style="font-size: 12px; color: var(--text-secondary); margin-top: 8px;">客户浏览商品后会在此显示记录</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = `
+                <div style="overflow-x: auto;">
+                    <table class="data-table" style="width: 100%; min-width: 800px;">
+                        <thead>
+                            <tr>
+                                <th style="padding: 12px;">用户</th>
+                                <th style="padding: 12px;">商品名称</th>
+                                <th style="padding: 12px;">价格</th>
+                                <th style="padding: 12px;">浏览时间</th>
+                                <th style="padding: 12px;">IP地址</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${logs.map(log => `
+                                <tr>
+                                    <td style="padding: 12px;">
+                                        <div style="font-weight: 500;">${log.user_name || log.userName || '用户#' + log.userId}</div>
+                                        ${log.user_phone || log.userPhone ? `<div style="font-size: 12px; color: var(--text-secondary);">${log.user_phone || log.userPhone}</div>` : ''}
+                                    </td>
+                                    <td style="padding: 12px;">${log.productName || '未知商品'}</td>
+                                    <td style="padding: 12px;">¥${log.productPrice || 0}</td>
+                                    <td style="padding: 12px;">${new Date(log.browseTime).toLocaleString('zh-CN')}</td>
+                                    <td style="padding: 12px; font-size: 12px; color: var(--text-secondary);">${log.ipAddress || '-'}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+                ${logs.length >= 20 ? '<p style="text-align: center; margin-top: 12px; color: var(--text-secondary); font-size: 13px;">仅显示最近20条记录</p>' : ''}
+            `;
+        } catch (error) {
+            console.error('加载浏览日志失败:', error);
+            container.innerHTML = `
+                <div class="empty-state-small">
+                    <svg width="56" height="56" class="icon" aria-hidden="true"><use xlink:href="#icon-time"></use></svg>
+                    <p>加载失败</p>
+                    <button class="btn btn-sm btn-primary" onclick="ProfileService.refreshBrowsingLogs()">重试</button>
+                </div>
+            `;
+        }
+    },
+
+    // 加载商家购买日志
+    async loadMerchantPurchaseLogs() {
+        const container = document.getElementById('merchantPurchaseLogs');
+        if (!container) return;
+
+        try {
+            const logs = await utils.request('/merchant/logs/purchase?limit=20');
+            console.log('购买日志数据:', logs);
+
+            if (!logs || logs.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state-small">
+                        <svg width="56" height="56" class="icon" aria-hidden="true"><use xlink:href="#icon-shopping-bag"></use></svg>
+                        <p>暂无购买日志</p>
+                        <p style="font-size: 12px; color: var(--text-secondary); margin-top: 8px;">客户购买商品后会在此显示记录</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = `
+                <div style="overflow-x: auto;">
+                    <table class="data-table" style="width: 100%; min-width: 900px;">
+                        <thead>
+                            <tr>
+                                <th style="padding: 12px;">用户</th>
+                                <th style="padding: 12px;">订单ID</th>
+                                <th style="padding: 12px;">商品数量</th>
+                                <th style="padding: 12px;">订单金额</th>
+                                <th style="padding: 12px;">购买时间</th>
+                                <th style="padding: 12px;">IP地址</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${logs.map(log => `
+                                <tr>
+                                    <td style="padding: 12px;">
+                                        <div style="font-weight: 500;">${log.user_name || log.userName || '用户#' + log.userId}</div>
+                                        ${log.user_phone || log.userPhone ? `<div style="font-size: 12px; color: var(--text-secondary);">${log.user_phone || log.userPhone}</div>` : ''}
+                                    </td>
+                                    <td style="padding: 12px;">#${log.orderId}</td>
+                                    <td style="padding: 12px;">${log.itemCount || 0} 件</td>
+                                    <td style="padding: 12px; color: var(--danger); font-weight: 600;">¥${log.totalAmount || 0}</td>
+                                    <td style="padding: 12px;">${new Date(log.purchaseTime).toLocaleString('zh-CN')}</td>
+                                    <td style="padding: 12px; font-size: 12px; color: var(--text-secondary);">${log.ipAddress || '-'}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+                ${logs.length >= 20 ? '<p style="text-align: center; margin-top: 12px; color: var(--text-secondary); font-size: 13px;">仅显示最近20条记录</p>' : ''}
+            `;
+        } catch (error) {
+            console.error('加载购买日志失败:', error);
+            container.innerHTML = `
+                <div class="empty-state-small">
+                    <svg width="56" height="56" class="icon" aria-hidden="true"><use xlink:href="#icon-shopping-bag"></use></svg>
+                    <p>加载失败</p>
+                    <button class="btn btn-sm btn-primary" onclick="ProfileService.refreshPurchaseLogs()">重试</button>
+                </div>
+            `;
+        }
+    },
+
+    // 刷新浏览日志
+    refreshBrowsingLogs() {
+        const container = document.getElementById('merchantBrowsingLogs');
+        if (container) {
+            container.innerHTML = '<div class="loading-text">加载中...</div>';
+        }
+        this.loadMerchantBrowsingLogs();
+    },
+
+    // 刷新购买日志
+    refreshPurchaseLogs() {
+        const container = document.getElementById('merchantPurchaseLogs');
+        if (container) {
+            container.innerHTML = '<div class="loading-text">加载中...</div>';
+        }
+        this.loadMerchantPurchaseLogs();
     },
 
     // 加载订单列表
@@ -1012,11 +1163,14 @@ const ProfileService = {
             const content = document.getElementById('browsingLogsContent');
             if (!content) return;
 
+            console.log('浏览日志数据:', logs); // 调试信息
+
             if (!logs || logs.length === 0) {
                 content.innerHTML = `
                     <div style="text-align: center; padding: 40px; color: var(--text-secondary);">
                         <svg width="64" height="64" class="icon" aria-hidden="true"><use xlink:href="#icon-time"></use></svg>
                         <p style="margin-top: 16px;">暂无浏览日志</p>
+                        <p style="font-size: 12px; margin-top: 8px;">提示：客户浏览商品后会在此显示记录</p>
                     </div>
                 `;
                 return;
@@ -1026,6 +1180,7 @@ const ProfileService = {
                 <table style="width: 100%; border-collapse: collapse;">
                     <thead>
                         <tr style="background: var(--bg-secondary); text-align: left;">
+                            <th style="padding: 12px; border-bottom: 2px solid var(--border-light);">用户</th>
                             <th style="padding: 12px; border-bottom: 2px solid var(--border-light);">商品名称</th>
                             <th style="padding: 12px; border-bottom: 2px solid var(--border-light);">价格</th>
                             <th style="padding: 12px; border-bottom: 2px solid var(--border-light);">浏览时间</th>
@@ -1035,6 +1190,10 @@ const ProfileService = {
                     <tbody>
                         ${logs.map(log => `
                             <tr style="border-bottom: 1px solid var(--border-light);">
+                                <td style="padding: 12px;">
+                                    <div style="font-weight: 500;">${log.user_name || log.userName || '用户#' + log.userId}</div>
+                                    ${log.user_phone || log.userPhone ? `<div style="font-size: 12px; color: var(--text-secondary);">${log.user_phone || log.userPhone}</div>` : ''}
+                                </td>
                                 <td style="padding: 12px;">${log.productName || '未知商品'}</td>
                                 <td style="padding: 12px;">¥${log.productPrice || 0}</td>
                                 <td style="padding: 12px;">${new Date(log.browseTime).toLocaleString('zh-CN')}</td>
@@ -1086,11 +1245,14 @@ const ProfileService = {
             const content = document.getElementById('purchaseLogsContent');
             if (!content) return;
 
+            console.log('购买日志数据:', logs); // 调试信息
+
             if (!logs || logs.length === 0) {
                 content.innerHTML = `
                     <div style="text-align: center; padding: 40px; color: var(--text-secondary);">
                         <svg width="64" height="64" class="icon" aria-hidden="true"><use xlink:href="#icon-shopping-bag"></use></svg>
                         <p style="margin-top: 16px;">暂无购买日志</p>
+                        <p style="font-size: 12px; margin-top: 8px;">提示：客户购买商品后会在此显示记录</p>
                     </div>
                 `;
                 return;
@@ -1100,6 +1262,7 @@ const ProfileService = {
                 <table style="width: 100%; border-collapse: collapse;">
                     <thead>
                         <tr style="background: var(--bg-secondary); text-align: left;">
+                            <th style="padding: 12px; border-bottom: 2px solid var(--border-light);">用户</th>
                             <th style="padding: 12px; border-bottom: 2px solid var(--border-light);">订单ID</th>
                             <th style="padding: 12px; border-bottom: 2px solid var(--border-light);">商品数量</th>
                             <th style="padding: 12px; border-bottom: 2px solid var(--border-light);">订单金额</th>
@@ -1110,6 +1273,10 @@ const ProfileService = {
                     <tbody>
                         ${logs.map(log => `
                             <tr style="border-bottom: 1px solid var(--border-light);">
+                                <td style="padding: 12px;">
+                                    <div style="font-weight: 500;">${log.user_name || log.userName || '用户#' + log.userId}</div>
+                                    ${log.user_phone || log.userPhone ? `<div style="font-size: 12px; color: var(--text-secondary);">${log.user_phone || log.userPhone}</div>` : ''}
+                                </td>
                                 <td style="padding: 12px;">#${log.orderId}</td>
                                 <td style="padding: 12px;">${log.itemCount || 0} 件</td>
                                 <td style="padding: 12px; color: var(--danger); font-weight: 600;">¥${log.totalAmount || 0}</td>

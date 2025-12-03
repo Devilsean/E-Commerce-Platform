@@ -17,10 +17,13 @@ const ProductDetailService = {
             const product = await utils.request(`/guest/product/${productId}`);
             this.currentProduct = product;
 
-            // 记录浏览历史
+            // 记录浏览历史到本地存储
             if (typeof Store !== 'undefined') {
                 Store.addBrowsingHistory(product);
             }
+
+            // 记录浏览日志到数据库（如果用户已登录）
+            this.logBrowseToServer(productId);
 
             // 处理图片数组
             this.currentImages = this.parseProductImages(product);
@@ -683,6 +686,37 @@ const ProductDetailService = {
      */
     async loadMoreReviews(productId) {
         utils.showToast('加载更多评价功能开发中', 'info');
+    },
+
+    /**
+     * 记录浏览日志到服务器
+     */
+    async logBrowseToServer(productId) {
+        try {
+            const token = utils.getToken();
+            if (!token) {
+                // 用户未登录，不记录到数据库
+                return;
+            }
+
+            // 调用后端API记录浏览日志
+            await fetch(`${API_BASE}/user/log/browse`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    productId: productId,
+                    timestamp: new Date().toISOString()
+                })
+            });
+
+            console.log('浏览日志已记录到数据库');
+        } catch (error) {
+            // 静默失败，不影响用户体验
+            console.error('记录浏览日志失败:', error);
+        }
     }
 };
 

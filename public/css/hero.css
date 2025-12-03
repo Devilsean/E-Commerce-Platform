@@ -249,13 +249,13 @@
     width: 12px;
     height: 12px;
     border-radius: 50%;
-    background: rgba(255, 255, 255, 0.5);
+    background: rgba(216, 213, 213, 0.5);
     cursor: pointer;
     transition: var(--transition);
 }
 
 .hero-dot.active {
-    background: white;
+    background: rgb(188, 187, 187);
     transform: scale(1.2);
 }
 

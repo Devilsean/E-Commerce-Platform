@@ -141,11 +141,16 @@ public class OrderController {
     }
 
     /**
-     * 获取用户订单列表
+     * 获取用户订单列表（支持高级筛选）
      */
     @GetMapping
     public Result<List<Map<String, Object>>> getOrders(@RequestHeader("Authorization") String authHeader,
-                                                         @RequestParam(required = false) Integer status) {
+                                                         @RequestParam(required = false) Integer status,
+                                                         @RequestParam(required = false) String startDate,
+                                                         @RequestParam(required = false) String endDate,
+                                                         @RequestParam(required = false) BigDecimal minAmount,
+                                                         @RequestParam(required = false) BigDecimal maxAmount,
+                                                         @RequestParam(required = false) String keyword) {
         Long userId = getUserIdFromToken(authHeader);
         if (userId == null) {
             return Result.error("请先登录");
@@ -153,9 +158,35 @@ public class OrderController {
 
         LambdaQueryWrapper<Order> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Order::getUserId, userId);
+        
+        // 状态筛选
         if (status != null) {
             wrapper.eq(Order::getStatus, status);
         }
+        
+        // 日期范围筛选
+        if (startDate != null && !startDate.isEmpty()) {
+            wrapper.ge(Order::getCreateTime, LocalDateTime.parse(startDate + "T00:00:00"));
+        }
+        if (endDate != null && !endDate.isEmpty()) {
+            wrapper.le(Order::getCreateTime, LocalDateTime.parse(endDate + "T23:59:59"));
+        }
+        
+        // 金额范围筛选
+        if (minAmount != null) {
+            wrapper.ge(Order::getTotalAmount, minAmount);
+        }
+        if (maxAmount != null) {
+            wrapper.le(Order::getTotalAmount, maxAmount);
+        }
+        
+        // 关键词搜索（订单号、收货人）
+        if (keyword != null && !keyword.trim().isEmpty()) {
+            wrapper.and(w -> w.like(Order::getOrderNo, keyword)
+                    .or().like(Order::getReceiverName, keyword)
+                    .or().like(Order::getReceiverPhone, keyword));
+        }
+        
         wrapper.orderByDesc(Order::getCreateTime);
 
         List<Order> orders = orderMapper.selectList(wrapper);
@@ -185,6 +216,45 @@ public class OrderController {
         }
 
         return Result.success(result);
+    }
+    
+    /**
+     * 获取订单统计信息
+     */
+    @GetMapping("/statistics")
+    public Result<Map<String, Object>> getOrderStatistics(@RequestHeader("Authorization") String authHeader) {
+        Long userId = getUserIdFromToken(authHeader);
+        if (userId == null) {
+            return Result.error("请先登录");
+        }
+
+        LambdaQueryWrapper<Order> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Order::getUserId, userId);
+        List<Order> allOrders = orderMapper.selectList(wrapper);
+
+        Map<String, Object> stats = new HashMap<>();
+        stats.put("totalOrders", allOrders.size());
+        stats.put("pendingOrders", allOrders.stream().filter(o -> o.getStatus() == 0).count());
+        stats.put("paidOrders", allOrders.stream().filter(o -> o.getStatus() == 1 || o.getStatus() == 2).count());
+        stats.put("shippedOrders", allOrders.stream().filter(o -> o.getStatus() == 3).count());
+        stats.put("completedOrders", allOrders.stream().filter(o -> o.getStatus() == 4).count());
+        stats.put("cancelledOrders", allOrders.stream().filter(o -> o.getStatus() == 5).count());
+        
+        // 计算总消费金额
+        BigDecimal totalAmount = allOrders.stream()
+                .filter(o -> o.getStatus() == 4) // 只统计已完成订单
+                .map(Order::getActualAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        stats.put("totalAmount", totalAmount);
+        
+        // 最近30天订单数
+        LocalDateTime thirtyDaysAgo = LocalDateTime.now().minusDays(30);
+        long recentOrders = allOrders.stream()
+                .filter(o -> o.getCreateTime().isAfter(thirtyDaysAgo))
+                .count();
+        stats.put("recentOrders", recentOrders);
+
+        return Result.success(stats);
     }
 
     /**

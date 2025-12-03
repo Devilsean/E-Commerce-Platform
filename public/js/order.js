@@ -38,9 +38,9 @@ const OrderService = {
     },
 
     /**
-     * 获取订单列表
+     * 获取订单列表（支持高级筛选）
      */
-    async getOrders(status = null) {
+    async getOrders(status = null, filters = {}) {
         const token = utils.getToken();
         if (!token) {
             utils.showToast('请先登录', 'warning');
@@ -49,8 +49,32 @@ const OrderService = {
 
         try {
             let url = `${API_BASE}/user/orders`;
+            const params = new URLSearchParams();
+
             if (status !== null) {
-                url += `?status=${status}`;
+                params.append('status', status);
+            }
+
+            // 添加高级筛选参数
+            if (filters.startDate) {
+                params.append('startDate', filters.startDate);
+            }
+            if (filters.endDate) {
+                params.append('endDate', filters.endDate);
+            }
+            if (filters.minAmount) {
+                params.append('minAmount', filters.minAmount);
+            }
+            if (filters.maxAmount) {
+                params.append('maxAmount', filters.maxAmount);
+            }
+            if (filters.keyword) {
+                params.append('keyword', filters.keyword);
+            }
+
+            const queryString = params.toString();
+            if (queryString) {
+                url += `?${queryString}`;
             }
 
             const response = await fetch(url, {
@@ -71,6 +95,35 @@ const OrderService = {
             console.error('Get orders error:', error);
             utils.showToast('获取订单失败', 'error');
             return [];
+        }
+    },
+
+    /**
+     * 获取订单统计信息
+     */
+    async getOrderStatistics() {
+        const token = utils.getToken();
+        if (!token) {
+            return null;
+        }
+
+        try {
+            const response = await fetch(`${API_BASE}/user/orders/statistics`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            const data = await response.json();
+
+            if (data.code === 200) {
+                return data.data;
+            } else {
+                return null;
+            }
+        } catch (error) {
+            console.error('Get order statistics error:', error);
+            return null;
         }
     },
 
@@ -504,9 +557,103 @@ const OrderService = {
     /**
      * 加载并显示订单列表
      */
-    async loadAndDisplayOrders(status = null) {
-        const orders = await this.getOrders(status);
+    async loadAndDisplayOrders(status = null, filters = {}) {
+        const orders = await this.getOrders(status, filters);
         this.renderOrderList(orders, 'ordersList');
+    },
+
+    /**
+     * 显示高级筛选对话框
+     */
+    showAdvancedFilter() {
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.style.display = 'flex';
+        modal.innerHTML = `
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3><svg width="20" height="20" class="icon" aria-hidden="true"><use xlink:href="#icon-filter"></use></svg> 高级筛选</h3>
+                    <button class="modal-close" onclick="this.closest('.modal').remove()">×</button>
+                </div>
+                <form onsubmit="OrderService.handleAdvancedFilter(event)">
+                    <div class="form-group">
+                        <label>关键词搜索</label>
+                        <input type="text" name="keyword" class="form-input" placeholder="订单号、收货人姓名或电话">
+                    </div>
+                    <div class="form-group">
+                        <label>日期范围</label>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                            <input type="date" name="startDate" class="form-input" placeholder="开始日期">
+                            <input type="date" name="endDate" class="form-input" placeholder="结束日期">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>金额范围</label>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                            <input type="number" name="minAmount" class="form-input" placeholder="最低金额" step="0.01" min="0">
+                            <input type="number" name="maxAmount" class="form-input" placeholder="最高金额" step="0.01" min="0">
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" onclick="this.closest('.modal').remove()">取消</button>
+                        <button type="button" class="btn" onclick="OrderService.resetFilter(); this.closest('.modal').remove();">重置</button>
+                        <button type="submit" class="btn btn-primary">应用筛选</button>
+                    </div>
+                </form>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    },
+
+    /**
+     * 处理高级筛选
+     */
+    async handleAdvancedFilter(event) {
+        event.preventDefault();
+        const form = event.target;
+
+        const filters = {
+            keyword: form.keyword.value.trim(),
+            startDate: form.startDate.value,
+            endDate: form.endDate.value,
+            minAmount: form.minAmount.value,
+            maxAmount: form.maxAmount.value
+        };
+
+        // 移除空值
+        Object.keys(filters).forEach(key => {
+            if (!filters[key]) {
+                delete filters[key];
+            }
+        });
+
+        // 保存筛选条件
+        this.currentFilters = filters;
+
+        // 关闭模态框
+        form.closest('.modal').remove();
+
+        // 重新加载订单
+        if (window.app && window.app.currentOrderStatus !== undefined) {
+            await this.loadAndDisplayOrders(window.app.currentOrderStatus, filters);
+        } else {
+            await this.loadAndDisplayOrders(null, filters);
+        }
+
+        utils.showToast('筛选已应用', 'success');
+    },
+
+    /**
+     * 重置筛选
+     */
+    async resetFilter() {
+        this.currentFilters = {};
+        if (window.app && window.app.currentOrderStatus !== undefined) {
+            await this.loadAndDisplayOrders(window.app.currentOrderStatus);
+        } else {
+            await this.loadAndDisplayOrders();
+        }
+        utils.showToast('筛选已重置', 'success');
     },
 
     /**

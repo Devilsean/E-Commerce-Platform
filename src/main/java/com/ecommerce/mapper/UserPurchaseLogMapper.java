@@ -21,14 +21,15 @@ public interface UserPurchaseLogMapper extends BaseMapper<UserPurchaseLog> {
     List<UserPurchaseLog> getRecentPurchaseLog(@Param("userId") Long userId, @Param("limit") Integer limit);
     
     /**
-     * 获取商家的购买日志（通过订单关联）
+     * 获取商家的购买日志（通过订单关联，包含用户信息）
      */
-    @Select("SELECT upl.* FROM user_purchase_log upl " +
+    @Select("SELECT DISTINCT upl.*, u.username as user_name, u.phone as user_phone " +
+            "FROM user_purchase_log upl " +
             "INNER JOIN `order` o ON upl.order_id = o.id " +
             "INNER JOIN order_item oi ON o.id = oi.order_id " +
             "INNER JOIN product p ON oi.product_id = p.id " +
-            "WHERE p.merchant_id = #{merchantId} " +
-            "GROUP BY upl.id " +
+            "LEFT JOIN user u ON upl.user_id = u.id " +
+            "WHERE p.merchant_id = #{merchantId} AND p.deleted = 0 " +
             "ORDER BY upl.purchase_time DESC " +
             "LIMIT #{limit}")
     List<UserPurchaseLog> getMerchantPurchaseLog(@Param("merchantId") Long merchantId, @Param("limit") Integer limit);

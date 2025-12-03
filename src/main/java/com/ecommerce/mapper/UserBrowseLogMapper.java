@@ -21,11 +21,13 @@ public interface UserBrowseLogMapper extends BaseMapper<UserBrowseLog> {
     List<UserBrowseLog> getRecentBrowseLog(@Param("userId") Long userId, @Param("limit") Integer limit);
     
     /**
-     * 获取商家商品的浏览日志
+     * 获取商家商品的浏览日志（包含用户信息）
      */
-    @Select("SELECT ubl.* FROM user_browse_log ubl " +
+    @Select("SELECT ubl.*, u.username as user_name, u.phone as user_phone " +
+            "FROM user_browse_log ubl " +
             "INNER JOIN product p ON ubl.product_id = p.id " +
-            "WHERE p.merchant_id = #{merchantId} " +
+            "LEFT JOIN user u ON ubl.user_id = u.id " +
+            "WHERE p.merchant_id = #{merchantId} AND p.deleted = 0 " +
             "ORDER BY ubl.browse_time DESC " +
             "LIMIT #{limit}")
     List<UserBrowseLog> getMerchantProductBrowseLog(@Param("merchantId") Long merchantId, @Param("limit") Integer limit);
