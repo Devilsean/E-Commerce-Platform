@@ -4,38 +4,37 @@
     background: transparent;
     color: var(--text-secondary);
     margin-top: var(--spacing-4xl);
-    padding-top: 60px;
+    padding: var(--spacing-3xl) 0;
     border-top: 1px solid var(--border-light);
 }
 
 .footer-content {
-    max-width: 1400px;
+    max-width: 1200px;
     margin: 0 auto;
-    padding: 0 var(--spacing-lg) 60px;
+    padding: 0 var(--spacing-lg);
 }
 
 .footer-grid {
     display: grid;
-    grid-template-columns: 2fr 1fr 1fr 1fr;
-    gap: 60px;
-    margin-bottom: 60px;
+    grid-template-columns: 1.5fr 1fr 1fr;
+    gap: var(--spacing-3xl);
+    margin-bottom: var(--spacing-3xl);
 }
 
 /* 页脚品牌区 */
 .footer-brand {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-md);
+    gap: var(--spacing-sm);
 }
 
 .footer-logo {
     display: flex;
     align-items: center;
     gap: var(--spacing-sm);
-    font-size: var(--text-2xl);
+    font-size: var(--text-xl);
     font-weight: var(--font-bold);
     color: var(--text-primary);
-    margin-bottom: var(--spacing-md);
 }
 
 .footer-logo .icon {
@@ -43,47 +42,21 @@
 }
 
 .footer-description {
-    font-size: var(--text-base);
-    color: var(--text-secondary);
-    line-height: 1.8;
-    margin-bottom: var(--spacing-xl);
-}
-
-.footer-social {
-    display: flex;
-    gap: var(--spacing-sm);
-}
-
-.social-link {
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: transparent;
-    border: 1px solid var(--border-light);
-    border-radius: var(--radius-md);
-    color: var(--text-secondary);
-    transition: all var(--transition-fast);
-}
-
-.social-link:hover {
-    background: var(--bg-secondary);
-    border-color: var(--text-primary);
-    color: var(--text-primary);
-    transform: translateY(-2px);
+    font-size: var(--text-sm);
+    color: var(--text-tertiary);
+    line-height: 1.6;
+    margin-top: var(--spacing-xs);
 }
 
 /* 页脚链接区 */
 .footer-section {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-md);
 }
 
 .footer-title {
-    font-size: var(--text-lg);
-    font-weight: var(--font-bold);
+    font-size: var(--text-base);
+    font-weight: var(--font-semibold);
     color: var(--text-primary);
     margin-bottom: var(--spacing-md);
 }
@@ -91,116 +64,123 @@
 .footer-links {
     display: flex;
     flex-direction: column;
-    gap: var(--spacing-lg);
+    gap: var(--spacing-sm);
 }
 
 .footer-link {
     color: var(--text-secondary);
-    font-size: var(--text-base);
+    font-size: var(--text-sm);
     text-decoration: none;
-    transition: all var(--transition-fast);
-    display: flex;
-    align-items: center;
-    gap: var(--spacing-xs);
-    line-height: 1.6;
+    transition: color var(--transition-fast);
+    line-height: 1.8;
 }
 
 .footer-link:hover {
     color: var(--text-primary);
-    padding-left: var(--spacing-xs);
-}
-
-.footer-link .icon {
-    width: 16px;
-    height: 16px;
 }
 
 /* 联系信息 */
+.footer-contact {
+    display: flex;
+    flex-direction: column;
+    gap: var(--spacing-sm);
+}
+
 .footer-contact-item {
     display: flex;
-    align-items: flex-start;
+    align-items: center;
     gap: var(--spacing-sm);
     color: var(--text-secondary);
-    font-size: var(--text-base);
-    margin-bottom: var(--spacing-lg);
-    line-height: 1.6;
+    font-size: var(--text-sm);
+    line-height: 1.8;
 }
 
 .footer-contact-item .icon {
     flex-shrink: 0;
-    margin-top: 2px;
-    color: var(--text-primary);
+    color: var(--text-tertiary);
 }
 
 /* 页脚底部 */
 .footer-bottom {
-    padding-top: 40px;
+    padding-top: var(--spacing-xl);
     border-top: 1px solid var(--border-light);
     display: flex;
     justify-content: space-between;
     align-items: center;
     flex-wrap: wrap;
-    gap: var(--spacing-lg);
+    gap: var(--spacing-md);
 }
 
 .footer-copyright {
-    font-size: var(--text-base);
+    font-size: var(--text-sm);
     color: var(--text-tertiary);
-    line-height: 1.6;
 }
 
 .footer-links-bottom {
     display: flex;
-    gap: var(--spacing-xl);
+    align-items: center;
+    gap: var(--spacing-md);
 }
 
 .footer-links-bottom a {
     color: var(--text-secondary);
-    font-size: var(--text-base);
+    font-size: var(--text-sm);
     text-decoration: none;
     transition: color var(--transition-fast);
-    line-height: 1.6;
 }
 
 .footer-links-bottom a:hover {
     color: var(--text-primary);
 }
 
-/* 响应式设计 */
-@media (max-width: 1024px) {
-    .footer-grid {
-        grid-template-columns: 1fr 1fr;
-        gap: var(--spacing-xl);
-    }
+.footer-links-bottom .separator {
+    color: var(--text-tertiary);
+    font-size: var(--text-sm);
 }
 
+/* 响应式设计 */
 @media (max-width: 768px) {
+    .footer {
+        padding: var(--spacing-2xl) 0;
+    }
+
     .footer-content {
-        padding: var(--spacing-xl) var(--spacing-md);
+        padding: 0 var(--spacing-md);
     }
 
     .footer-grid {
         grid-template-columns: 1fr;
-        gap: var(--spacing-xl);
+        gap: var(--spacing-2xl);
+        margin-bottom: var(--spacing-2xl);
     }
 
     .footer-bottom {
         flex-direction: column;
         text-align: center;
+        gap: var(--spacing-md);
     }
 
     .footer-links-bottom {
-        flex-direction: column;
-        gap: var(--spacing-sm);
+        flex-wrap: wrap;
+        justify-content: center;
     }
 }
 
 @media (max-width: 480px) {
     .footer-logo {
-        font-size: var(--text-xl);
+        font-size: var(--text-lg);
     }
 
     .footer-title {
-        font-size: var(--text-base);
+        font-size: var(--text-sm);
+    }
+
+    .footer-links-bottom {
+        flex-direction: column;
+        gap: var(--spacing-xs);
+    }
+
+    .footer-links-bottom .separator {
+        display: none;
     }
 }

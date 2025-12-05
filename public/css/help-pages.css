@@ -1,0 +1,136 @@
+/* ==================== 帮助页面样式 ==================== */
+
+.help-page {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 2rem 1rem;
+}
+
+.help-header {
+    margin-bottom: 2rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.help-header h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin: 1rem 0 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.help-header h1 .icon {
+    color: var(--primary);
+}
+
+.help-content {
+    line-height: 1.8;
+}
+
+.help-section {
+    margin-bottom: 2.5rem;
+    padding: 1.5rem;
+    background: var(--card-bg);
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.help-section h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.help-section h3 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin: 1rem 0 0.5rem;
+}
+
+.help-section p {
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+}
+
+.help-section ul,
+.help-section ol {
+    margin: 1rem 0;
+    padding-left: 2rem;
+}
+
+.help-section li {
+    color: var(--text-secondary);
+    margin-bottom: 0.75rem;
+    line-height: 1.6;
+}
+
+.help-section li strong {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.help-section ol {
+    counter-reset: item;
+}
+
+.help-section ol li {
+    counter-increment: item;
+}
+
+.faq-item {
+    margin: 1.5rem 0;
+    padding: 1rem;
+    background: var(--bg-secondary);
+    border-radius: 8px;
+    border-left: 3px solid var(--primary);
+}
+
+.faq-item h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    color: var(--primary);
+    margin: 0 0 0.5rem;
+}
+
+.faq-item p {
+    color: var(--text-secondary);
+    margin: 0;
+}
+
+.text-muted {
+    color: var(--text-tertiary);
+    font-size: 0.875rem;
+    font-style: italic;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+    .help-page {
+        padding: 1rem 0.5rem;
+    }
+
+    .help-header h1 {
+        font-size: 1.5rem;
+    }
+
+    .help-section {
+        padding: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .help-section h2 {
+        font-size: 1.25rem;
+    }
+
+    .help-section ul,
+    .help-section ol {
+        padding-left: 1.5rem;
+    }
+}

@@ -226,29 +226,29 @@ const ProductDetailService = {
                         <!-- 购买操作区 -->
                         <div class="detail-purchase-box">
                             <div class="quantity-selector-modern">
-                                <label class="quantity-label">购买数量</label>
-                                <div class="quantity-controls">
-                                    <button class="qty-btn" onclick="ProductDetailService.decreaseQuantity()" ${product.stock < 1 ? 'disabled' : ''}>
-                                        <svg width="16" height="16" class="icon"><use xlink:href="#icon-minus"></use></svg>
-                                    </button>
-                                    <input type="number" id="productQuantity" value="1" min="1" max="${product.stock}" class="qty-input" readonly>
-                                    <button class="qty-btn" onclick="ProductDetailService.increaseQuantity(${product.stock})" ${product.stock < 1 ? 'disabled' : ''}>
-                                        <svg width="16" height="16" class="icon"><use xlink:href="#icon-plus"></use></svg>
-                                    </button>
-                                </div>
+                            <label class="quantity-label">购买数量</label>
+                            <div class="quantity-controls">
+                                <button class="qty-btn" onclick="ProductDetailService.decreaseQuantity()" ${product.stock < 1 ? 'disabled' : ''}>
+                                    <img src="https://img.icons8.com/?size=100&id=1504&format=png" alt="Decrease Quantity Icon" style="width: 16px; height: 16px;">
+                                </button>
+                                <input type="number" id="productQuantity" value="1" min="1" max="${product.stock}" class="qty-input" readonly>
+                                <button class="qty-btn" onclick="ProductDetailService.increaseQuantity(${product.stock})" ${product.stock < 1 ? 'disabled' : ''}>
+                                    <img src="https://img.icons8.com/?size=100&id=1501&format=png" alt="Increase Quantity Icon" style="width: 16px; height: 16px;">
+                                </button>
                             </div>
+                        </div>
 
                             <div class="purchase-actions">
-                                <button class="btn btn-primary btn-lg btn-block" 
+                                <button class="btn btn-outline btn-lg" 
                                         onclick="ProductDetailService.addToCart()"
                                         ${product.stock < 1 ? 'disabled' : ''}>
-                                    <svg width="20" height="20" class="icon"><use xlink:href="#icon-cart"></use></svg>
+                                    <img src="https://img.icons8.com/?size=100&id=23169&format=png" alt="Add to Cart Icon" style="width: 20px; height: 20px;">
                                     ${product.stock < 1 ? '已售罄' : '加入购物车'}
                                 </button>
                                 <button class="btn btn-outline btn-lg" 
                                         onclick="ProductDetailService.buyNow()"
                                         ${product.stock < 1 ? 'disabled' : ''}>
-                                    <svg width="20" height="20" class="icon"><use xlink:href="#icon-credit-card"></use></svg>
+                                    <img src="https://img.icons8.com/?size=100&id=11833&format=png" alt="Buy Now Icon" style="width: 20px; height: 20px;">
                                     立即购买
                                 </button>
                             </div>
@@ -396,10 +396,10 @@ const ProductDetailService = {
             return `
                 <div class="tab-content-box">
                     <div class="empty-reviews">
-                        <svg width="80" height="80" class="icon"><use xlink:href="#icon-star"></use></svg>
+                                                <img src="https://img.icons8.com/?size=100&id=547&format=png" alt="No Reviews Star Icon" style="width: 80px; height: 80px;">
                         <p>暂无评价</p>
                         <button class="btn btn-primary" onclick="ProductDetailService.writeReview()">
-                            <svg width="18" height="18" class="icon"><use xlink:href="#icon-write"></use></svg>
+                                                    <img src="https://img.icons8.com/?size=100&id=6699&format=png" alt="Write Review Icon" style="width: 18px; height: 18px;">
                             写第一条评价
                         </button>
                     </div>

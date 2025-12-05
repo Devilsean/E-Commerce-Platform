@@ -89,28 +89,36 @@ const ProfileService = {
                     </div>
                     <div class="order-stats-grid">
                         <div class="order-stat-card" onclick="window.location.hash = '/orders'; setTimeout(() => { if(window.app && window.app.loadOrders) window.app.loadOrders(0); }, 200);" style="cursor: pointer;">
-                            <div class="stat-icon"><svg width="32" height="32" class="icon" aria-hidden="true"><use xlink:href="#icon-money"></use></svg></div>
+                            <div class="stat-icon">
+                                <img src="https://img.icons8.com/?size=100&id=7252&format=png" alt="Pending Payment Icon" style="width: 32px; height: 32px;">
+                            </div>
                             <div class="stat-info">
                                 <div class="stat-number" id="pendingCount">0</div>
                                 <div class="stat-label">待付款</div>
                             </div>
                         </div>
                         <div class="order-stat-card" onclick="window.location.hash = '/orders'; setTimeout(() => { if(window.app && window.app.loadOrders) window.app.loadOrders(1); }, 200);" style="cursor: pointer;">
-                            <div class="stat-icon"><svg width="32" height="32" class="icon" aria-hidden="true"><use xlink:href="#icon-box"></use></svg></div>
+                            <div class="stat-icon">
+                                <img src="https://img.icons8.com/?size=100&id=12091&format=png" alt="Paid Icon" style="width: 32px; height: 32px;">
+                            </div>
                             <div class="stat-info">
                                 <div class="stat-number" id="paidCount">0</div>
                                 <div class="stat-label">待发货</div>
                             </div>
                         </div>
                         <div class="order-stat-card" onclick="window.location.hash = '/orders'; setTimeout(() => { if(window.app && window.app.loadOrders) window.app.loadOrders(3); }, 200);" style="cursor: pointer;">
-                            <div class="stat-icon"><svg width="32" height="32" class="icon" aria-hidden="true"><use xlink:href="#icon-truck"></use></svg></div>
+                            <div class="stat-icon">
+                                <img src="https://img.icons8.com/?size=100&id=487&format=png" alt="Shipped Icon" style="width: 32px; height: 32px;">
+                            </div>
                             <div class="stat-info">
                                 <div class="stat-number" id="shippedCount">0</div>
                                 <div class="stat-label">待收货</div>
                             </div>
                         </div>
                         <div class="order-stat-card" onclick="window.location.hash = '/orders'; setTimeout(() => { if(window.app && window.app.loadOrders) window.app.loadOrders(4); }, 200);" style="cursor: pointer;">
-                            <div class="stat-icon"><svg width="32" height="32" class="icon" aria-hidden="true"><use xlink:href="#icon-check"></use></svg></div>
+                            <div class="stat-icon">
+                                <img src="https://img.icons8.com/?size=100&id=3686&format=png" alt="Completed Icon" style="width: 32px; height: 32px;">
+                            </div>
                             <div class="stat-info">
                                 <div class="stat-number" id="completedCount">0</div>
                                 <div class="stat-label">已完成</div>
@@ -150,7 +158,9 @@ const ProfileService = {
                     </div>
                     <div class="settings-list">
                         <div class="setting-item" onclick="ProfileService.showEditProfileModal()">
-                            <div class="setting-icon"><svg width="24" height="24" class="icon" aria-hidden="true"><use xlink:href="#icon-user"></use></svg></div>
+                            <div class="setting-icon">
+                                <img src="https://img.icons8.com/?size=100&id=23264&format=png" alt="Security Settings Icon" style="width: 24px; height: 24px;">
+                            </div>
                             <div class="setting-info">
                                 <h4>个人信息</h4>
                                 <p>修改昵称、联系方式等基本信息</p>
@@ -158,7 +168,9 @@ const ProfileService = {
                             <button class="btn btn-sm">编辑</button>
                         </div>
                         <div class="setting-item" onclick="ProfileService.showChangePasswordModal()">
-                            <div class="setting-icon"><svg width="24" height="24" class="icon" aria-hidden="true"><use xlink:href="#icon-lock"></use></svg></div>
+                            <div class="setting-icon">
+                                <img src="https://img.icons8.com/?size=100&id=94&format=png" alt="Security Settings Icon" style="width: 24px; height: 24px;">
+                            </div>
                             <div class="setting-info">
                                 <h4>安全设置</h4>
                                 <p>修改密码、绑定手机号</p>
@@ -166,7 +178,9 @@ const ProfileService = {
                             <button class="btn btn-sm">设置</button>
                         </div>
                         <div class="setting-item" onclick="ProfileService.showAccountStats()">
-                            <div class="setting-icon"><svg width="24" height="24" class="icon" aria-hidden="true"><use xlink:href="#icon-order"></use></svg></div>
+                            <div class="setting-icon">
+                                <img src="https://img.icons8.com/?size=100&id=15&format=png" alt="Security Settings Icon" style="width: 24px; height: 24px;">
+                            </div>
                             <div class="setting-info">
                                 <h4>账户统计</h4>
                                 <p>查看消费记录和订单历史</p>
@@ -190,29 +204,36 @@ const ProfileService = {
                     </div>
                     <div class="order-stats-grid">
                         <div class="order-stat-card">
-                            <div class="stat-icon"><svg width="32" height="32" class="icon" aria-hidden="true"><use xlink:href="#icon-box"></use></svg></div>
+                            <div class="stat-icon">
+                                <img src="https://img.icons8.com/?size=100&id=DlNS9fNLzyOd&format=png" alt="Total Products Icon" style="width: 32px; height: 32px;">
+                            </div>
                             <div class="stat-info">
                                 <div class="stat-number" id="merchantProductCount">0</div>
                                 <div class="stat-label">商品总数</div>
                             </div>
                         </div>
                         <div class="order-stat-card">
-                            <div class="stat-icon"><svg width="32" height="32" class="icon" aria-hidden="true"><use xlink:href="#icon-fire"></use></svg></div>
+                            <div class="stat-icon">
+                                <img src="https://img.icons8.com/?size=100&id=3x0z0wmYqFpB&format=png" alt="Total Products Icon" style="width: 32px; height: 32px;">
+                            </div>
                             <div class="stat-info">
                                 <div class="stat-number" id="merchantTotalSales">0</div>
                                 <div class="stat-label">总销量</div>
                             </div>
                         </div>
                         <div class="order-stat-card">
-                            <div class="stat-icon"><svg width="32" height="32" class="icon" aria-hidden="true"><use xlink:href="#icon-money"></use></svg></div>
+                            <div class="stat-icon">
+                                <img src="https://img.icons8.com/?size=100&id=w9CgCGrxafL1&format=png" alt="Total Products Icon" style="width: 32px; height: 32px;">
+                            </div>
                             <div class="stat-info">
                                 <div class="stat-number" id="merchantRevenue">¥0</div>
                                 <div class="stat-label">总收入</div>
                             </div>
                         </div>
                         <div class="order-stat-card">
-                            <div class="stat-icon"><svg width="32" height="32" class="icon" aria-hidden="true"><use xlink:href="#icon-star"></use></svg></div>
-                            <div class="stat-info">
+                            <div class="stat-icon">
+                                <img src="https://img.icons8.com/?size=100&id=VghVCIlysYfn&format=png" alt="Total Products Icon" style="width: 32px; height: 32px;">
+                            </div>
                                 <div class="stat-number" id="merchantRating">5.0</div>
                                 <div class="stat-label">店铺评分</div>
                             </div>
@@ -255,7 +276,9 @@ const ProfileService = {
                     </div>
                     <div class="settings-list">
                         <div class="setting-item">
-                            <div class="setting-icon"><svg width="24" height="24" class="icon" aria-hidden="true"><use xlink:href="#icon-box"></use></svg></div>
+                            <div class="stat-icon">
+                                <img src="https://img.icons8.com/?size=100&id=12091&format=png" alt="Total Products Icon" style="width: 32px; height: 32px;">
+                            </div>
                             <div class="setting-info">
                                 <h4>商品管理</h4>
                                 <p>查看和管理店铺商品</p>
@@ -263,7 +286,9 @@ const ProfileService = {
                             <button class="btn btn-sm btn-primary" onclick="event.stopPropagation(); window.location.hash = '/merchant';">进入</button>
                         </div>
                         <div class="setting-item">
-                            <div class="setting-icon"><svg width="24" height="24" class="icon" aria-hidden="true"><use xlink:href="#icon-order"></use></svg></div>
+                            <div class="stat-icon">
+                                <img src="https://img.icons8.com/?size=100&id=4255&format=png" alt="Total Products Icon" style="width: 32px; height: 32px;">
+                            </div>
                             <div class="setting-info">
                                 <h4>订单管理</h4>
                                 <p>处理客户订单和发货</p>
@@ -271,7 +296,9 @@ const ProfileService = {
                             <button class="btn btn-sm btn-primary" onclick="event.stopPropagation(); window.location.hash = '/merchant';">进入</button>
                         </div>
                         <div class="setting-item" onclick="showMessage('数据分析功能开发中...', 'info')">
-                            <div class="setting-icon"><svg width="24" height="24" class="icon" aria-hidden="true"><use xlink:href="#icon-order"></use></svg></div>
+                            <div class="stat-icon">
+                                <img src="https://img.icons8.com/?size=100&id=3005&format=png" alt="Total Products Icon" style="width: 32px; height: 32px;">
+                            </div>
                             <div class="setting-info">
                                 <h4>数据分析</h4>
                                 <p>查看销售趋势和热门商品</p>
@@ -707,7 +734,9 @@ const ProfileService = {
         if (addresses.length === 0) {
             container.innerHTML = `
                 <div class="empty-state-small">
-                    <div class="empty-icon-small"><svg width="56" height="56" class="icon" aria-hidden="true"><use xlink:href="#icon-location"></use></svg></div>
+                    <div class="empty-icon-small">
+                        <img src="https://img.icons8.com/?size=100&id=53383&format=png" alt="No Address Icon" style="width: 56px; height: 56px;">
+                    </div>
                     <p>还没有收货地址</p>
                     <button class="btn btn-primary btn-sm" onclick="ProfileService.showAddAddressModal()">
                         添加地址

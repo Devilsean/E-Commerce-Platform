@@ -33,6 +33,18 @@ class App {
         this.router.register('/register', () => this.renderRegister());
         this.router.register('/profile', () => this.renderProfile());
         this.router.register('/merchant', () => this.renderMerchantManagement());
+
+        // 帮助页面路由
+        this.router.register('/help/order', () => this.renderHelpOrder());
+        this.router.register('/help/payment', () => this.renderHelpPayment());
+        this.router.register('/help/return', () => this.renderHelpReturn());
+        this.router.register('/help/faq', () => this.renderHelpFAQ());
+
+        // 信息页面路由
+        this.router.register('/privacy', () => this.renderPrivacy());
+        this.router.register('/terms', () => this.renderTerms());
+        this.router.register('/about', () => this.renderAbout());
+
         this.router.register('/404', () => this.render404());
     }
 
@@ -883,7 +895,9 @@ class App {
         if (this.cart.length === 0) {
             content.innerHTML = `
                 <div class="empty-state">
-                    <div class="empty-icon"><svg width="96" height="96" class="icon" aria-hidden="true"><use xlink:href="#icon-cart"></use></svg></div>
+                    <div class="empty-icon">
+                        <img src="https://img.icons8.com/?size=128&id=ii6Lr4KivOiE&format=png" alt="Empty Cart Icon" style="width: 96px; height: 96px;">
+                    </div>
                     <h3>购物车是空的</h3>
                     <p>快去挑选心仪的商品吧</p>
                     <button class="btn btn-primary btn-lg" onclick="window.location.hash = '/';">
@@ -1307,14 +1321,18 @@ class App {
                                 <label class="radio-card">
                                     <input type="radio" name="userType" value="1" checked>
                                     <div class="radio-content">
-                                        <span class="radio-icon"><svg width="20" height="20" class="icon" aria-hidden="true"><use xlink:href="#icon-user"></use></svg></span>
+                                        <span class="radio-icon">
+                                            <img src="https://img.icons8.com/?size=100&id=12438&format=png" alt="Regular User Icon" style="width: 40px; height: 40px;">
+                                        </span>
                                         <span class="radio-text">普通用户</span>
                                     </div>
                                 </label>
                                 <label class="radio-card">
                                     <input type="radio" name="userType" value="2">
                                     <div class="radio-content">
-                                        <span class="radio-icon"><svg width="20" height="20" class="icon" aria-hidden="true"><use xlink:href="#icon-merchant"></use></svg></span>
+                                        <span class="radio-icon">
+                                            <img src="https://img.icons8.com/?size=100&id=ZDJDUuKgm34C&format=png" alt="Merchant Icon" style="width: 40px; height: 40px;">
+                                        </span>
                                         <span class="radio-text">商家</span>
                                     </div>
                                 </label>
@@ -1452,7 +1470,7 @@ class App {
                         </div>
                         
                         <div class="form-tips">
-                            <p>📌 注册即表示同意用户协议和隐私政策</p>
+                            <p> 注册即表示同意用户协议和隐私政策</p>
                         </div>
                         
                         <button type="submit" class="btn btn-primary btn-block btn-lg">
@@ -1516,7 +1534,7 @@ class App {
             <div class="profile-content">
                 <div class="profile-section">
                     <div class="section-title">
-                        <h3>📋 我的订单</h3>
+                        <h3> 我的订单</h3>
                         <a href="#/orders" class="view-all">查看全部 →</a>
                     </div>
                     <div class="order-stats-grid">
@@ -1978,17 +1996,674 @@ class App {
         this.loadMerchantData();
     }
 
-    render404() {
-        const content = document.getElementById('main-content');
-        content.innerHTML = `
+    // ==================== 帮助页面 ====================
+    
+    renderHelpOrder() {
+            const content = document.getElementById('main-content');
+            content.innerHTML = `
+            <div class="help-page">
+                <div class="help-header">
+                    <button class="btn btn-sm" onclick="history.back()">← 返回</button>
+                    <h1><svg width="28" height="28" class="icon" aria-hidden="true"><use xlink:href="#icon-order"></use></svg> 购物流程</h1>
+                </div>
+                
+                <div class="help-content">
+                    <div class="help-section">
+                        <h2>1. 浏览商品</h2>
+                        <p>在首页浏览所有商品，或通过分类、搜索功能快速找到您需要的商品。</p>
+                        <ul>
+                            <li>点击商品卡片查看详细信息</li>
+                            <li>使用搜索框输入关键词搜索商品</li>
+                            <li>通过左侧分类栏筛选商品类别</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="help-section">
+                        <h2>2. 加入购物车</h2>
+                        <p>找到心仪的商品后，点击"加入购物车"按钮。</p>
+                        <ul>
+                            <li>在商品详情页可以选择购买数量</li>
+                            <li>购物车图标会显示当前商品数量</li>
+                            <li>可以继续浏览添加更多商品</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="help-section">
+                        <h2>3. 确认订单</h2>
+                        <p>进入购物车页面，确认商品信息和数量。</p>
+                        <ul>
+                            <li>可以修改商品数量或删除商品</li>
+                            <li>查看订单总金额</li>
+                            <li>点击"立即结算"进入结算页面</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="help-section">
+                        <h2>4. 填写收货信息</h2>
+                        <p>在结算页面填写收货人信息。</p>
+                        <ul>
+                            <li>填写收货人姓名和联系电话</li>
+                            <li>填写详细的收货地址</li>
+                            <li>可选填订单备注</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="help-section">
+                        <h2>5. 完成支付</h2>
+                        <p>提交订单后，使用支付宝或微信扫码支付。</p>
+                        <ul>
+                            <li>支持微信支付、支付宝支付</li>
+                            <li>支付成功后订单自动确认</li>
+                            <li>可在"我的订单"中查看订单状态</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="help-section">
+                        <h2>6. 等待收货</h2>
+                        <p>商家会尽快为您发货，请耐心等待。</p>
+                        <ul>
+                            <li>订单发货后会更新物流信息</li>
+                            <li>收到商品后请及时确认收货</li>
+                            <li>确认收货后可以对商品进行评价</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        `;
+        }
+
+        renderHelpPayment() {
+            const content = document.getElementById('main-content');
+            content.innerHTML = `
+            <div class="help-page">
+                <div class="help-header">
+                    <button class="btn btn-sm" onclick="history.back()">← 返回</button>
+                    <h1><svg width="28" height="28" class="icon" aria-hidden="true"><use xlink:href="#icon-credit-card"></use></svg> 支付方式</h1>
+                </div>
+                
+                <div class="help-content">
+                    <div class="help-section">
+                        <h2>支持的支付方式</h2>
+                        <p>我们支持多种便捷的支付方式，确保您的购物体验安全、快速。</p>
+                    </div>
+                    
+                    <div class="help-section">
+                        <h2>1. 微信支付</h2>
+                        <ul>
+                            <li>使用微信扫一扫功能扫描支付二维码</li>
+                            <li>确认支付金额后输入支付密码</li>
+                            <li>支付成功后自动跳转订单页面</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="help-section">
+                        <h2>2. 支付宝支付</h2>
+                        <ul>
+                            <li>使用支付宝扫一扫功能扫描支付二维码</li>
+                            <li>确认支付金额后输入支付密码</li>
+                            <li>支付成功后自动跳转订单页面</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="help-section">
+                        <h2>支付安全保障</h2>
+                        <ul>
+                            <li>所有支付信息均经过加密处理</li>
+                            <li>采用第三方支付平台，资金安全有保障</li>
+                            <li>支持7天无理由退款</li>
+                            <li>如遇支付问题，请联系客服：400-888-8888</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="help-section">
+                        <h2>常见问题</h2>
+                        <div class="faq-item">
+                            <h3>Q: 支付失败怎么办？</h3>
+                            <p>A: 请检查网络连接和账户余额，如仍无法支付请联系客服。</p>
+                        </div>
+                        <div class="faq-item">
+                            <h3>Q: 支付后多久发货？</h3>
+                            <p>A: 一般在支付成功后24小时内发货。</p>
+                        </div>
+                        <div class="faq-item">
+                            <h3>Q: 可以使用优惠券吗？</h3>
+                            <p>A: 目前暂不支持优惠券，敬请期待。</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        }
+
+        renderHelpReturn() {
+            const content = document.getElementById('main-content');
+            content.innerHTML = `
+            <div class="help-page">
+                <div class="help-header">
+                    <button class="btn btn-sm" onclick="history.back()">← 返回</button>
+                    <h1><svg width="28" height="28" class="icon" aria-hidden="true"><use xlink:href="#icon-refresh"></use></svg> 退换货政策</h1>
+                </div>
+                
+                <div class="help-content">
+                    <div class="help-section">
+                        <h2>7天无理由退货</h2>
+                        <p>自收到商品之日起7天内，如商品未使用且不影响二次销售，可申请无理由退货。</p>
+                    </div>
+                    
+                    <div class="help-section">
+                        <h2>退货条件</h2>
+                        <ul>
+                            <li>商品及包装保持完好，不影响二次销售</li>
+                            <li>商品配件、赠品、发票等齐全</li>
+                            <li>未经使用或损坏</li>
+                            <li>不属于特殊商品（如食品、贴身用品等）</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="help-section">
+                        <h2>退货流程</h2>
+                        <ol>
+                            <li>在"我的订单"中找到需要退货的订单</li>
+                            <li>点击"申请退货"按钮</li>
+                            <li>填写退货原因和说明</li>
+                            <li>等待商家审核（1-2个工作日）</li>
+                            <li>审核通过后，将商品寄回指定地址</li>
+                            <li>商家收到商品并确认无误后，3-5个工作日内退款</li>
+                        </ol>
+                    </div>
+                    
+                    <div class="help-section">
+                        <h2>换货说明</h2>
+                        <ul>
+                            <li>如商品存在质量问题，可申请换货</li>
+                            <li>换货需提供商品问题照片</li>
+                            <li>商家审核通过后，将为您寄送新商品</li>
+                            <li>换货运费由商家承担</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="help-section">
+                        <h2>退款说明</h2>
+                        <ul>
+                            <li>退款将原路返回至您的支付账户</li>
+                            <li>退款到账时间：3-5个工作日</li>
+                            <li>如超过5个工作日未到账，请联系客服</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="help-section">
+                        <h2>特别提示</h2>
+                        <ul>
+                            <li>退货运费：非质量问题由买家承担</li>
+                            <li>质量问题退货运费由商家承担</li>
+                            <li>如有疑问，请联系客服：400-888-8888</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        `;
+        }
+
+        renderHelpFAQ() {
+            const content = document.getElementById('main-content');
+            content.innerHTML = `
+            <div class="help-page">
+                <div class="help-header">
+                    <button class="btn btn-sm" onclick="history.back()">← 返回</button>
+                    <h1><svg width="28" height="28" class="icon" aria-hidden="true"><use xlink:href="#icon-help"></use></svg> 常见问题</h1>
+                </div>
+                
+                <div class="help-content">
+                    <div class="help-section">
+                        <h2>账户相关</h2>
+                        
+                        <div class="faq-item">
+                            <h3>Q: 如何注册账号？</h3>
+                            <p>A: 点击页面右上角的"登录"按钮，然后选择"立即注册"，填写相关信息即可完成注册。</p>
+                        </div>
+                        
+                        <div class="faq-item">
+                            <h3>Q: 忘记密码怎么办？</h3>
+                            <p>A: 请联系客服：400-888-8888，提供账号信息后可重置密码。</p>
+                        </div>
+                        
+                        <div class="faq-item">
+                            <h3>Q: 可以修改个人信息吗？</h3>
+                            <p>A: 可以。登录后进入"个人中心"，在账户设置中修改个人信息。</p>
+                        </div>
+                    </div>
+                    
+                    <div class="help-section">
+                        <h2>购物相关</h2>
+                        
+                        <div class="faq-item">
+                            <h3>Q: 如何搜索商品？</h3>
+                            <p>A: 在页面顶部的搜索框中输入商品名称或关键词，点击搜索即可。</p>
+                        </div>
+                        
+                        <div class="faq-item">
+                            <h3>Q: 购物车商品会保存多久？</h3>
+                            <p>A: 购物车商品会一直保存，直到您手动删除或下单购买。</p>
+                        </div>
+                        
+                        <div class="faq-item">
+                            <h3>Q: 可以一次购买多件商品吗？</h3>
+                            <p>A: 可以。将多件商品加入购物车后，一起结算即可。</p>
+                        </div>
+                    </div>
+                    
+                    <div class="help-section">
+                        <h2>订单相关</h2>
+                        
+                        <div class="faq-item">
+                            <h3>Q: 如何查看订单状态？</h3>
+                            <p>A: 登录后进入"个人中心"，点击"我的订单"即可查看所有订单状态。</p>
+                        </div>
+                        
+                        <div class="faq-item">
+                            <h3>Q: 可以取消订单吗？</h3>
+                            <p>A: 未支付的订单可以直接取消。已支付但未发货的订单，请联系客服取消。</p>
+                        </div>
+                        
+                        <div class="faq-item">
+                            <h3>Q: 订单发货后多久能收到？</h3>
+                            <p>A: 一般3-7个工作日内送达，具体时间视地区而定。</p>
+                        </div>
+                    </div>
+                    
+                    <div class="help-section">
+                        <h2>配送相关</h2>
+                        
+                        <div class="faq-item">
+                            <h3>Q: 配送范围是哪里？</h3>
+                            <p>A: 目前支持全国配送（港澳台除外）。</p>
+                        </div>
+                        
+                        <div class="faq-item">
+                            <h3>Q: 运费如何计算？</h3>
+                            <p>A: 目前全场包邮，无需支付运费。</p>
+                        </div>
+                        
+                        <div class="faq-item">
+                            <h3>Q: 可以修改收货地址吗？</h3>
+                            <p>A: 订单未发货前可以联系客服修改地址。已发货的订单无法修改。</p>
+                        </div>
+                    </div>
+                    
+                    <div class="help-section">
+                        <h2>售后相关</h2>
+                        
+                        <div class="faq-item">
+                            <h3>Q: 收到的商品有问题怎么办？</h3>
+                            <p>A: 请在收货后24小时内联系客服，提供商品照片，我们会尽快为您处理。</p>
+                        </div>
+                        
+                        <div class="faq-item">
+                            <h3>Q: 如何申请退款？</h3>
+                            <p>A: 在"我的订单"中找到对应订单，点击"申请退款"，填写退款原因即可。</p>
+                        </div>
+                        
+                        <div class="faq-item">
+                            <h3>Q: 退款多久到账？</h3>
+                            <p>A: 商家审核通过后，3-5个工作日内退款到账。</p>
+                        </div>
+                    </div>
+                    
+                    <div class="help-section">
+                        <h2>联系我们</h2>
+                        <p>如果以上内容无法解决您的问题，请通过以下方式联系我们：</p>
+                        <ul>
+                            <li>客服热线：400-888-8888（工作时间：9:00-18:00）</li>
+                            <li>客服邮箱：service@shop.com</li>
+                            <li>在线客服：点击页面右下角的客服图标</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        `;
+        }
+
+        // ==================== 信息页面 ====================
+
+        renderPrivacy() {
+            const content = document.getElementById('main-content');
+            content.innerHTML = `
+            <div class="help-page">
+                <div class="help-header">
+                    <button class="btn btn-sm" onclick="history.back()">← 返回</button>
+                    <h1><svg width="28" height="28" class="icon" aria-hidden="true"><use xlink:href="#icon-lock"></use></svg> 隐私政策</h1>
+                </div>
+                
+                <div class="help-content">
+                    <div class="help-section">
+                        <p class="text-muted">最后更新日期：2024年1月1日</p>
+                        <p>精品商城（以下简称"我们"）非常重视用户的隐私保护。本隐私政策说明了我们如何收集、使用、存储和保护您的个人信息。</p>
+                    </div>
+                    
+                    <div class="help-section">
+                        <h2>1. 信息收集</h2>
+                        <p>我们可能收集以下类型的信息：</p>
+                        <ul>
+                            <li><strong>账户信息：</strong>用户名、密码、手机号、邮箱等</li>
+                            <li><strong>订单信息：</strong>收货地址、联系方式、购买记录等</li>
+                            <li><strong>设备信息：</strong>IP地址、浏览器类型、操作系统等</li>
+                            <li><strong>使用信息：</strong>浏览记录、搜索记录、购物车信息等</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="help-section">
+                        <h2>2. 信息使用</h2>
+                        <p>我们收集的信息将用于：</p>
+                        <ul>
+                            <li>提供和改进我们的服务</li>
+                            <li>处理订单和配送商品</li>
+                            <li>与您沟通订单状态和促销活动</li>
+                            <li>个性化推荐商品</li>
+                            <li>防止欺诈和保护账户安全</li>
+                            <li>遵守法律法规要求</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="help-section">
+                        <h2>3. 信息共享</h2>
+                        <p>我们不会出售您的个人信息。在以下情况下，我们可能会共享您的信息：</p>
+                        <ul>
+                            <li>获得您的明确同意</li>
+                            <li>与配送服务商共享必要的配送信息</li>
+                            <li>与支付服务商共享必要的支付信息</li>
+                            <li>遵守法律法规或政府要求</li>
+                            <li>保护我们或他人的合法权益</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="help-section">
+                        <h2>4. 信息安全</h2>
+                        <p>我们采取以下措施保护您的信息安全：</p>
+                        <ul>
+                            <li>使用加密技术传输和存储敏感信息</li>
+                            <li>实施严格的访问控制和权限管理</li>
+                            <li>定期进行安全审计和漏洞扫描</li>
+                            <li>建立应急响应机制处理安全事件</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="help-section">
+                        <h2>5. Cookie使用</h2>
+                        <p>我们使用Cookie和类似技术来：</p>
+                        <ul>
+                            <li>记住您的登录状态</li>
+                            <li>保存购物车信息</li>
+                            <li>分析网站使用情况</li>
+                            <li>提供个性化体验</li>
+                        </ul>
+                        <p>您可以通过浏览器设置管理Cookie，但这可能影响某些功能的使用。</p>
+                    </div>
+                    
+                    <div class="help-section">
+                        <h2>6. 您的权利</h2>
+                        <p>您对个人信息享有以下权利：</p>
+                        <ul>
+                            <li>访问和查看您的个人信息</li>
+                            <li>更正不准确的个人信息</li>
+                            <li>删除您的个人信息</li>
+                            <li>撤回同意或限制处理</li>
+                            <li>数据可携带权</li>
+                        </ul>
+                        <p>如需行使上述权利，请联系我们的客服。</p>
+                    </div>
+                    
+                    <div class="help-section">
+                        <h2>7. 未成年人保护</h2>
+                        <p>我们不会故意收集未满18周岁未成年人的个人信息。如果您是未成年人的监护人，发现我们收集了未成年人的信息，请联系我们删除。</p>
+                    </div>
+                    
+                    <div class="help-section">
+                        <h2>8. 政策更新</h2>
+                        <p>我们可能会不时更新本隐私政策。更新后的政策将在网站上公布，重大变更会通过邮件或站内通知告知您。</p>
+                    </div>
+                    
+                    <div class="help-section">
+                        <h2>9. 联系我们</h2>
+                        <p>如对本隐私政策有任何疑问，请通过以下方式联系我们：</p>
+                        <ul>
+                            <li>客服热线：400-888-8888</li>
+                            <li>客服邮箱：service@shop.com</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        `;
+        }
+
+        renderTerms() {
+            const content = document.getElementById('main-content');
+            content.innerHTML = `
+            <div class="help-page">
+                <div class="help-header">
+                    <button class="btn btn-sm" onclick="history.back()">← 返回</button>
+                    <h1><svg width="28" height="28" class="icon" aria-hidden="true"><use xlink:href="#icon-note"></use></svg> 服务条款</h1>
+                </div>
+                
+                <div class="help-content">
+                    <div class="help-section">
+                        <p class="text-muted">最后更新日期：2024年1月1日</p>
+                        <p>欢迎使用精品商城！在使用我们的服务前，请仔细阅读以下服务条款。</p>
+                    </div>
+                    
+                    <div class="help-section">
+                        <h2>1. 服务说明</h2>
+                        <p>精品商城是一个在线购物平台，为用户提供商品浏览、购买、支付等服务。我们致力于为用户提供优质的购物体验。</p>
+                    </div>
+                    
+                    <div class="help-section">
+                        <h2>2. 用户注册</h2>
+                        <ul>
+                            <li>用户需提供真实、准确的注册信息</li>
+                            <li>用户应妥善保管账号和密码</li>
+                            <li>用户对账号下的所有行为负责</li>
+                            <li>禁止将账号转让或出借给他人使用</li>
+                            <li>发现账号被盗用应立即通知我们</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="help-section">
+                        <h2>3. 商品信息</h2>
+                        <ul>
+                            <li>我们努力确保商品信息的准确性</li>
+                            <li>商品图片仅供参考，以实物为准</li>
+                            <li>商品价格可能随市场变化调整</li>
+                            <li>库存信息实时更新，但不保证绝对准确</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="help-section">
+                        <h2>4. 订单处理</h2>
+                        <ul>
+                            <li>提交订单即表示您同意购买该商品</li>
+                            <li>我们有权拒绝或取消任何订单</li>
+                            <li>订单确认后，我们将尽快安排发货</li>
+                            <li>特殊情况下可能延迟发货，我们会及时通知</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="help-section">
+                        <h2>5. 支付方式</h2>
+                        <ul>
+                            <li>支持微信支付、支付宝等主流支付方式</li>
+                            <li>支付信息经过加密处理，确保安全</li>
+                            <li>支付成功后订单自动确认</li>
+                            <li>如遇支付问题，请联系客服</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="help-section">
+                        <h2>6. 配送服务</h2>
+                        <ul>
+                            <li>我们提供全国配送服务（港澳台除外）</li>
+                            <li>配送时间一般为3-7个工作日</li>
+                            <li>偏远地区可能需要更长时间</li>
+                            <li>配送过程中如有问题，请联系客服</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="help-section">
+                        <h2>7. 退换货政策</h2>
+                        <ul>
+                            <li>支持7天无理由退货</li>
+                            <li>商品需保持完好，不影响二次销售</li>
+                            <li>质量问题可申请换货或退款</li>
+                            <li>详细政策请查看"退换货政策"页面</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="help-section">
+                        <h2>8. 用户行为规范</h2>
+                        <p>用户在使用服务时，不得：</p>
+                        <ul>
+                            <li>发布虚假信息或恶意评价</li>
+                            <li>侵犯他人知识产权或隐私权</li>
+                            <li>进行欺诈、洗钱等违法活动</li>
+                            <li>干扰或破坏平台正常运营</li>
+                            <li>使用外挂、机器人等非法工具</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="help-section">
+                        <h2>9. 知识产权</h2>
+                        <ul>
+                            <li>网站内容受知识产权法保护</li>
+                            <li>未经许可不得复制、传播网站内容</li>
+                            <li>商标、Logo等标识归我们所有</li>
+                            <li>用户上传内容应确保拥有相应权利</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="help-section">
+                        <h2>10. 免责声明</h2>
+                        <ul>
+                            <li>我们不对第三方链接内容负责</li>
+                            <li>不可抗力导致的服务中断不承担责任</li>
+                            <li>用户自行承担使用服务的风险</li>
+                            <li>我们保留随时修改或终止服务的权利</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="help-section">
+                        <h2>11. 争议解决</h2>
+                        <ul>
+                            <li>本条款适用中华人民共和国法律</li>
+                            <li>因本条款引起的争议，双方应友好协商解决</li>
+                            <li>协商不成的，可向我方所在地人民法院提起诉讼</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="help-section">
+                        <h2>12. 条款修改</h2>
+                        <p>我们保留随时修改本服务条款的权利。修改后的条款将在网站上公布，继续使用服务即表示您接受修改后的条款。</p>
+                    </div>
+                    
+                    <div class="help-section">
+                        <h2>13. 联系我们</h2>
+                        <p>如对本服务条款有任何疑问，请通过以下方式联系我们：</p>
+                        <ul>
+                            <li>客服热线：400-888-8888</li>
+                            <li>客服邮箱：service@shop.com</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        `;
+        }
+
+        renderAbout() {
+            const content = document.getElementById('main-content');
+            content.innerHTML = `
+            <div class="help-page">
+                <div class="help-header">
+                    <button class="btn btn-sm" onclick="history.back()">← 返回</button>
+                    <h1><svg width="28" height="28" class="icon" aria-hidden="true"><use xlink:href="#icon-home"></use></svg> 关于我们</h1>
+                </div>
+                
+                <div class="help-content">
+                    <div class="help-section">
+                        <h2>公司简介</h2>
+                        <p>精品商城成立于2024年，是一家专注于为用户提供优质商品和卓越购物体验的电商平台。我们致力于精选全球好物，为消费者带来高品质的生活方式。</p>
+                    </div>
+                    
+                    <div class="help-section">
+                        <h2>我们的使命</h2>
+                        <p>让每个人都能轻松享受到优质商品和贴心服务，成为用户最信赖的购物平台。</p>
+                    </div>
+                    
+                    <div class="help-section">
+                        <h2>我们的愿景</h2>
+                        <p>打造中国领先的精品电商平台，为用户创造更美好的购物体验。</p>
+                    </div>
+                    
+                    <div class="help-section">
+                        <h2>核心价值观</h2>
+                        <ul>
+                            <li><strong>品质第一：</strong>严格把控商品质量，只为用户提供优质商品</li>
+                            <li><strong>用户至上：</strong>始终将用户需求放在首位，提供贴心服务</li>
+                            <li><strong>诚信经营：</strong>坚持诚信原则，建立长期信任关系</li>
+                            <li><strong>持续创新：</strong>不断优化服务，提升用户体验</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="help-section">
+                        <h2>我们的优势</h2>
+                        <ul>
+                            <li><strong>精选商品：</strong>严格筛选供应商，确保商品品质</li>
+                            <li><strong>价格优惠：</strong>直接对接品牌方，减少中间环节</li>
+                            <li><strong>快速配送：</strong>全国多个仓储中心，快速送达</li>
+                            <li><strong>售后保障：</strong>7天无理由退货，完善的售后服务</li>
+                            <li><strong>安全支付：</strong>多种支付方式，资金安全有保障</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="help-section">
+                        <h2>发展历程</h2>
+                        <ul>
+                            <li><strong>2024年1月：</strong>精品商城正式上线</li>
+                            <li><strong>2024年3月：</strong>注册用户突破10万</li>
+                            <li><strong>2024年6月：</strong>商品品类扩展至1000+</li>
+                            <li><strong>2024年9月：</strong>获得A轮融资</li>
+                            <li><strong>2024年12月：</strong>日订单量突破1万单</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="help-section">
+                        <h2>联系我们</h2>
+                        <p>我们期待为您提供更好的服务，欢迎随时联系我们：</p>
+                        <ul>
+                            <li><strong>客服热线：</strong>400-888-8888（工作时间：9:00-18:00）</li>
+                            <li><strong>客服邮箱：</strong>service@shop.com</li>
+                            <li><strong>公司地址：</strong>北京市朝阳区xx路xx号</li>
+                            <li><strong>商务合作：</strong>business@shop.com</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="help-section">
+                        <h2>加入我们</h2>
+                        <p>我们正在寻找志同道合的伙伴，如果您对电商行业充满热情，欢迎加入我们的团队！</p>
+                        <p>招聘邮箱：hr@shop.com</p>
+                    </div>
+                </div>
+            </div>
+        `;
+        }
+
+        render404() {
+            const content = document.getElementById('main-content');
+            content.innerHTML = `
             <div class="empty-state">
                 <div class="empty-icon">404</div>
                 <p>页面不存在</p>
                 <button class="btn btn-primary" onclick="app.router.navigate('/')">返回首页</button>
             </div>
         `;
+        }
     }
-}
 
-// ==================== 初始化应用 ====================
-const app = new App();
+    // ==================== 初始化应用 ====================
+    const app = new App();
