@@ -1,7 +1,7 @@
 /* ==================== 页脚样式 ==================== */
 
 .footer {
-    background: transparent;
+    background: linear-gradient(to bottom, transparent, rgba(0, 0, 0, 0.02));
     color: var(--text-secondary);
     margin-top: var(--spacing-4xl);
     padding: var(--spacing-3xl) 0;
@@ -16,7 +16,7 @@
 
 .footer-grid {
     display: grid;
-    grid-template-columns: 1.5fr 1fr 1fr;
+    grid-template-columns: 1.5fr 1fr 1fr 1fr;
     gap: var(--spacing-3xl);
     margin-bottom: var(--spacing-3xl);
 }
@@ -44,8 +44,51 @@
 .footer-description {
     font-size: var(--text-sm);
     color: var(--text-tertiary);
-    line-height: 1.6;
+    line-height: 1.8;
     margin-top: var(--spacing-xs);
+    margin-bottom: var(--spacing-md);
+}
+
+/* 社交媒体图标 */
+.footer-social {
+    margin-top: var(--spacing-lg);
+}
+
+.footer-social-title {
+    display: block;
+    font-size: var(--text-sm);
+    color: var(--text-secondary);
+    margin-bottom: var(--spacing-sm);
+    font-weight: var(--font-medium);
+}
+
+.footer-social-icons {
+    display: flex;
+    gap: var(--spacing-sm);
+}
+
+.social-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: all var(--transition-fast);
+}
+
+.social-icon:hover {
+    background: var(--primary);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.social-icon .icon {
+    color: inherit;
 }
 
 /* 页脚链接区 */
@@ -139,6 +182,17 @@
 }
 
 /* 响应式设计 */
+@media (max-width: 992px) {
+    .footer-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: var(--spacing-2xl);
+    }
+    
+    .footer-brand {
+        grid-column: 1 / -1;
+    }
+}
+
 @media (max-width: 768px) {
     .footer {
         padding: var(--spacing-2xl) 0;
@@ -152,6 +206,15 @@
         grid-template-columns: 1fr;
         gap: var(--spacing-2xl);
         margin-bottom: var(--spacing-2xl);
+    }
+    
+    .footer-brand {
+        grid-column: 1;
+        text-align: center;
+    }
+    
+    .footer-social-icons {
+        justify-content: center;
     }
 
     .footer-bottom {
@@ -169,6 +232,7 @@
 @media (max-width: 480px) {
     .footer-logo {
         font-size: var(--text-lg);
+        justify-content: center;
     }
 
     .footer-title {
@@ -182,5 +246,10 @@
 
     .footer-links-bottom .separator {
         display: none;
+    }
+    
+    .social-icon {
+        width: 32px;
+        height: 32px;
     }
 }

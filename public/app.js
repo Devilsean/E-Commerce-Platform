@@ -1997,10 +1997,10 @@ class App {
     }
 
     // ==================== 帮助页面 ====================
-    
+
     renderHelpOrder() {
-            const content = document.getElementById('main-content');
-            content.innerHTML = `
+        const content = document.getElementById('main-content');
+        content.innerHTML = `
             <div class="help-page">
                 <div class="help-header">
                     <button class="btn btn-sm" onclick="history.back()">← 返回</button>
@@ -2070,11 +2070,11 @@ class App {
                 </div>
             </div>
         `;
-        }
+    }
 
-        renderHelpPayment() {
-            const content = document.getElementById('main-content');
-            content.innerHTML = `
+    renderHelpPayment() {
+        const content = document.getElementById('main-content');
+        content.innerHTML = `
             <div class="help-page">
                 <div class="help-header">
                     <button class="btn btn-sm" onclick="history.back()">← 返回</button>
@@ -2133,11 +2133,11 @@ class App {
                 </div>
             </div>
         `;
-        }
+    }
 
-        renderHelpReturn() {
-            const content = document.getElementById('main-content');
-            content.innerHTML = `
+    renderHelpReturn() {
+        const content = document.getElementById('main-content');
+        content.innerHTML = `
             <div class="help-page">
                 <div class="help-header">
                     <button class="btn btn-sm" onclick="history.back()">← 返回</button>
@@ -2202,11 +2202,11 @@ class App {
                 </div>
             </div>
         `;
-        }
+    }
 
-        renderHelpFAQ() {
-            const content = document.getElementById('main-content');
-            content.innerHTML = `
+    renderHelpFAQ() {
+        const content = document.getElementById('main-content');
+        content.innerHTML = `
             <div class="help-page">
                 <div class="help-header">
                     <button class="btn btn-sm" onclick="history.back()">← 返回</button>
@@ -2321,13 +2321,13 @@ class App {
                 </div>
             </div>
         `;
-        }
+    }
 
-        // ==================== 信息页面 ====================
+    // ==================== 信息页面 ====================
 
-        renderPrivacy() {
-            const content = document.getElementById('main-content');
-            content.innerHTML = `
+    renderPrivacy() {
+        const content = document.getElementById('main-content');
+        content.innerHTML = `
             <div class="help-page">
                 <div class="help-header">
                     <button class="btn btn-sm" onclick="history.back()">← 返回</button>
@@ -2336,7 +2336,6 @@ class App {
                 
                 <div class="help-content">
                     <div class="help-section">
-                        <p class="text-muted">最后更新日期：2024年1月1日</p>
                         <p>精品商城（以下简称"我们"）非常重视用户的隐私保护。本隐私政策说明了我们如何收集、使用、存储和保护您的个人信息。</p>
                     </div>
                     
@@ -2433,11 +2432,11 @@ class App {
                 </div>
             </div>
         `;
-        }
+    }
 
-        renderTerms() {
-            const content = document.getElementById('main-content');
-            content.innerHTML = `
+    renderTerms() {
+        const content = document.getElementById('main-content');
+        content.innerHTML = `
             <div class="help-page">
                 <div class="help-header">
                     <button class="btn btn-sm" onclick="history.back()">← 返回</button>
@@ -2446,7 +2445,6 @@ class App {
                 
                 <div class="help-content">
                     <div class="help-section">
-                        <p class="text-muted">最后更新日期：2024年1月1日</p>
                         <p>欢迎使用精品商城！在使用我们的服务前，请仔细阅读以下服务条款。</p>
                     </div>
                     
@@ -2573,23 +2571,18 @@ class App {
                 </div>
             </div>
         `;
-        }
+    }
 
-        renderAbout() {
-            const content = document.getElementById('main-content');
-            content.innerHTML = `
+    renderAbout() {
+        const content = document.getElementById('main-content');
+        content.innerHTML = `
             <div class="help-page">
                 <div class="help-header">
                     <button class="btn btn-sm" onclick="history.back()">← 返回</button>
                     <h1><svg width="28" height="28" class="icon" aria-hidden="true"><use xlink:href="#icon-home"></use></svg> 关于我们</h1>
                 </div>
                 
-                <div class="help-content">
-                    <div class="help-section">
-                        <h2>公司简介</h2>
-                        <p>精品商城成立于2024年，是一家专注于为用户提供优质商品和卓越购物体验的电商平台。我们致力于精选全球好物，为消费者带来高品质的生活方式。</p>
-                    </div>
-                    
+                <div class="help-content">                  
                     <div class="help-section">
                         <h2>我们的使命</h2>
                         <p>让每个人都能轻松享受到优质商品和贴心服务，成为用户最信赖的购物平台。</p>
@@ -2622,23 +2615,12 @@ class App {
                     </div>
                     
                     <div class="help-section">
-                        <h2>发展历程</h2>
-                        <ul>
-                            <li><strong>2024年1月：</strong>精品商城正式上线</li>
-                            <li><strong>2024年3月：</strong>注册用户突破10万</li>
-                            <li><strong>2024年6月：</strong>商品品类扩展至1000+</li>
-                            <li><strong>2024年9月：</strong>获得A轮融资</li>
-                            <li><strong>2024年12月：</strong>日订单量突破1万单</li>
-                        </ul>
-                    </div>
-                    
-                    <div class="help-section">
                         <h2>联系我们</h2>
                         <p>我们期待为您提供更好的服务，欢迎随时联系我们：</p>
                         <ul>
                             <li><strong>客服热线：</strong>400-888-8888（工作时间：9:00-18:00）</li>
                             <li><strong>客服邮箱：</strong>service@shop.com</li>
-                            <li><strong>公司地址：</strong>北京市朝阳区xx路xx号</li>
+                            <li><strong>公司地址：</strong>广州市番禺区窝工</li>
                             <li><strong>商务合作：</strong>business@shop.com</li>
                         </ul>
                     </div>
@@ -2651,19 +2633,19 @@ class App {
                 </div>
             </div>
         `;
-        }
+    }
 
-        render404() {
-            const content = document.getElementById('main-content');
-            content.innerHTML = `
+    render404() {
+        const content = document.getElementById('main-content');
+        content.innerHTML = `
             <div class="empty-state">
                 <div class="empty-icon">404</div>
                 <p>页面不存在</p>
                 <button class="btn btn-primary" onclick="app.router.navigate('/')">返回首页</button>
             </div>
         `;
-        }
     }
+}
 
-    // ==================== 初始化应用 ====================
-    const app = new App();
+// ==================== 初始化应用 ====================
+const app = new App();
