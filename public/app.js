@@ -1634,6 +1634,14 @@ class App {
                         <svg width="18" height="18" class="icon" aria-hidden="true"><use xlink:href="#icon-order"></use></svg>
                         订单管理
                     </button>
+                    <button class="merchant-tab" onclick="app.router.navigate('/merchant/reports')">
+                        <svg width="18" height="18" class="icon" aria-hidden="true"><use xlink:href="#icon-chart"></use></svg>
+                        销售报表
+                    </button>
+                    <button class="merchant-tab" onclick="app.router.navigate('/merchant/customers')">
+                        <svg width="18" height="18" class="icon" aria-hidden="true"><use xlink:href="#icon-user"></use></svg>
+                        客户管理
+                    </button>
                 </div>
                 
                 <!-- 商品管理标签页 -->
@@ -1994,6 +2002,78 @@ class App {
         // 加载统计数据和商品数据
         MerchantService.loadMerchantStats();
         this.loadMerchantData();
+    }
+
+    // 渲染销售报表页面
+    renderSalesReports() {
+        const user = utils.getUserInfo();
+        if (!user || (user.userType !== 2 && user.role !== 'merchant')) {
+            utils.showToast('需要商家权限', 'error');
+            this.router.navigate('/');
+            return;
+        }
+
+        const content = document.getElementById('main-content');
+        content.innerHTML = `
+            <div class="section">
+                <div class="page-header">
+                    <button class="btn btn-sm" onclick="app.router.navigate('/merchant')">← 返回商家中心</button>
+                    <h2><svg width="24" height="24" class="icon" aria-hidden="true"><use xlink:href="#icon-chart"></use></svg> 销售统计报表</h2>
+                </div>
+                
+                <div id="sales-report-container">
+                    <div class="loading-text">加载中...</div>
+                </div>
+            </div>
+        `;
+
+        // 使用 SalesReportService 加载报表
+        if (typeof SalesReportService !== 'undefined') {
+            SalesReportService.loadSalesReport();
+        } else {
+            document.getElementById('sales-report-container').innerHTML = '<div class="error">销售报表模块加载失败</div>';
+        }
+    }
+
+    // 渲染客户管理页面
+    renderCustomerManagement() {
+        const user = utils.getUserInfo();
+        if (!user || (user.userType !== 2 && user.role !== 'merchant')) {
+            utils.showToast('需要商家权限', 'error');
+            this.router.navigate('/');
+            return;
+        }
+
+        const content = document.getElementById('main-content');
+        content.innerHTML = `
+            <div class="section">
+                <div class="page-header">
+                    <button class="btn btn-sm" onclick="app.router.navigate('/merchant')">← 返回商家中心</button>
+                    <h2><svg width="24" height="24" class="icon" aria-hidden="true"><use xlink:href="#icon-user"></use></svg> 客户管理</h2>
+                </div>
+                
+                <div class="section-header" style="margin-top: 20px;">
+                    <div class="search-box">
+                        <input type="text" id="customerSearchInput" placeholder="搜索客户（用户名/手机号/邮箱）" class="form-input" style="width: 300px;">
+                        <button class="btn btn-primary" onclick="CustomerManagement.handleSearch()">
+                            <svg width="16" height="16" class="icon" aria-hidden="true"><use xlink:href="#icon-search"></use></svg>
+                            搜索
+                        </button>
+                    </div>
+                </div>
+                
+                <div id="customerList" style="margin-top: 20px;">
+                    <div class="loading-text">加载中...</div>
+                </div>
+            </div>
+        `;
+
+        // 使用 CustomerManagement 加载客户数据
+        if (typeof CustomerManagement !== 'undefined') {
+            CustomerManagement.init();
+        } else {
+            document.getElementById('customerList').innerHTML = '<div class="error">客户管理模块加载失败</div>';
+        }
     }
 
     // ==================== 帮助页面 ====================

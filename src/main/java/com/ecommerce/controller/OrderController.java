@@ -5,9 +5,12 @@ import com.ecommerce.common.Result;
 import com.ecommerce.entity.Order;
 import com.ecommerce.entity.OrderItem;
 import com.ecommerce.entity.Product;
+import com.ecommerce.entity.User;
 import com.ecommerce.mapper.OrderItemMapper;
 import com.ecommerce.mapper.OrderMapper;
 import com.ecommerce.mapper.ProductMapper;
+import com.ecommerce.mapper.UserMapper;
+import com.ecommerce.service.EmailService;
 import com.ecommerce.utils.JwtUtil;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,6 +45,12 @@ public class OrderController {
 
     @Autowired
     private ProductMapper productMapper;
+
+    @Autowired
+    private UserMapper userMapper;
+
+    @Autowired
+    private EmailService emailService;
 
     /**
      * 从请求头中提取用户ID
@@ -130,6 +139,31 @@ public class OrderController {
             // 扣减库存
             product.setStock(product.getStock() - itemReq.getQuantity());
             productMapper.updateById(product);
+        }
+
+        // 发送订单确认邮件
+        try {
+            User user = userMapper.selectById(userId);
+            if (user != null) {
+                emailService.sendOrderConfirmationEmail(user, order, request.getItems().stream()
+                    .map(itemReq -> {
+                        OrderItem item = new OrderItem();
+                        Product p = products.stream()
+                            .filter(prod -> prod.getId().equals(itemReq.getProductId()))
+                            .findFirst()
+                            .orElse(null);
+                        if (p != null) {
+                            item.setProductName(p.getName());
+                            item.setQuantity(itemReq.getQuantity());
+                            item.setPrice(p.getPrice());
+                            item.setSubtotal(p.getPrice().multiply(new BigDecimal(itemReq.getQuantity())));
+                        }
+                        return item;
+                    })
+                    .toList());
+            }
+        } catch (Exception e) {
+            log.error("发送订单确认邮件失败", e);
         }
 
         Map<String, Object> data = new HashMap<>();
@@ -355,6 +389,16 @@ public class OrderController {
             }
         }
 
+        // 发送支付成功邮件
+        try {
+            User user = userMapper.selectById(userId);
+            if (user != null) {
+                emailService.sendPaymentSuccessEmail(user, order);
+            }
+        } catch (Exception e) {
+            log.error("发送支付成功邮件失败", e);
+        }
+
         return Result.success("支付成功");
     }
 
@@ -439,6 +483,16 @@ public class OrderController {
         int result = orderMapper.updateById(order);
         if (result <= 0) {
             return Result.error("确认失败");
+        }
+
+        // 发送订单完成邮件
+        try {
+            User user = userMapper.selectById(userId);
+            if (user != null) {
+                emailService.sendOrderCompletionEmail(user, order);
+            }
+        } catch (Exception e) {
+            log.error("发送订单完成邮件失败", e);
         }
 
         return Result.success("确认收货成功");

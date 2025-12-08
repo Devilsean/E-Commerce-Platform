@@ -5,13 +5,16 @@ import com.ecommerce.common.Result;
 import com.ecommerce.entity.Order;
 import com.ecommerce.entity.OrderItem;
 import com.ecommerce.entity.Product;
+import com.ecommerce.entity.User;
 import com.ecommerce.entity.UserBrowseLog;
 import com.ecommerce.entity.UserPurchaseLog;
 import com.ecommerce.mapper.OrderItemMapper;
 import com.ecommerce.mapper.OrderMapper;
 import com.ecommerce.mapper.ProductMapper;
 import com.ecommerce.mapper.UserBrowseLogMapper;
+import com.ecommerce.mapper.UserMapper;
 import com.ecommerce.mapper.UserPurchaseLogMapper;
+import com.ecommerce.service.EmailService;
 import com.ecommerce.utils.JwtUtil;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -47,6 +50,12 @@ public class MerchantController {
 
     @Autowired
     private UserPurchaseLogMapper purchaseLogMapper;
+
+    @Autowired
+    private UserMapper userMapper;
+
+    @Autowired
+    private EmailService emailService;
 
     /**
      * 从请求头中提取并验证Token，返回商家ID
@@ -448,6 +457,16 @@ public class MerchantController {
             return Result.error("发货失败");
         }
 
+        // 发送发货通知邮件
+        try {
+            User user = userMapper.selectById(order.getUserId());
+            if (user != null) {
+                emailService.sendShippingNotificationEmail(user, order);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
         return Result.success("发货成功");
     }
 
@@ -477,6 +496,150 @@ public class MerchantController {
         if (merchantId == null) {
             return Result.error("无权限访问，请以商家身份登录");
         }
+    /**
+     * 获取销售统计报表
+     */
+    @GetMapping("/reports/sales")
+    public Result<Map<String, Object>> getSalesReport(@RequestHeader(value = "Authorization", required = false) String authHeader,
+                                                       @RequestParam(required = false) String startDate,
+                                                       @RequestParam(required = false) String endDate) {
+        Long merchantId = getMerchantIdFromToken(authHeader);
+        if (merchantId == null) {
+            return Result.error("无权限访问，请以商家身份登录");
+        }
+
+        try {
+            Map<String, Object> report = new HashMap<>();
+            
+            // 查询商家的所有商品
+            LambdaQueryWrapper<Product> productWrapper = new LambdaQueryWrapper<>();
+            productWrapper.eq(Product::getMerchantId, merchantId);
+            List<Product> products = productMapper.selectList(productWrapper);
+            List<Long> productIds = products.stream().map(Product::getId).collect(java.util.stream.Collectors.toList());
+            
+            if (productIds.isEmpty()) {
+                report.put("totalOrders", 0);
+                report.put("totalRevenue", 0);
+                report.put("totalProducts", 0);
+                report.put("productSales", new ArrayList<>());
+                return Result.success(report);
+            }
+
+            // 查询订单项
+            LambdaQueryWrapper<OrderItem> itemWrapper = new LambdaQueryWrapper<>();
+            itemWrapper.in(OrderItem::getProductId, productIds);
+            List<OrderItem> allItems = orderItemMapper.selectList(itemWrapper);
+            
+            // 获取所有相关订单
+            List<Long> orderIds = allItems.stream()
+                .map(OrderItem::getOrderId)
+                .distinct()
+                .collect(java.util.stream.Collectors.toList());
+            
+            List<Order> orders = new ArrayList<>();
+            if (!orderIds.isEmpty()) {
+                LambdaQueryWrapper<Order> orderWrapper = new LambdaQueryWrapper<>();
+                orderWrapper.in(Order::getId, orderIds);
+                
+                // 日期筛选
+                if (startDate != null && !startDate.isEmpty()) {
+                    orderWrapper.ge(Order::getCreateTime, java.time.LocalDateTime.parse(startDate + "T00:00:00"));
+                }
+                if (endDate != null && !endDate.isEmpty()) {
+                    orderWrapper.le(Order::getCreateTime, java.time.LocalDateTime.parse(endDate + "T23:59:59"));
+                }
+                
+                orders = orderMapper.selectList(orderWrapper);
+            }
+            
+            // 统计数据
+            int totalOrders = orders.size();
+            BigDecimal totalRevenue = orders.stream()
+                .filter(o -> o.getStatus() == 4) // 只统计已完成订单
+                .map(Order::getActualAmount)
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+            
+            // 按商品统计销量
+            Map<Long, Map<String, Object>> productSalesMap = new HashMap<>();
+            for (Product product : products) {
+                Map<String, Object> salesData = new HashMap<>();
+                salesData.put("productId", product.getId());
+                salesData.put("productName", product.getName());
+                salesData.put("sales", product.getSales() != null ? product.getSales() : 0);
+                salesData.put("stock", product.getStock());
+                salesData.put("price", product.getPrice());
+                
+                // 计算收入
+                BigDecimal revenue = allItems.stream()
+                    .filter(item -> item.getProductId().equals(product.getId()))
+                    .filter(item -> orders.stream().anyMatch(o -> o.getId().equals(item.getOrderId()) && o.getStatus() == 4))
+                    .map(OrderItem::getSubtotal)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+                salesData.put("revenue", revenue);
+                
+                productSalesMap.put(product.getId(), salesData);
+            }
+            
+            // 按日期统计
+            Map<String, BigDecimal> dailySales = new java.util.TreeMap<>();
+            for (Order order : orders) {
+                if (order.getStatus() == 4) {
+                    String date = order.getCreateTime().toLocalDate().toString();
+                    dailySales.merge(date, order.getActualAmount(), BigDecimal::add);
+                }
+            }
+            
+            report.put("totalOrders", totalOrders);
+            report.put("totalRevenue", totalRevenue);
+            report.put("totalProducts", products.size());
+            report.put("productSales", new ArrayList<>(productSalesMap.values()));
+            report.put("dailySales", dailySales);
+            report.put("completedOrders", orders.stream().filter(o -> o.getStatus() == 4).count());
+            report.put("pendingOrders", orders.stream().filter(o -> o.getStatus() == 0 || o.getStatus() == 1).count());
+            
+            return Result.success(report);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Result.error("获取销售报表失败：" + e.getMessage());
+        }
+    }
+
+    /**
+     * 获取商品销售排行
+     */
+    @GetMapping("/reports/top-products")
+    public Result<List<Map<String, Object>>> getTopProducts(@RequestHeader(value = "Authorization", required = false) String authHeader,
+                                                             @RequestParam(defaultValue = "10") Integer limit) {
+        Long merchantId = getMerchantIdFromToken(authHeader);
+        if (merchantId == null) {
+            return Result.error("无权限访问，请以商家身份登录");
+        }
+
+        try {
+            LambdaQueryWrapper<Product> wrapper = new LambdaQueryWrapper<>();
+            wrapper.eq(Product::getMerchantId, merchantId)
+                   .orderByDesc(Product::getSales)
+                   .last("LIMIT " + limit);
+            
+            List<Product> products = productMapper.selectList(wrapper);
+            List<Map<String, Object>> result = new ArrayList<>();
+            
+            for (Product product : products) {
+                Map<String, Object> data = new HashMap<>();
+                data.put("id", product.getId());
+                data.put("name", product.getName());
+                data.put("sales", product.getSales());
+                data.put("price", product.getPrice());
+                data.put("stock", product.getStock());
+                data.put("revenue", product.getPrice().multiply(new BigDecimal(product.getSales() != null ? product.getSales() : 0)));
+                result.add(data);
+            }
+            
+            return Result.success(result);
+        } catch (Exception e) {
+            return Result.error("获取销售排行失败：" + e.getMessage());
+        }
+    }
         
         List<UserBrowseLog> logs = browseLogMapper.getMerchantProductBrowseLog(merchantId, limit);
         return Result.success(logs);

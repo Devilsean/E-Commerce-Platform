@@ -51,4 +51,9 @@ public interface UserService {
      * 验证验证码
      */
     boolean verifyCode(String phone, String code);
+    
+    /**
+     * 注销账户
+     */
+    boolean deleteAccount(Long userId, String password);
 }

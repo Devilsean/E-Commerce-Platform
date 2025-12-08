@@ -187,6 +187,16 @@ const ProfileService = {
                             </div>
                             <button class="btn btn-sm">查看</button>
                         </div>
+                        <div class="setting-item" onclick="showDeleteAccountModal()">
+                            <div class="setting-icon">
+                                <img src="https://img.icons8.com/?size=100&id=67&format=png" alt="Delete Account Icon" style="width: 24px; height: 24px;">
+                            </div>
+                            <div class="setting-info">
+                                <h4>注销账户</h4>
+                                <p>永久删除账户及所有数据</p>
+                            </div>
+                            <button class="btn btn-sm btn-danger">注销</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -304,6 +314,16 @@ const ProfileService = {
                                 <p>查看销售趋势和热门商品</p>
                             </div>
                             <button class="btn btn-sm">分析</button>
+                        </div>
+                        <div class="setting-item" onclick="showDeleteAccountModal()">
+                            <div class="stat-icon">
+                                <img src="https://img.icons8.com/?size=100&id=67&format=png" alt="Delete Account Icon" style="width: 32px; height: 32px;">
+                            </div>
+                            <div class="setting-info">
+                                <h4>注销账户</h4>
+                                <p>永久删除商家账户及所有店铺数据</p>
+                            </div>
+                            <button class="btn btn-sm btn-danger" onclick="event.stopPropagation(); showDeleteAccountModal();">注销</button>
                         </div>
                     </div>
                 </div>

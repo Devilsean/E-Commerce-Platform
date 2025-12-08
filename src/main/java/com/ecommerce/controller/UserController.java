@@ -4,6 +4,8 @@ import com.ecommerce.common.Result;
 import com.ecommerce.entity.User;
 import com.ecommerce.entity.UserBrowseLog;
 import com.ecommerce.entity.UserPurchaseLog;
+import com.ecommerce.entity.UserAddress;
+import com.ecommerce.mapper.UserAddressMapper;
 import com.ecommerce.mapper.UserBrowseLogMapper;
 import com.ecommerce.mapper.UserPurchaseLogMapper;
 import com.ecommerce.service.UserService;
@@ -46,6 +48,9 @@ public class UserController {
 
     @Autowired
     private UserPurchaseLogMapper purchaseLogMapper;
+
+    @Autowired
+    private UserAddressMapper addressMapper;
 
     /**
      * 用户注册
@@ -361,6 +366,231 @@ public class UserController {
         return ip;
     }
 
+    /**
+     * 获取用户收货地址列表
+     */
+    @GetMapping("/addresses")
+    public Result<List<UserAddress>> getAddresses(@RequestHeader("Authorization") String token) {
+        if (token.startsWith("Bearer ")) {
+            token = token.substring(7);
+        }
+        
+        Long userId = jwtUtil.getUserIdFromToken(token);
+        List<UserAddress> addresses = addressMapper.getUserAddresses(userId);
+        return Result.success(addresses);
+    }
+
+    /**
+     * 添加收货地址
+     */
+    @PostMapping("/address")
+    public Result<UserAddress> addAddress(@RequestHeader("Authorization") String token,
+                                          @Valid @RequestBody AddAddressRequest request) {
+        if (token.startsWith("Bearer ")) {
+            token = token.substring(7);
+        }
+        
+        Long userId = jwtUtil.getUserIdFromToken(token);
+        
+        try {
+            // 如果设置为默认地址，先取消其他默认地址
+            if (request.getIsDefault() != null && request.getIsDefault() == 1) {
+                jdbcTemplate.update("UPDATE user_address SET is_default = 0 WHERE user_id = ?", userId);
+            }
+            
+            // 创建新地址
+            UserAddress address = new UserAddress();
+            address.setUserId(userId);
+            address.setReceiverName(request.getReceiver());
+            address.setReceiverPhone(request.getPhone());
+            
+            // 解析地区信息
+            String region = request.getRegion();
+            if (region != null && !region.isEmpty()) {
+                String[] parts = region.split("/");
+                if (parts.length >= 1) {
+                    address.setProvince(parts[0].trim());
+                } else {
+                    address.setProvince("");
+                }
+                if (parts.length >= 2) {
+                    address.setCity(parts[1].trim());
+                } else {
+                    address.setCity("");
+                }
+                if (parts.length >= 3) {
+                    address.setDistrict(parts[2].trim());
+                } else {
+                    address.setDistrict("");
+                }
+            } else {
+                // 如果region为空，设置默认值
+                address.setProvince("");
+                address.setCity("");
+                address.setDistrict("");
+            }
+            
+            address.setDetailAddress(request.getAddress());
+            address.setIsDefault(request.getIsDefault() != null ? request.getIsDefault() : 0);
+            address.setDeleted(0);
+            
+            addressMapper.insert(address);
+            return Result.success(address);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Result.error("添加地址失败：" + e.getMessage());
+        }
+    }
+
+    /**
+     * 更新收货地址
+     */
+    @PutMapping("/address/{addressId}")
+    public Result<Void> updateAddress(@RequestHeader("Authorization") String token,
+                                      @PathVariable Long addressId,
+                                      @Valid @RequestBody AddAddressRequest request) {
+        if (token.startsWith("Bearer ")) {
+            token = token.substring(7);
+        }
+        
+        Long userId = jwtUtil.getUserIdFromToken(token);
+        
+        try {
+            // 检查地址是否属于当前用户
+            UserAddress existAddress = addressMapper.selectById(addressId);
+            if (existAddress == null || !existAddress.getUserId().equals(userId)) {
+                return Result.error("地址不存在或无权操作");
+            }
+            
+            // 如果设置为默认地址，先取消其他默认地址
+            if (request.getIsDefault() != null && request.getIsDefault() == 1) {
+                jdbcTemplate.update("UPDATE user_address SET is_default = 0 WHERE user_id = ? AND id != ?",
+                    userId, addressId);
+            }
+            
+            // 更新地址
+            UserAddress address = new UserAddress();
+            address.setId(addressId);
+            address.setReceiverName(request.getReceiver());
+            address.setReceiverPhone(request.getPhone());
+            
+            // 解析地区信息
+            String region = request.getRegion();
+            if (region != null && !region.isEmpty()) {
+                String[] parts = region.split("/");
+                if (parts.length >= 1) {
+                    address.setProvince(parts[0].trim());
+                } else {
+                    address.setProvince("");
+                }
+                if (parts.length >= 2) {
+                    address.setCity(parts[1].trim());
+                } else {
+                    address.setCity("");
+                }
+                if (parts.length >= 3) {
+                    address.setDistrict(parts[2].trim());
+                } else {
+                    address.setDistrict("");
+                }
+            } else {
+                // 如果region为空，设置默认值
+                address.setProvince("");
+                address.setCity("");
+                address.setDistrict("");
+            }
+            
+            address.setDetailAddress(request.getAddress());
+            address.setIsDefault(request.getIsDefault() != null ? request.getIsDefault() : 0);
+            
+            addressMapper.updateById(address);
+            return Result.success("更新成功");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Result.error("更新地址失败：" + e.getMessage());
+        }
+    }
+
+    /**
+     * 删除收货地址
+     */
+    @DeleteMapping("/address/{addressId}")
+    public Result<Void> deleteAddress(@RequestHeader("Authorization") String token,
+                                      @PathVariable Long addressId) {
+        if (token.startsWith("Bearer ")) {
+            token = token.substring(7);
+        }
+        
+        Long userId = jwtUtil.getUserIdFromToken(token);
+        
+        try {
+            // 检查地址是否属于当前用户
+            UserAddress address = addressMapper.selectById(addressId);
+            if (address == null || !address.getUserId().equals(userId)) {
+                return Result.error("地址不存在或无权操作");
+            }
+            
+            // 逻辑删除
+            address.setDeleted(1);
+            addressMapper.updateById(address);
+            return Result.success("删除成功");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Result.error("删除地址失败：" + e.getMessage());
+        }
+    }
+
+    /**
+     * 设置默认地址
+     */
+    @PutMapping("/address/{addressId}/default")
+    public Result<Void> setDefaultAddress(@RequestHeader("Authorization") String token,
+                                          @PathVariable Long addressId) {
+        if (token.startsWith("Bearer ")) {
+            token = token.substring(7);
+        }
+        
+        Long userId = jwtUtil.getUserIdFromToken(token);
+        
+        try {
+            // 检查地址是否属于当前用户
+            UserAddress address = addressMapper.selectById(addressId);
+            if (address == null || !address.getUserId().equals(userId)) {
+                return Result.error("地址不存在或无权操作");
+            }
+            
+            // 取消其他默认地址
+            jdbcTemplate.update("UPDATE user_address SET is_default = 0 WHERE user_id = ?", userId);
+            
+            // 设置为默认
+            address.setIsDefault(1);
+            addressMapper.updateById(address);
+            return Result.success("设置成功");
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Result.error("设置失败：" + e.getMessage());
+        }
+
+    /**
+     * 注销账户
+     */
+    @DeleteMapping("/delete-account")
+    public Result<Void> deleteAccount(@RequestHeader("Authorization") String token,
+                                      @Valid @RequestBody DeleteAccountRequest request) {
+        if (token.startsWith("Bearer ")) {
+            token = token.substring(7);
+        }
+        
+        Long userId = jwtUtil.getUserIdFromToken(token);
+        boolean success = userService.deleteAccount(userId, request.getPassword());
+        if (success) {
+            return Result.success("账户注销成功");
+        } else {
+            return Result.error("账户注销失败");
+        }
+    }
+    }
+
     // ========== 请求DTO类 ==========
 
     @Data
@@ -449,7 +679,30 @@ public class UserController {
         private Long orderId;
         
         private List<Map<String, Object>> items;
+
+    @Data
+    static class DeleteAccountRequest {
+        @NotBlank(message = "密码不能为空")
+        private String password;
+    }
         
         private String timestamp;
+    }
+
+    @Data
+    static class AddAddressRequest {
+        @NotBlank(message = "收货人姓名不能为空")
+        private String receiver;
+
+        @NotBlank(message = "联系电话不能为空")
+        private String phone;
+
+        @NotBlank(message = "所在地区不能为空")
+        private String region;
+
+        @NotBlank(message = "详细地址不能为空")
+        private String address;
+
+        private Integer isDefault;
     }
 }

@@ -284,5 +284,37 @@ public class UserServiceImpl implements UserService {
         redisUtil.delete("verification:code:" + phone);
 
         return true;
+
+    @Override
+    public boolean deleteAccount(Long userId, String password) {
+        // 参数校验
+        if (userId == null || !StringUtils.hasText(password)) {
+            throw new BusinessException(ResultCode.PARAM_ERROR);
+        }
+
+        // 查询用户
+        User user = userMapper.selectById(userId);
+        if (user == null) {
+            throw new BusinessException(ResultCode.USER_NOT_FOUND);
+        }
+
+        // 验证密码
+        if (!passwordEncoder.matches(password, user.getPassword())) {
+            throw new BusinessException(ResultCode.USER_PASSWORD_ERROR.getCode(), "密码错误");
+        }
+
+        // 逻辑删除用户账户
+        user.setDeleted(1);
+        user.setStatus(0); // 同时禁用账户
+        int result = userMapper.updateById(user);
+
+        if (result > 0) {
+            // 删除Redis中的token
+            redisUtil.delete("user:token:" + userId);
+            log.info("用户注销账户成功：{}，用户ID：{}", user.getUsername(), userId);
+        }
+
+        return result > 0;
+    }
     }
 }

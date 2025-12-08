@@ -41,6 +41,21 @@ spring:
       max-file-size: 10MB
       max-request-size: 100MB
       enabled: true
+  
+  # 邮件配置
+  mail:
+    host: smtp.qq.com
+    port: 587
+    username: your-email@qq.com
+    password: your-email-auth-code
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
+    default-encoding: UTF-8
 
 # MyBatis Plus配置
 mybatis-plus:
