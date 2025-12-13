@@ -591,6 +591,20 @@ public class UserController {
         }
     }
 
+    /**
+     * 获取账户统计信息
+     */
+    @GetMapping("/account-stats")
+    public Result<Map<String, Object>> getAccountStats(@RequestHeader("Authorization") String token) {
+        if (token.startsWith("Bearer ")) {
+            token = token.substring(7);
+        }
+        
+        Long userId = jwtUtil.getUserIdFromToken(token);
+        Map<String, Object> stats = userService.getAccountStats(userId);
+        return Result.success(stats);
+    }
+
     // ========== 请求DTO类 ==========
 
     @Data

@@ -1133,33 +1133,20 @@ const ProfileService = {
     },
 
     // 显示账户统计
-    showAccountStats() {
+    async showAccountStats() {
         const modal = document.createElement('div');
         modal.className = 'modal';
         modal.style.display = 'flex';
         modal.innerHTML = `
-            <div class="modal-content">
+            <div class="modal-content" style="max-width: 600px;">
                 <div class="modal-header">
                     <h3><svg width="20" height="20" class="icon" aria-hidden="true"><use xlink:href="#icon-order"></use></svg> 账户统计</h3>
                     <button class="modal-close" onclick="this.closest('.modal').remove()">×</button>
                 </div>
-                <div style="padding: 20px;">
-                    <div class="stats-grid">
-                        <div class="stat-card">
-                            <h4>总订单数</h4>
-                            <div class="stat-value">0</div>
-                        </div>
-                        <div class="stat-card">
-                            <h4>总消费金额</h4>
-                            <div class="stat-value">¥0</div>
-                        </div>
-                        <div class="stat-card">
-                            <h4>会员等级</h4>
-                            <div class="stat-value">普通会员</div>
-                        </div>
-                    </div>
-                    <div style="margin-top: 20px; text-align: center; color: #666;">
-                        <p>更多统计功能开发中...</p>
+                <div style="padding: 20px;" id="accountStatsContent">
+                    <div class="loading-text" style="text-align: center; padding: 40px;">
+                        <div style="font-size: 24px; margin-bottom: 10px;">⏳</div>
+                        加载中...
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -1168,6 +1155,98 @@ const ProfileService = {
             </div>
         `;
         document.body.appendChild(modal);
+
+        // 从后端API获取账户统计数据
+        try {
+            const stats = await utils.request('/user/account-stats');
+            const content = document.getElementById('accountStatsContent');
+            if (!content) return;
+
+            // 格式化注册时间
+            let registerTimeStr = '未知';
+            if (stats.registerTime) {
+                const date = new Date(stats.registerTime);
+                registerTimeStr = date.toLocaleDateString('zh-CN', { year: 'numeric', month: 'long', day: 'numeric' });
+            }
+
+            content.innerHTML = `
+                <!-- 账户概览 -->
+                <div style="background: #000000ff; border-radius: 12px; padding: 20px; color: white; margin-bottom: 20px;">
+                    <div style="display: flex; align-items: center; gap: 16px;">
+                        <div>
+                            <div style="font-size: 20px; font-weight: bold;">${stats.username || '用户'} 的账单统计</div>
+                            <div style="opacity: 0.9; margin-top: 4px;">注册于 ${registerTimeStr}，已使用 ${stats.registerDays || 0} 天</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 消费统计 -->
+                <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 20px;">
+                    <div style="background: #f8f9fa; border-radius: 12px; padding: 20px; text-align: center;">
+                        <div style="font-size: 28px; font-weight: bold; color: var(--primary);">${stats.totalOrders || 0}</div>
+                        <div style="color: #666; margin-top: 4px;">总订单数</div>
+                    </div>
+                    <div style="background: #f8f9fa; border-radius: 12px; padding: 20px; text-align: center;">
+                        <div style="font-size: 28px; font-weight: bold; color: #10b981;">¥${parseFloat(stats.totalSpent || 0).toFixed(2)}</div>
+                        <div style="color: #666; margin-top: 4px;">已消费金额</div>
+                    </div>
+                </div>
+
+                <!-- 待支付金额提示 -->
+                ${stats.pendingAmount > 0 ? `
+                <div style="background: #fef3c7; border-radius: 8px; padding: 12px 16px; margin-bottom: 20px; display: flex; align-items: center; gap: 12px;">
+                    <span style="font-size: 20px;">💰</span>
+                    <div>
+                        <div style="font-weight: 500; color: #92400e;">待支付金额：¥${parseFloat(stats.pendingAmount || 0).toFixed(2)}</div>
+                        <div style="font-size: 12px; color: #a16207;">您有 ${stats.pendingOrders || 0} 笔订单待支付</div>
+                    </div>
+                </div>
+                ` : ''}
+
+                <!-- 订单状态分布 -->
+                <div style="background: #f8f9fa; border-radius: 12px; padding: 20px;">
+                    <h4 style="margin: 0 0 16px 0; font-size: 16px;">📋 订单状态分布</h4>
+                    <div style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; text-align: center;">
+                        <div style="cursor: pointer;" onclick="window.location.hash='/orders'; this.closest('.modal').remove();">
+                            <div style="font-size: 24px; font-weight: bold; color: #f59e0b;">${stats.pendingOrders || 0}</div>
+                            <div style="font-size: 12px; color: #666;">待付款</div>
+                        </div>
+                        <div style="cursor: pointer;" onclick="window.location.hash='/orders'; this.closest('.modal').remove();">
+                            <div style="font-size: 24px; font-weight: bold; color: #3b82f6;">${stats.paidOrders || 0}</div>
+                            <div style="font-size: 12px; color: #666;">待发货</div>
+                        </div>
+                        <div style="cursor: pointer;" onclick="window.location.hash='/orders'; this.closest('.modal').remove();">
+                            <div style="font-size: 24px; font-weight: bold; color: #8b5cf6;">${stats.shippedOrders || 0}</div>
+                            <div style="font-size: 12px; color: #666;">已发货</div>
+                        </div>
+                        <div style="cursor: pointer;" onclick="window.location.hash='/orders'; this.closest('.modal').remove();">
+                            <div style="font-size: 24px; font-weight: bold; color: #10b981;">${stats.completedOrders || 0}</div>
+                            <div style="font-size: 12px; color: #666;">已完成</div>
+                        </div>
+                        <div style="cursor: pointer;" onclick="window.location.hash='/orders'; this.closest('.modal').remove();">
+                            <div style="font-size: 24px; font-weight: bold; color: #6b7280;">${stats.cancelledOrders || 0}</div>
+                            <div style="font-size: 12px; color: #666;">已取消</div>
+                        </div>
+                    </div>
+                    <div style="text-align: center; margin-top: 16px;">
+                        <button class="btn btn-sm" onclick="window.location.hash='/orders'; this.closest('.modal').remove();">
+                            查看全部订单 →
+                        </button>
+                    </div>
+                </div>
+            `;
+        } catch (error) {
+            console.error('获取账户统计失败:', error);
+            const content = document.getElementById('accountStatsContent');
+            if (content) {
+                content.innerHTML = `
+                    <div style="text-align: center; padding: 40px; color: var(--text-secondary);">
+                        <p>加载失败，请稍后重试</p>
+                        <button class="btn btn-primary btn-sm" onclick="ProfileService.showAccountStats()" style="margin-top: 16px;">重试</button>
+                    </div>
+                `;
+            }
+        }
     },
 
     // 编辑地址

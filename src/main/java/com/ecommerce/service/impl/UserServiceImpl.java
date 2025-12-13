@@ -2,8 +2,10 @@ package com.ecommerce.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.ecommerce.common.ResultCode;
+import com.ecommerce.entity.Order;
 import com.ecommerce.entity.User;
 import com.ecommerce.exception.BusinessException;
+import com.ecommerce.mapper.OrderMapper;
 import com.ecommerce.mapper.UserMapper;
 import com.ecommerce.service.UserService;
 import com.ecommerce.utils.JwtUtil;
@@ -14,6 +16,12 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
@@ -27,6 +35,9 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private UserMapper userMapper;
+
+    @Autowired
+    private OrderMapper orderMapper;
 
     @Autowired
     private JwtUtil jwtUtil;
@@ -316,5 +327,100 @@ public class UserServiceImpl implements UserService {
         }
 
         return result > 0;
+    }
+
+    @Override
+    public Map<String, Object> getAccountStats(Long userId) {
+        if (userId == null) {
+            throw new BusinessException(ResultCode.PARAM_ERROR);
+        }
+
+        // 查询用户信息
+        User user = userMapper.selectById(userId);
+        if (user == null) {
+            throw new BusinessException(ResultCode.USER_NOT_FOUND);
+        }
+
+        Map<String, Object> stats = new HashMap<>();
+
+        // 查询用户订单统计
+        LambdaQueryWrapper<Order> orderWrapper = new LambdaQueryWrapper<>();
+        orderWrapper.eq(Order::getUserId, userId);
+        List<Order> orders = orderMapper.selectList(orderWrapper);
+
+        // 总订单数
+        int totalOrders = orders.size();
+        stats.put("totalOrders", totalOrders);
+
+        // 各状态订单数
+        int pendingOrders = 0;    // 待支付
+        int paidOrders = 0;       // 已支付/待发货
+        int shippedOrders = 0;    // 已发货
+        int completedOrders = 0;  // 已完成
+        int cancelledOrders = 0;  // 已取消
+
+        BigDecimal totalSpent = BigDecimal.ZERO;
+        BigDecimal pendingAmount = BigDecimal.ZERO;  // 待支付金额
+        
+        for (Order order : orders) {
+            Integer status = order.getStatus();
+            BigDecimal amount = order.getActualAmount() != null ? order.getActualAmount() : order.getTotalAmount();
+            if (amount == null) {
+                amount = BigDecimal.ZERO;
+            }
+            
+            if (status != null) {
+                switch (status) {
+                    case 0:
+                        pendingOrders++;
+                        pendingAmount = pendingAmount.add(amount);
+                        break;
+                    case 1:
+                    case 2:
+                        paidOrders++;
+                        totalSpent = totalSpent.add(amount);
+                        break;
+                    case 3:
+                        shippedOrders++;
+                        totalSpent = totalSpent.add(amount);
+                        break;
+                    case 4:
+                        completedOrders++;
+                        totalSpent = totalSpent.add(amount);
+                        break;
+                    case 5:
+                        cancelledOrders++;
+                        break;
+                }
+            }
+        }
+
+        stats.put("pendingOrders", pendingOrders);
+        stats.put("paidOrders", paidOrders);
+        stats.put("shippedOrders", shippedOrders);
+        stats.put("completedOrders", completedOrders);
+        stats.put("cancelledOrders", cancelledOrders);
+        stats.put("totalSpent", totalSpent);
+        stats.put("pendingAmount", pendingAmount);
+
+        // 计算注册天数
+        LocalDateTime createTime = user.getCreateTime();
+        long registerDays = 0;
+        if (createTime != null) {
+            registerDays = ChronoUnit.DAYS.between(createTime, LocalDateTime.now());
+        }
+        stats.put("registerDays", registerDays);
+        stats.put("registerTime", createTime);
+
+        // 用户基本信息
+        stats.put("username", user.getUsername());
+        stats.put("nickname", user.getNickname());
+        stats.put("phone", user.getPhone());
+        stats.put("email", user.getEmail());
+        stats.put("avatar", user.getAvatar());
+        stats.put("userType", user.getUserType());
+
+        log.info("获取用户账户统计成功：{}，总订单数：{}，总消费：{}", user.getUsername(), totalOrders, totalSpent);
+        return stats;
     }
 }

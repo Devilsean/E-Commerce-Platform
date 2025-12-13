@@ -150,22 +150,22 @@ const MerchantStatsService = {
         container.innerHTML = `
             <!-- 核心指标卡片 -->
             <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-bottom: 20px;">
-                <div style="background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 16px; border-radius: 10px;">
+                <div style="background: #000000ff; color: white; padding: 16px; border-radius: 10px;">
                     <div style="font-size: 13px; opacity: 0.9;">商品总数</div>
                     <div style="font-size: 28px; font-weight: bold; margin: 6px 0;">${productStats.totalProducts || 0}</div>
                     <div style="font-size: 11px; opacity: 0.8;">在线 ${productStats.onlineProducts || 0} / 下线 ${productStats.offlineProducts || 0}</div>
                 </div>
-                <div style="background: linear-gradient(135deg, #11998e, #38ef7d); color: white; padding: 16px; border-radius: 10px;">
+                <div style="background: #000000ff; color: white; padding: 16px; border-radius: 10px;">
                     <div style="font-size: 13px; opacity: 0.9;">总销量</div>
                     <div style="font-size: 28px; font-weight: bold; margin: 6px 0;">${productStats.totalSales || 0}</div>
                     <div style="font-size: 11px; opacity: 0.8;">库存 ${productStats.totalStock || 0}</div>
                 </div>
-                <div style="background: linear-gradient(135deg, #eb3349, #f45c43); color: white; padding: 16px; border-radius: 10px;">
+                <div style="background: #000000ff; color: white; padding: 16px; border-radius: 10px;">
                     <div style="font-size: 13px; opacity: 0.9;">订单总数</div>
                     <div style="font-size: 28px; font-weight: bold; margin: 6px 0;">${orderStats.totalOrders || 0}</div>
                     <div style="font-size: 11px; opacity: 0.8;">已完成 ${orderStats.completedOrders || 0}</div>
                 </div>
-                <div style="background: linear-gradient(135deg, #4facfe, #00f2fe); color: white; padding: 16px; border-radius: 10px;">
+                <div style="background: #000000ff; color: white; padding: 16px; border-radius: 10px;">
                     <div style="font-size: 13px; opacity: 0.9;">预估收入</div>
                     <div style="font-size: 28px; font-weight: bold; margin: 6px 0;">¥${this.formatNumber(orderStats.totalRevenue)}</div>
                     <div style="font-size: 11px; opacity: 0.8;">待收 ¥${this.formatNumber(orderStats.pendingRevenue)}</div>
@@ -174,7 +174,7 @@ const MerchantStatsService = {
 
             <!-- 订单状态 -->
             <div style="background: #f8f9fa; padding: 16px; border-radius: 10px; margin-bottom: 20px;">
-                <h4 style="margin: 0 0 12px 0; font-size: 14px; color: #333;">📦 订单状态分布</h4>
+                <h4 style="margin: 0 0 12px 0; font-size: 14px; color: #333;"> 订单状态分布</h4>
                 <div style="display: flex; flex-wrap: wrap; gap: 8px;">
                     <div style="flex: 1; min-width: 70px; text-align: center; padding: 10px; background: #fff3e0; border-radius: 6px;">
                         <div style="font-size: 20px; font-weight: bold; color: #ff9800;">${orderStats.pendingOrders || 0}</div>
@@ -201,7 +201,7 @@ const MerchantStatsService = {
 
             <!-- 热销商品 -->
             <div style="background: #f8f9fa; padding: 16px; border-radius: 10px;">
-                <h4 style="margin: 0 0 12px 0; font-size: 14px; color: #333;">🏆 热销商品 TOP5</h4>
+                <h4 style="margin: 0 0 12px 0; font-size: 14px; color: #333;"> 热销商品 TOP5</h4>
                 ${topProducts.length > 0 ? `
                     <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
                         <thead>

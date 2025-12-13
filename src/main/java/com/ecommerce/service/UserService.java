@@ -56,4 +56,11 @@ public interface UserService {
      * 注销账户
      */
     boolean deleteAccount(Long userId, String password);
+    
+    /**
+     * 获取用户账户统计信息
+     * @param userId 用户ID
+     * @return 统计信息Map，包含总订单数、总消费金额、会员等级、注册天数等
+     */
+    java.util.Map<String, Object> getAccountStats(Long userId);
 }
