@@ -830,7 +830,6 @@ class App {
         } catch (error) {
             content.innerHTML = `
                 <div class="error-state">
-                    <div class="error-icon">😕</div>
                     <h3>商品不存在</h3>
                     <p>该商品可能已下架或不存在</p>
                     <button class="btn btn-primary" onclick="history.back()">返回上一页</button>
@@ -1617,7 +1616,13 @@ class App {
     renderMerchantSection() {
         return `
             <div class="section">
-                <h2><svg width="24" height="24" class="icon" aria-hidden="true"><use xlink:href="#icon-merchant"></use></svg> 商家管理中心</h2>
+                <div class="section-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h2 style="margin: 0;"><svg width="24" height="24" class="icon" aria-hidden="true"><use xlink:href="#icon-merchant"></use></svg> 商家管理中心</h2>
+                    <button class="btn btn-primary" onclick="showMerchantStatsModal()">
+                        <svg width="18" height="18" class="icon" aria-hidden="true"><use xlink:href="#icon-chart"></use></svg>
+                        数据分析
+                    </button>
+                </div>
                 
                 <!-- 统计数据 -->
                 <div id="merchant-stats-grid" class="stats-grid">

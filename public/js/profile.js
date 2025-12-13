@@ -305,7 +305,7 @@ const ProfileService = {
                             </div>
                             <button class="btn btn-sm btn-primary" onclick="event.stopPropagation(); window.location.hash = '/merchant';">进入</button>
                         </div>
-                        <div class="setting-item" onclick="showMessage('数据分析功能开发中...', 'info')">
+                        <div class="setting-item" onclick="showMerchantStatsModal()">
                             <div class="stat-icon">
                                 <img src="https://img.icons8.com/?size=100&id=3005&format=png" alt="Total Products Icon" style="width: 32px; height: 32px;">
                             </div>
@@ -313,7 +313,7 @@ const ProfileService = {
                                 <h4>数据分析</h4>
                                 <p>查看销售趋势和热门商品</p>
                             </div>
-                            <button class="btn btn-sm">分析</button>
+                            <button class="btn btn-sm btn-primary" onclick="event.stopPropagation(); showMerchantStatsModal();">分析</button>
                         </div>
                         <div class="setting-item" onclick="showDeleteAccountModal()">
                             <div class="stat-icon">

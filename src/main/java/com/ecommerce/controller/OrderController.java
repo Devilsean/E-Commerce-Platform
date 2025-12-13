@@ -13,6 +13,7 @@ import com.ecommerce.mapper.UserMapper;
 import com.ecommerce.service.EmailService;
 import com.ecommerce.utils.JwtUtil;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
@@ -30,6 +31,7 @@ import java.util.stream.Collectors;
 /**
  * 订单控制器
  */
+@Slf4j
 @RestController
 @RequestMapping("/user/orders")
 public class OrderController {

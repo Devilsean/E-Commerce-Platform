@@ -496,6 +496,135 @@ public class MerchantController {
         if (merchantId == null) {
             return Result.error("无权限访问，请以商家身份登录");
         }
+        
+        List<UserBrowseLog> logs = browseLogMapper.getMerchantProductBrowseLog(merchantId, limit);
+        return Result.success(logs);
+    }
+
+    /**
+     * 获取商家综合统计数据（供前端数据分析弹窗使用）
+     */
+    @GetMapping("/statistics")
+    public Result<Map<String, Object>> getStatistics(@RequestHeader(value = "Authorization", required = false) String authHeader) {
+        Long merchantId = getMerchantIdFromToken(authHeader);
+        if (merchantId == null) {
+            return Result.error("无权限访问，请以商家身份登录");
+        }
+
+        try {
+            Map<String, Object> statistics = new HashMap<>();
+            
+            // 1. 商品统计
+            Map<String, Object> productStats = new HashMap<>();
+            LambdaQueryWrapper<Product> productWrapper = new LambdaQueryWrapper<>();
+            productWrapper.eq(Product::getMerchantId, merchantId);
+            List<Product> products = productMapper.selectList(productWrapper);
+            
+            productStats.put("totalProducts", products.size());
+            productStats.put("onlineProducts", products.stream().filter(p -> p.getStatus() != null && p.getStatus() == 1).count());
+            productStats.put("offlineProducts", products.stream().filter(p -> p.getStatus() != null && p.getStatus() == 0).count());
+            productStats.put("totalSales", products.stream().mapToInt(p -> p.getSales() != null ? p.getSales() : 0).sum());
+            productStats.put("totalStock", products.stream().mapToInt(p -> p.getStock() != null ? p.getStock() : 0).sum());
+            
+            statistics.put("productStats", productStats);
+            
+            // 2. 订单统计
+            Map<String, Object> orderStats = new HashMap<>();
+            List<Long> productIds = products.stream().map(Product::getId).collect(java.util.stream.Collectors.toList());
+            
+            if (productIds.isEmpty()) {
+                orderStats.put("totalOrders", 0);
+                orderStats.put("pendingOrders", 0);
+                orderStats.put("paidOrders", 0);
+                orderStats.put("shippedOrders", 0);
+                orderStats.put("completedOrders", 0);
+                orderStats.put("cancelledOrders", 0);
+                orderStats.put("totalRevenue", BigDecimal.ZERO);
+                orderStats.put("pendingRevenue", BigDecimal.ZERO);
+            } else {
+                // 查询包含商家商品的订单项
+                LambdaQueryWrapper<OrderItem> itemWrapper = new LambdaQueryWrapper<>();
+                itemWrapper.in(OrderItem::getProductId, productIds);
+                List<OrderItem> orderItems = orderItemMapper.selectList(itemWrapper);
+                
+                // 获取订单ID列表
+                List<Long> orderIds = orderItems.stream()
+                        .map(OrderItem::getOrderId)
+                        .distinct()
+                        .collect(java.util.stream.Collectors.toList());
+                
+                if (orderIds.isEmpty()) {
+                    orderStats.put("totalOrders", 0);
+                    orderStats.put("pendingOrders", 0);
+                    orderStats.put("paidOrders", 0);
+                    orderStats.put("shippedOrders", 0);
+                    orderStats.put("completedOrders", 0);
+                    orderStats.put("cancelledOrders", 0);
+                    orderStats.put("totalRevenue", BigDecimal.ZERO);
+                    orderStats.put("pendingRevenue", BigDecimal.ZERO);
+                } else {
+                    // 查询订单
+                    LambdaQueryWrapper<Order> orderWrapper = new LambdaQueryWrapper<>();
+                    orderWrapper.in(Order::getId, orderIds);
+                    List<Order> orders = orderMapper.selectList(orderWrapper);
+                    
+                    orderStats.put("totalOrders", orders.size());
+                    orderStats.put("pendingOrders", orders.stream().filter(o -> o.getStatus() != null && o.getStatus() == 0).count());
+                    orderStats.put("paidOrders", orders.stream().filter(o -> o.getStatus() != null && (o.getStatus() == 1 || o.getStatus() == 2)).count());
+                    orderStats.put("shippedOrders", orders.stream().filter(o -> o.getStatus() != null && o.getStatus() == 3).count());
+                    orderStats.put("completedOrders", orders.stream().filter(o -> o.getStatus() != null && o.getStatus() == 4).count());
+                    orderStats.put("cancelledOrders", orders.stream().filter(o -> o.getStatus() != null && o.getStatus() == 5).count());
+                    
+                    // 计算总收入（已完成订单）
+                    BigDecimal totalRevenue = orders.stream()
+                            .filter(o -> o.getStatus() != null && o.getStatus() == 4)
+                            .map(o -> o.getActualAmount() != null ? o.getActualAmount() : BigDecimal.ZERO)
+                            .reduce(BigDecimal.ZERO, BigDecimal::add);
+                    orderStats.put("totalRevenue", totalRevenue);
+                    
+                    // 计算待收入（已支付但未完成的订单）
+                    BigDecimal pendingRevenue = orders.stream()
+                            .filter(o -> o.getStatus() != null && (o.getStatus() == 1 || o.getStatus() == 2 || o.getStatus() == 3))
+                            .map(o -> o.getActualAmount() != null ? o.getActualAmount() : BigDecimal.ZERO)
+                            .reduce(BigDecimal.ZERO, BigDecimal::add);
+                    orderStats.put("pendingRevenue", pendingRevenue);
+                }
+            }
+            
+            statistics.put("orderStats", orderStats);
+            
+            // 3. 热销商品TOP5
+            List<Map<String, Object>> topProducts = new ArrayList<>();
+            products.stream()
+                    .sorted((a, b) -> {
+                        int salesA = a.getSales() != null ? a.getSales() : 0;
+                        int salesB = b.getSales() != null ? b.getSales() : 0;
+                        return salesB - salesA;
+                    })
+                    .limit(5)
+                    .forEach(product -> {
+                        Map<String, Object> productData = new HashMap<>();
+                        productData.put("id", product.getId());
+                        productData.put("name", product.getName());
+                        productData.put("price", product.getPrice());
+                        productData.put("sales", product.getSales() != null ? product.getSales() : 0);
+                        productData.put("stock", product.getStock() != null ? product.getStock() : 0);
+                        // 计算预估收入
+                        BigDecimal price = product.getPrice() != null ? product.getPrice() : BigDecimal.ZERO;
+                        int sales = product.getSales() != null ? product.getSales() : 0;
+                        productData.put("revenue", price.multiply(new BigDecimal(sales)));
+                        topProducts.add(productData);
+                    });
+            
+            statistics.put("topProducts", topProducts);
+            
+            return Result.success(statistics);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Result.error("获取统计数据失败：" + e.getMessage());
+        }
+    }
+
     /**
      * 获取销售统计报表
      */
@@ -536,7 +665,7 @@ public class MerchantController {
                 .distinct()
                 .collect(java.util.stream.Collectors.toList());
             
-            List<Order> orders = new ArrayList<>();
+            final List<Order> orders;
             if (!orderIds.isEmpty()) {
                 LambdaQueryWrapper<Order> orderWrapper = new LambdaQueryWrapper<>();
                 orderWrapper.in(Order::getId, orderIds);
@@ -550,6 +679,8 @@ public class MerchantController {
                 }
                 
                 orders = orderMapper.selectList(orderWrapper);
+            } else {
+                orders = new ArrayList<>();
             }
             
             // 统计数据
@@ -639,10 +770,6 @@ public class MerchantController {
         } catch (Exception e) {
             return Result.error("获取销售排行失败：" + e.getMessage());
         }
-    }
-        
-        List<UserBrowseLog> logs = browseLogMapper.getMerchantProductBrowseLog(merchantId, limit);
-        return Result.success(logs);
     }
 
     /**

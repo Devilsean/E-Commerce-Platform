@@ -284,6 +284,7 @@ public class UserServiceImpl implements UserService {
         redisUtil.delete("verification:code:" + phone);
 
         return true;
+    }
 
     @Override
     public boolean deleteAccount(Long userId, String password) {
@@ -315,6 +316,5 @@ public class UserServiceImpl implements UserService {
         }
 
         return result > 0;
-    }
     }
 }

@@ -570,6 +570,7 @@ public class UserController {
             e.printStackTrace();
             return Result.error("设置失败：" + e.getMessage());
         }
+    }
 
     /**
      * 注销账户
@@ -588,7 +589,6 @@ public class UserController {
         } else {
             return Result.error("账户注销失败");
         }
-    }
     }
 
     // ========== 请求DTO类 ==========
@@ -679,14 +679,14 @@ public class UserController {
         private Long orderId;
         
         private List<Map<String, Object>> items;
+        
+        private String timestamp;
+    }
 
     @Data
     static class DeleteAccountRequest {
         @NotBlank(message = "密码不能为空")
         private String password;
-    }
-        
-        private String timestamp;
     }
 
     @Data
