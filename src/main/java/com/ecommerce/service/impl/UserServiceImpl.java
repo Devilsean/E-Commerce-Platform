@@ -45,7 +45,8 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private RedisUtil redisUtil;
 
-    private final BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+    // 使用静态单例，避免每次创建新实例
+    private static final BCryptPasswordEncoder PASSWORD_ENCODER = new BCryptPasswordEncoder();
 
     // 密码复杂度正则：至少8位，包含大小写字母和数字
     private static final String PASSWORD_PATTERN = "^(?=.*[a-z])(?=.*[A-Z])(?=.*\\d)[a-zA-Z\\d]{8,}$";
@@ -62,7 +63,7 @@ public class UserServiceImpl implements UserService {
         }
 
         // 校验密码复杂度
-        if (!Pattern.matches(PASSWORD_PATTERN, password)) {
+        if (!isValidPassword(password)) {
             throw new BusinessException(ResultCode.PASSWORD_COMPLEXITY_ERROR);
         }
 
@@ -103,7 +104,7 @@ public class UserServiceImpl implements UserService {
         // 创建用户
         User user = new User();
         user.setUsername(username);
-        user.setPassword(passwordEncoder.encode(password));
+        user.setPassword(PASSWORD_ENCODER.encode(password));
         user.setPhone(phone);
         user.setEmail(email);
         user.setNickname(username);
@@ -152,7 +153,7 @@ public class UserServiceImpl implements UserService {
         }
 
         // 验证密码
-        if (!passwordEncoder.matches(password, user.getPassword())) {
+        if (!PASSWORD_ENCODER.matches(password, user.getPassword())) {
             throw new BusinessException(ResultCode.USER_PASSWORD_ERROR);
         }
 
@@ -212,12 +213,53 @@ public class UserServiceImpl implements UserService {
             throw new BusinessException(ResultCode.USER_NOT_FOUND);
         }
 
-        // 不允许直接修改密码、用户类型等敏感字段
-        user.setPassword(null);
-        user.setUserType(null);
-        user.setUsername(null);
+        // 校验手机号格式（如果提供了手机号）
+        if (StringUtils.hasText(user.getPhone()) && !Pattern.matches(PHONE_PATTERN, user.getPhone())) {
+            throw new BusinessException(ResultCode.PARAM_ERROR.getCode(), "手机号格式不正确");
+        }
 
-        int result = userMapper.updateById(user);
+        // 校验邮箱格式（如果提供了邮箱）
+        if (StringUtils.hasText(user.getEmail()) && !Pattern.matches(EMAIL_PATTERN, user.getEmail())) {
+            throw new BusinessException(ResultCode.PARAM_ERROR.getCode(), "邮箱格式不正确");
+        }
+
+        // 检查手机号是否已被其他用户使用
+        if (StringUtils.hasText(user.getPhone())) {
+            LambdaQueryWrapper<User> phoneWrapper = new LambdaQueryWrapper<>();
+            phoneWrapper.eq(User::getPhone, user.getPhone())
+                       .ne(User::getId, user.getId());
+            User phoneUser = userMapper.selectOne(phoneWrapper);
+            if (phoneUser != null) {
+                throw new BusinessException(ResultCode.PARAM_ERROR.getCode(), "手机号已被其他用户使用");
+            }
+        }
+
+        // 检查邮箱是否已被其他用户使用
+        if (StringUtils.hasText(user.getEmail())) {
+            LambdaQueryWrapper<User> emailWrapper = new LambdaQueryWrapper<>();
+            emailWrapper.eq(User::getEmail, user.getEmail())
+                       .ne(User::getId, user.getId());
+            User emailUser = userMapper.selectOne(emailWrapper);
+            if (emailUser != null) {
+                throw new BusinessException(ResultCode.PARAM_ERROR.getCode(), "邮箱已被其他用户使用");
+            }
+        }
+
+        // 更新用户信息（只更新允许修改的字段）
+        existUser.setNickname(user.getNickname());
+        existUser.setPhone(user.getPhone());
+        existUser.setEmail(user.getEmail());
+        if (user.getAvatar() != null) {
+            existUser.setAvatar(user.getAvatar());
+        }
+
+        int result = userMapper.updateById(existUser);
+        
+        if (result > 0) {
+            log.info("用户信息更新成功：{}，昵称：{}，手机：{}，邮箱：{}",
+                existUser.getUsername(), existUser.getNickname(), existUser.getPhone(), existUser.getEmail());
+        }
+        
         return result > 0;
     }
 
@@ -229,7 +271,7 @@ public class UserServiceImpl implements UserService {
         }
 
         // 校验新密码复杂度
-        if (!Pattern.matches(PASSWORD_PATTERN, newPassword)) {
+        if (!isValidPassword(newPassword)) {
             throw new BusinessException(ResultCode.PASSWORD_COMPLEXITY_ERROR);
         }
 
@@ -240,12 +282,12 @@ public class UserServiceImpl implements UserService {
         }
 
         // 验证旧密码
-        if (!passwordEncoder.matches(oldPassword, user.getPassword())) {
+        if (!PASSWORD_ENCODER.matches(oldPassword, user.getPassword())) {
             throw new BusinessException(ResultCode.USER_PASSWORD_ERROR.getCode(), "原密码错误");
         }
 
         // 更新密码
-        user.setPassword(passwordEncoder.encode(newPassword));
+        user.setPassword(PASSWORD_ENCODER.encode(newPassword));
         int result = userMapper.updateById(user);
 
         if (result > 0) {
@@ -311,7 +353,7 @@ public class UserServiceImpl implements UserService {
         }
 
         // 验证密码
-        if (!passwordEncoder.matches(password, user.getPassword())) {
+        if (!PASSWORD_ENCODER.matches(password, user.getPassword())) {
             throw new BusinessException(ResultCode.USER_PASSWORD_ERROR.getCode(), "密码错误");
         }
 
@@ -422,5 +464,15 @@ public class UserServiceImpl implements UserService {
 
         log.info("获取用户账户统计成功：{}，总订单数：{}，总消费：{}", user.getUsername(), totalOrders, totalSpent);
         return stats;
+    }
+
+    /**
+     * 验证密码复杂度
+     * 使用预编译的Pattern提升性能
+     */
+    private static final Pattern PASSWORD_PATTERN_COMPILED = Pattern.compile(PASSWORD_PATTERN);
+    
+    private boolean isValidPassword(String password) {
+        return password != null && PASSWORD_PATTERN_COMPILED.matcher(password).matches();
     }
 }

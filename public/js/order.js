@@ -162,36 +162,41 @@ const OrderService = {
     /**
      * 支付订单
      */
-    async payOrder(orderId, paymentType = 1) {
+    async payOrder(orderId, paymentType = 1, notificationEmail = null) {
         const token = utils.getToken();
         if (!token) {
             utils.showToast('请先登录', 'warning');
-            return false;
+            return null;
         }
 
         try {
+            const requestBody = { paymentType };
+            if (notificationEmail) {
+                requestBody.notificationEmail = notificationEmail;
+            }
+
             const response = await fetch(`${API_BASE}/user/orders/${orderId}/pay`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${token}`
                 },
-                body: JSON.stringify({ paymentType })
+                body: JSON.stringify(requestBody)
             });
 
             const data = await response.json();
 
             if (data.code === 200) {
                 utils.showToast('支付成功', 'success');
-                return true;
+                return data.data; // 返回支付结果数据
             } else {
                 utils.showToast(data.message || '支付失败', 'error');
-                return false;
+                return null;
             }
         } catch (error) {
             console.error('Pay order error:', error);
             utils.showToast('支付失败', 'error');
-            return false;
+            return null;
         }
     },
 
@@ -454,6 +459,15 @@ const OrderService = {
                             <span class="detail-label">收货地址：</span>
                             <span class="detail-value">${order.receiverAddress}</span>
                         </div>
+                        ${order.notificationEmail ? `
+                            <div class="detail-row">
+                                <span class="detail-label">通知邮箱：</span>
+                                <span class="detail-value">
+                                    <svg width="14" height="14" class="icon" aria-hidden="true" style="vertical-align: middle; margin-right: 4px;"><use xlink:href="#icon-email"></use></svg>
+                                    ${order.notificationEmail}
+                                </span>
+                            </div>
+                        ` : ''}
                         ${order.logisticsCompany ? `
                             <div class="detail-row">
                                 <span class="detail-label">物流公司：</span>
@@ -503,15 +517,167 @@ const OrderService = {
     },
 
     /**
-     * 处理支付订单
+     * 处理支付订单 - 显示支付确认弹窗
      */
     async handlePayOrder(orderId) {
-        const success = await this.payOrder(orderId);
-        if (success) {
-            // 刷新订单列表
-            if (window.app && window.app.currentOrderStatus !== undefined) {
-                this.loadAndDisplayOrders(window.app.currentOrderStatus);
+        // 先获取订单详情
+        const order = await this.getOrderDetail(orderId);
+        if (!order) return;
+
+        // 获取用户信息
+        const user = utils.getUserInfo();
+
+        // 显示支付确认弹窗
+        this.showPaymentModal(order, user);
+    },
+
+    /**
+     * 显示支付确认弹窗
+     */
+    showPaymentModal(order, user) {
+        // 确定通知邮箱：优先使用订单邮箱，其次用户邮箱
+        const currentEmail = order.notificationEmail || (user && user.email) || '';
+        const hasEmail = currentEmail && currentEmail.trim() !== '';
+
+        const modal = document.createElement('div');
+        modal.id = 'paymentModal';
+        modal.className = 'modal';
+        modal.style.display = 'flex';
+        modal.innerHTML = `
+            <div class="modal-content" style="max-width: 500px;">
+                <div class="modal-header">
+                    <h3><svg width="20" height="20" class="icon" aria-hidden="true"><use xlink:href="#icon-credit-card"></use></svg> 确认支付</h3>
+                    <button class="modal-close" onclick="document.getElementById('paymentModal').remove()">×</button>
+                </div>
+                <form id="paymentForm" onsubmit="OrderService.submitPayment(event, ${order.id})">
+                    <div class="modal-body" style="padding: 20px;">
+                        <!-- 订单信息 -->
+                        <div style="background: #f8f9fa; border-radius: 8px; padding: 16px; margin-bottom: 20px;">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                <span style="color: #666;">订单号：</span>
+                                <span style="font-family: monospace;">${order.orderNo}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; font-size: 20px; font-weight: bold; color: var(--primary);">
+                                <span>支付金额：</span>
+                                <span>¥${order.actualAmount || order.totalAmount}</span>
+                            </div>
+                        </div>
+
+                        <!-- 支付方式 -->
+                        <div class="form-group">
+                            <label>支付方式</label>
+                            <div style="display: flex; gap: 12px;">
+                                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 8px; flex: 1;">
+                                    <input type="radio" name="paymentType" value="1" checked>
+                                    <span>💳 微信支付</span>
+                                </label>
+                                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; padding: 12px 16px; border: 2px solid #e5e7eb; border-radius: 8px; flex: 1;">
+                                    <input type="radio" name="paymentType" value="2">
+                                    <span>💰 支付宝</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- 通知邮箱 -->
+                        <div class="form-group">
+                            <label>
+                                通知邮箱 <span class="label-required">*</span>
+                                <span style="color: #10b981; font-size: 12px; margin-left: 8px;"> 支付成功后将发送订单详情到此邮箱</span>
+                            </label>
+                            <input type="email" name="notificationEmail" required class="form-input"
+                                placeholder="请输入邮箱地址" value="${currentEmail}"
+                                style="${!hasEmail ? 'border-color: #f59e0b;' : ''}">
+                            ${!hasEmail ? `
+                            <div style="background: #fef3c7; border-radius: 8px; padding: 12px; margin-top: 8px;">
+                                <div style="display: flex; align-items: center; gap: 8px; color: #92400e; font-size: 13px;">
+                                    <span></span>
+                                    <span>请填写邮箱以接收支付成功通知和订单详情</span>
+                                </div>
+                            </div>
+                            ` : ''}
+                        </div>
+
+                        <div style="background: #ecfdf5; border-radius: 8px; padding: 12px; margin-top: 16px;">
+                            <div style="display: flex; align-items: center; gap: 8px; color: #065f46; font-size: 13px;">
+                                <span>✅</span>
+                                <span>支付成功后，您将收到包含订单详情的邮件通知</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer" style="display: flex; gap: 12px; justify-content: flex-end;">
+                        <button type="button" class="btn btn-secondary" onclick="document.getElementById('paymentModal').remove()">取消</button>
+                        <button type="submit" class="btn btn-primary">
+                            <svg width="16" height="16" class="icon" aria-hidden="true"><use xlink:href="#icon-check"></use></svg>
+                            确认支付
+                        </button>
+                    </div>
+                </form>
+            </div>
+        `;
+        document.body.appendChild(modal);
+    },
+
+    /**
+     * 提交支付
+     */
+    async submitPayment(event, orderId) {
+        event.preventDefault();
+        const form = event.target;
+
+        const paymentType = parseInt(form.paymentType.value);
+        const notificationEmail = form.notificationEmail.value.trim();
+
+        // 验证邮箱
+        if (!notificationEmail) {
+            utils.showToast('请填写通知邮箱', 'error');
+            return;
+        }
+
+        if (!/^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$/.test(notificationEmail)) {
+            utils.showToast('请输入正确的邮箱格式', 'error');
+            return;
+        }
+
+        // 显示加载状态
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const originalText = submitBtn.innerHTML;
+        submitBtn.innerHTML = '<span class="loading-spinner"></span> 支付中...';
+        submitBtn.disabled = true;
+
+        try {
+            const result = await OrderService.payOrder(orderId, paymentType, notificationEmail);
+
+            if (result) {
+                // 关闭弹窗
+                document.getElementById('paymentModal').remove();
+
+                // 清空购物车（支付成功后清空）
+                if (typeof CartService !== 'undefined') {
+                    CartService.cart = [];
+                    CartService.saveCart();
+                    CartService.updateCartCount();
+                } else if (window.app) {
+                    // 兼容 app.js 中的购物车
+                    window.app.cart = [];
+                    localStorage.removeItem('cart');
+                    window.app.updateUI();
+                }
+
+                // 显示成功提示
+                utils.showToast('支付成功！', 'success');
+
+                // 跳转到订单列表页面
+                setTimeout(() => {
+                    window.location.hash = '/orders';
+                }, 500);
             }
+        } catch (error) {
+            console.error('Payment error:', error);
+            utils.showToast('支付失败，请重试', 'error');
+        } finally {
+            // 恢复按钮状态
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
         }
     },
 

@@ -45,8 +45,25 @@ const ProfileService = {
         const content = document.getElementById('main-content');
         const avatarUrl = currentUser.avatar || this.getDefaultAvatar(currentUser.username);
 
+        // 检查是否需要显示邮箱提醒
+        const showEmailReminder = !currentUser.email;
+
         content.innerHTML = `
     <div class="profile-container">
+        ${showEmailReminder ? `
+        <div style="background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-radius: 12px; padding: 16px 20px; margin-bottom: 20px; display: flex; align-items: center; gap: 16px; box-shadow: 0 2px 8px rgba(245, 158, 11, 0.15);">
+            <div style="background: white; border-radius: 50%; width: 48px; height: 48px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                <span style="font-size: 24px;"></span>
+            </div>
+            <div style="flex: 1;">
+                <div style="font-weight: 600; color: #92400e; margin-bottom: 4px;">设置邮箱，接收订单通知</div>
+                <div style="font-size: 13px; color: #a16207;">设置邮箱后，您将收到支付成功、发货通知等重要邮件提醒</div>
+            </div>
+            <button class="btn btn-sm" style="background: #f59e0b; color: white; border: none; white-space: nowrap;" onclick="ProfileService.showEditProfileModal()">
+                立即设置
+            </button>
+        </div>
+        ` : ''}
         <div class="profile-header">
             <div class="profile-banner" style="background-color: #fafafa; padding: 20px 16px; border-radius: 8px;">
                 <div class="profile-avatar-large" onclick="ProfileService.showAvatarSelector()" style="cursor: pointer; position: relative;" title="点击更换头像">
@@ -57,7 +74,9 @@ const ProfileService = {
                 </div>
                 <div class="profile-header-info">
                     <h2>${currentUser.username || '用户'}</h2>
-                    <p class="profile-subtitle">${currentUser.email || currentUser.phone || '未设置联系方式'}</p>
+                    <p class="profile-subtitle">
+                        ${currentUser.email ? `<svg width="14" height="14" class="icon" aria-hidden="true" style="vertical-align: middle; margin-right: 4px;"><use xlink:href="#icon-email"></use></svg>${currentUser.email}` : (currentUser.phone || '未设置联系方式')}
+                    </p>
                     <span class="badge badge-${isMerchant ? 'merchant' : 'user'}">
                         <svg width="16" height="16" class="icon" aria-hidden="true"><use xlink:href="#icon-${isMerchant ? 'merchant' : 'user'}"></use></svg> ${isMerchant ? '商家账号' : '普通用户'}
                     </span>
@@ -1003,23 +1022,39 @@ const ProfileService = {
                     <button class="modal-close" onclick="this.closest('.modal').remove()">×</button>
                 </div>
                 <form onsubmit="ProfileService.handleEditProfile(event)">
+                    ${!currentUser.email ? `
+                    <div style="background: #fef3c7; border-radius: 8px; padding: 12px 16px; margin-bottom: 16px;">
+                        <div style="display: flex; align-items: center; gap: 8px; color: #92400e;">
+                            <span style="font-size: 20px;"></span>
+                            <div>
+                                <div style="font-weight: 600;">建议设置邮箱</div>
+                                <div style="font-size: 12px; margin-top: 2px;">设置邮箱后，您将收到支付成功、发货通知等重要邮件提醒</div>
+                            </div>
+                        </div>
+                    </div>
+                    ` : ''}
                     <div class="form-group">
-                        <label>用户名 <span class="label-required">*</span></label>
-                        <input type="text" name="username" value="${currentUser.username || ''}" required class="form-input" placeholder="请输入用户名">
+                        <label>昵称 <span class="label-required">*</span></label>
+                        <input type="text" name="username" value="${currentUser.nickname || currentUser.username || ''}" required class="form-input" placeholder="请输入昵称">
                     </div>
                     <div class="form-group">
                         <label>手机号</label>
                         <input type="tel" name="phone" value="${currentUser.phone || ''}" pattern="[0-9]{11}" class="form-input" placeholder="请输入11位手机号">
-                        <div class="form-hint">💡 设置后可作为默认联系电话</div>
+                        <div class="form-hint"> 设置后可作为默认联系电话</div>
                     </div>
                     <div class="form-group">
-                        <label>邮箱</label>
-                        <input type="email" name="email" value="${currentUser.email || ''}" class="form-input" placeholder="请输入邮箱">
-                    </div>
-                    <div class="form-group">
-                        <label>默认收货地址</label>
-                        <textarea name="defaultAddress" rows="3" class="form-input" placeholder="请输入默认收货地址（可选）">${currentUser.defaultAddress || ''}</textarea>
-                        <div class="form-hint">💡 设置后下单时自动填充</div>
+                        <label>
+                            邮箱
+                            ${!currentUser.email ? '<span class="label-required">*</span>' : ''}
+                            <span style="color: #f59e0b; font-size: 12px; margin-left: 4px;"> 用于接收订单通知</span>
+                        </label>
+                        <input type="email" name="email" value="${currentUser.email || ''}"
+                            class="form-input" placeholder="请输入邮箱地址"
+                            ${!currentUser.email ? 'required' : ''}
+                            style="${!currentUser.email ? 'border-color: #f59e0b;' : ''}">
+                        <div class="form-hint" style="color: ${!currentUser.email ? '#f59e0b' : '#666'};">
+                            ${!currentUser.email ? '<strong> 重要：</strong>' : ' '}设置邮箱后，您将收到订单确认、支付成功、发货通知等邮件提醒
+                        </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" onclick="this.closest('.modal').remove()">取消</button>
@@ -1036,11 +1071,12 @@ const ProfileService = {
         event.preventDefault();
         const form = event.target;
         const data = {
-            username: form.username.value.trim(),
+            nickname: form.username.value.trim(),
             phone: form.phone.value.trim(),
-            email: form.email.value.trim(),
-            defaultAddress: form.defaultAddress.value.trim()
+            email: form.email.value.trim()
         };
+
+        console.log('准备更新用户信息:', data);
 
         // 验证手机号格式
         if (data.phone && !/^1[3-9]\d{9}$/.test(data.phone)) {
@@ -1048,23 +1084,56 @@ const ProfileService = {
             return;
         }
 
+        // 验证邮箱格式
+        if (data.email && !/^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$/.test(data.email)) {
+            showMessage('请输入正确的邮箱格式', 'error');
+            return;
+        }
+
+        // 显示加载状态
+        const submitBtn = form.querySelector('button[type="submit"]');
+        const originalText = submitBtn.textContent;
+        submitBtn.textContent = '保存中...';
+        submitBtn.disabled = true;
+
         try {
-            // 这里应该调用后端API保存信息
-            // await utils.request('/user/update', {
-            //     method: 'PUT',
-            //     body: JSON.stringify(data)
-            // });
+            // 调用后端API保存信息
+            console.log('发送请求到 /user/update');
+            const result = await utils.request('/user/update', {
+                method: 'PUT',
+                body: JSON.stringify(data)
+            });
+            console.log('更新成功，返回结果:', result);
 
             // 更新本地用户信息
             const currentUser = Store.getCurrentUser();
-            Object.assign(currentUser, data);
-            Store.setCurrentUser(currentUser);
+            if (currentUser) {
+                currentUser.nickname = data.nickname;
+                currentUser.phone = data.phone;
+                currentUser.email = data.email;
+                Store.setCurrentUser(currentUser);
+                console.log('本地用户信息已更新:', currentUser);
+            }
+
+            // 同时更新localStorage中的userInfo
+            const userInfo = utils.getUserInfo();
+            if (userInfo) {
+                userInfo.nickname = data.nickname;
+                userInfo.phone = data.phone;
+                userInfo.email = data.email;
+                utils.setUserInfo(userInfo);
+            }
 
             showMessage('个人信息更新成功', 'success');
             form.closest('.modal').remove();
             this.loadProfile();
         } catch (error) {
-            showMessage('更新失败，请稍后重试', 'error');
+            console.error('更新用户信息失败:', error);
+            showMessage(error.message || '更新失败，请稍后重试', 'error');
+        } finally {
+            // 恢复按钮状态
+            submitBtn.textContent = originalText;
+            submitBtn.disabled = false;
         }
     },
 

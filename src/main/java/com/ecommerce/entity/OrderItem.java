@@ -55,6 +55,7 @@ public class OrderItem implements Serializable {
     /**
      * 小计金额
      */
+    @TableField("subtotal")
     private BigDecimal subtotal;
     
     /**

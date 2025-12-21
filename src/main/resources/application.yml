@@ -2,15 +2,31 @@ server:
   port: 8080
   servlet:
     context-path: /api
+  # Tomcat优化配置
+  tomcat:
+    threads:
+      max: 200
+      min-spare: 10
+    accept-count: 100
+    max-connections: 8192
 
 spring:
   application:
     name: ecommerce-platform
   
+  # 启动优化配置
+  main:
+    lazy-initialization: false  # 生产环境建议关闭懒加载
+    banner-mode: log  # 减少控制台输出
+  
+  # JMX禁用（减少启动时间）
+  jmx:
+    enabled: false
+  
   # 数据源配置
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/ecommerce?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false
+    url: jdbc:mysql://localhost:3306/ecommerce?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai&useSSL=false&rewriteBatchedStatements=true
     username: root
     password: 70716968
     hikari:
@@ -19,6 +35,10 @@ spring:
       connection-timeout: 30000
       idle-timeout: 600000
       max-lifetime: 1800000
+      # 连接池优化
+      pool-name: EcommerceHikariPool
+      auto-commit: true
+      validation-timeout: 3000
   
   # Redis配置
   data:
@@ -44,10 +64,10 @@ spring:
   
   # 邮件配置
   mail:
-    host: smtp.qq.com
+    host: smtp.gmail.com
     port: 587
-    username: your-email@qq.com
-    password: your-email-auth-code
+    username: cunzhangqie@gmail.com
+    password: zdnr mmhu yjie shyk
     properties:
       mail:
         smtp:
@@ -61,13 +81,21 @@ spring:
 mybatis-plus:
   configuration:
     map-underscore-to-camel-case: true
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    # 生产环境关闭SQL日志输出，提升性能
+    # log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    # 开启二级缓存
+    cache-enabled: true
+    # 延迟加载
+    lazy-loading-enabled: true
+    aggressive-lazy-loading: false
   global-config:
     db-config:
       id-type: auto
       logic-delete-field: deleted
       logic-delete-value: 1
       logic-not-delete-value: 0
+    # 关闭banner
+    banner: false
   mapper-locations: classpath*:/mapper/**/*.xml
 
 # JWT配置
@@ -114,7 +142,24 @@ platform:
 # 日志配置
 logging:
   level:
-    com.ecommerce: debug
-    org.springframework.web: info
+    com.ecommerce: info
+    org.springframework.web: warn
+    org.springframework.boot: warn
+    com.zaxxer.hikari: warn
+    org.mybatis: warn
   pattern:
-    console: '%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{50} - %msg%n'
+    console: '%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n'
+
+# 开发环境可以开启debug日志
+---
+spring:
+  config:
+    activate:
+      on-profile: dev
+logging:
+  level:
+    com.ecommerce: debug
+    org.springframework.web: debug
+mybatis-plus:
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl

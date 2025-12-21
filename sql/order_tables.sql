@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS `order` (
     `logistics_company` VARCHAR(50) COMMENT '物流公司',
     `logistics_no` VARCHAR(50) COMMENT '物流单号',
     `remark` VARCHAR(500) COMMENT '订单备注',
+    `notification_email` VARCHAR(100) COMMENT '通知邮箱（用于接收订单相关通知）',
     `deleted` INT NOT NULL DEFAULT 0 COMMENT '逻辑删除：0-未删除，1-已删除',
     `create_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `update_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',

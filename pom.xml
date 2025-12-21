@@ -103,10 +103,15 @@
             <artifactId>commons-lang3</artifactId>
         </dependency>
 
-        <!-- Hutool工具类 -->
+        <!-- Hutool工具类 - 只引入需要的模块，减少启动时间 -->
         <dependency>
             <groupId>cn.hutool</groupId>
-            <artifactId>hutool-all</artifactId>
+            <artifactId>hutool-core</artifactId>
+            <version>5.8.23</version>
+        </dependency>
+        <dependency>
+            <groupId>cn.hutool</groupId>
+            <artifactId>hutool-crypto</artifactId>
             <version>5.8.23</version>
         </dependency>
 

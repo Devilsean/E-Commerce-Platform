@@ -33,6 +33,8 @@ class App {
         this.router.register('/register', () => this.renderRegister());
         this.router.register('/profile', () => this.renderProfile());
         this.router.register('/merchant', () => this.renderMerchantManagement());
+        this.router.register('/merchant/reports', () => this.renderSalesReports());
+        this.router.register('/merchant/customers', () => this.renderCustomerManagement());
 
         // 帮助页面路由
         this.router.register('/help/order', () => this.renderHelpOrder());
@@ -1099,6 +1101,7 @@ class App {
         const defaultPhone = user.phone || '';
         const defaultAddress = user.defaultAddress || '';
         const defaultName = user.username || '';
+        const defaultEmail = user.email || '';
 
         content.innerHTML = `
             <div class="checkout-container">
@@ -1106,7 +1109,7 @@ class App {
 
                 <div class="checkout-section">
                     <h3><svg width="20" height="20" class="icon" aria-hidden="true"><use xlink:href="#icon-location"></use></svg> 收货信息</h3>
-                    ${defaultPhone || defaultAddress ? '<div class="form-hint" style="margin-bottom: 12px;">💡 已自动填充您的默认信息，可修改</div>' : ''}
+                    ${defaultPhone || defaultAddress || defaultEmail ? '<div class="form-hint" style="margin-bottom: 12px;"> 已自动填充您的默认信息，可修改</div>' : ''}
                     <form id="checkoutForm" class="address-form">
                         <div class="form-group">
                             <label>收货人姓名 <span class="label-required">*</span></label>
@@ -1119,6 +1122,11 @@ class App {
                         <div class="form-group">
                             <label>收货地址 <span class="label-required">*</span></label>
                             <textarea name="receiverAddress" required class="form-input" rows="3" placeholder="请输入详细收货地址">${defaultAddress}</textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>通知邮箱 <span class="label-required">*</span></label>
+                            <input type="email" name="notificationEmail" value="${defaultEmail}" required class="form-input" placeholder="请输入邮箱地址">
+                            <div class="form-hint"> 您将在支付成功和商家发货时收到邮件通知</div>
                         </div>
                         <div class="form-group">
                             <label>订单备注</label>
@@ -1185,6 +1193,7 @@ class App {
             receiverName: formData.get('receiverName'),
             receiverPhone: formData.get('receiverPhone'),
             receiverAddress: formData.get('receiverAddress'),
+            notificationEmail: formData.get('notificationEmail'),
             remark: formData.get('remark') || ''
         };
 
@@ -1194,11 +1203,18 @@ class App {
 
         if (result) {
             // 显示支付二维码（演示用）
-            this.showPaymentQRCode(result.orderId, result.totalAmount);
+            this.showPaymentQRCode(result.orderId, result.totalAmount, result.notificationEmail);
         }
     }
 
-    showPaymentQRCode(orderId, amount) {
+    showPaymentQRCode(orderId, amount, notificationEmail) {
+        // 验证参数
+        if (!orderId) {
+            console.error('showPaymentQRCode: orderId is missing');
+            utils.showToast('订单ID无效，请重试', 'error');
+            return;
+        }
+
         const modal = document.createElement('div');
         modal.id = 'paymentModal';
         modal.className = 'modal';
@@ -1230,23 +1246,48 @@ class App {
         `;
         document.body.appendChild(modal);
 
+        // 保存购物车数据用于记录购买日志
+        const cartItems = [...this.cart];
+
+        // 保存 this 引用，确保在回调中正确访问
+        const self = this;
+
         // 3秒后自动完成支付
         setTimeout(async () => {
-            const success = await OrderService.payOrder(orderId, 1);
-            modal.remove();
+            try {
+                console.log('Calling payOrder with:', { orderId, paymentType: 1, notificationEmail });
+                const result = await OrderService.payOrder(orderId, 1, notificationEmail);
+                console.log('payOrder result:', result);
+                modal.remove();
 
-            if (success) {
-                // 记录购买日志
-                Store.logPurchaseToServer(orderId, this.cart);
+                if (result) {
+                    // 记录购买日志
+                    Store.logPurchaseToServer(orderId, cartItems);
 
-                // 清空购物车
-                this.cart = [];
-                localStorage.removeItem('cart');
-                this.updateUI();
+                    // 清空购物车 - 同时清空 app.cart 和 CartService
+                    self.cart = [];
+                    localStorage.removeItem('cart');
 
-                // 显示成功提示并跳转到订单列表
-                utils.showToast('支付成功！订单已提交', 'success');
-                this.router.navigate('/orders');
+                    // 同时清空 CartService 的购物车（如果存在）
+                    if (typeof CartService !== 'undefined') {
+                        CartService.cart = [];
+                        CartService.saveCart();
+                        CartService.updateCartCount();
+                    }
+
+                    self.updateUI();
+
+                    // 跳转到订单列表（OrderService.payOrder 已经显示了成功提示）
+                    setTimeout(() => {
+                        window.location.hash = '/orders';
+                    }, 300);
+                }
+                // 注意：如果 result 为 null，OrderService.payOrder 已经显示了错误提示
+                // 所以这里不需要再显示错误提示
+            } catch (error) {
+                console.error('Payment error:', error);
+                modal.remove();
+                // 错误已经在 OrderService.payOrder 中处理，这里不需要再显示
             }
         }, 3000);
     }
@@ -2734,3 +2775,5 @@ class App {
 
 // ==================== 初始化应用 ====================
 const app = new App();
+
+

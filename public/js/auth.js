@@ -164,9 +164,10 @@ const AuthService = {
                             <div class="form-group">
                                 <label>
                                     <span class="label-icon"></span>
-                                    <span>邮箱</span>
+                                    <span>邮箱 <span style="color: #f59e0b; font-size: 11px;">接收订单通知</span></span>
                                 </label>
-                                <input type="email" name="email" placeholder="请输入邮箱" class="form-input">
+                                <input type="email" name="email" placeholder="请输入邮箱（推荐填写）" class="form-input" style="border-color: #f59e0b;">
+                                <div style="font-size: 11px; color: #f59e0b; margin-top: 4px;"> 填写邮箱可接收支付成功、发货通知</div>
                             </div>
                         </div>
                         

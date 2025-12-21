@@ -105,16 +105,22 @@ public class UserController {
      */
     @PutMapping("/update")
     public Result<Void> updateUser(@RequestHeader("Authorization") String token,
-                                    @RequestBody User user) {
+                                    @RequestBody UpdateUserRequest request) {
         if (token.startsWith("Bearer ")) {
             token = token.substring(7);
         }
         
         Long userId = jwtUtil.getUserIdFromToken(token);
+        
+        // 创建User对象并设置要更新的字段
+        User user = new User();
         user.setId(userId);
+        user.setNickname(request.getNickname());
+        user.setPhone(request.getPhone());
+        user.setEmail(request.getEmail());
         
         boolean success = userService.updateUser(user);
-        return success ? Result.success() : Result.error("更新失败");
+        return success ? Result.success("更新成功") : Result.error("更新失败");
     }
 
     /**
@@ -718,5 +724,13 @@ public class UserController {
         private String address;
 
         private Integer isDefault;
+    }
+
+    @Data
+    static class UpdateUserRequest {
+        private String nickname;
+        private String phone;
+        private String email;
+        private String avatar;
     }
 }

@@ -1,5 +1,6 @@
 package com.ecommerce.service;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.ecommerce.entity.OrderItem;
 import com.ecommerce.entity.PurchaseLogItem;
 import com.ecommerce.entity.UserBrowseLog;
@@ -120,24 +121,29 @@ public class UserLogService {
 
     /**
      * 获取用户浏览统计
+     * 优化：使用数据库聚合查询代替内存计算
      */
     public Map<String, Object> getUserBrowseStats(Long userId) {
         Map<String, Object> stats = new HashMap<>();
         
-        // 总浏览次数
-        List<UserBrowseLog> allLogs = browseLogMapper.getRecentBrowseLog(userId, 10000);
-        stats.put("totalBrowse", allLogs.size());
+        // 使用COUNT查询总浏览次数，避免加载大量数据到内存
+        LambdaQueryWrapper<UserBrowseLog> totalWrapper = new LambdaQueryWrapper<>();
+        totalWrapper.eq(UserBrowseLog::getUserId, userId);
+        Long totalBrowse = browseLogMapper.selectCount(totalWrapper);
+        stats.put("totalBrowse", totalBrowse);
         
         // 最近7天浏览次数
         LocalDateTime sevenDaysAgo = LocalDateTime.now().minusDays(7);
-        long recentCount = allLogs.stream()
-            .filter(log -> log.getBrowseTime().isAfter(sevenDaysAgo))
-            .count();
+        LambdaQueryWrapper<UserBrowseLog> recentWrapper = new LambdaQueryWrapper<>();
+        recentWrapper.eq(UserBrowseLog::getUserId, userId)
+                     .ge(UserBrowseLog::getBrowseTime, sevenDaysAgo);
+        Long recentCount = browseLogMapper.selectCount(recentWrapper);
         stats.put("recentBrowse", recentCount);
         
-        // 最常浏览的商品
+        // 最常浏览的商品 - 只获取前10个
+        List<UserBrowseLog> recentLogs = browseLogMapper.getRecentBrowseLog(userId, 100);
         Map<Long, Long> productCounts = new HashMap<>();
-        for (UserBrowseLog log : allLogs) {
+        for (UserBrowseLog log : recentLogs) {
             productCounts.merge(log.getProductId(), 1L, Long::sum);
         }
         stats.put("mostViewedProducts", productCounts);
@@ -147,28 +153,39 @@ public class UserLogService {
 
     /**
      * 获取用户购买统计
+     * 优化：使用数据库聚合查询代替内存计算
      */
     public Map<String, Object> getUserPurchaseStats(Long userId) {
         Map<String, Object> stats = new HashMap<>();
         
-        // 总购买次数和金额
-        List<UserPurchaseLog> allLogs = purchaseLogMapper.getRecentPurchaseLog(userId, 10000);
-        stats.put("totalOrders", allLogs.size());
+        // 使用COUNT查询总购买次数
+        LambdaQueryWrapper<UserPurchaseLog> totalWrapper = new LambdaQueryWrapper<>();
+        totalWrapper.eq(UserPurchaseLog::getUserId, userId);
+        Long totalOrders = purchaseLogMapper.selectCount(totalWrapper);
+        stats.put("totalOrders", totalOrders);
         
+        // 获取最近的购买记录计算总金额（限制数量避免内存问题）
+        List<UserPurchaseLog> allLogs = purchaseLogMapper.getRecentPurchaseLog(userId, 1000);
         BigDecimal totalAmount = allLogs.stream()
             .map(UserPurchaseLog::getTotalAmount)
+            .filter(amount -> amount != null)
             .reduce(BigDecimal.ZERO, BigDecimal::add);
         stats.put("totalAmount", totalAmount);
         
         // 最近30天购买次数和金额
         LocalDateTime thirtyDaysAgo = LocalDateTime.now().minusDays(30);
-        List<UserPurchaseLog> recentLogs = allLogs.stream()
-            .filter(log -> log.getPurchaseTime().isAfter(thirtyDaysAgo))
-            .toList();
-        stats.put("recentOrders", recentLogs.size());
+        LambdaQueryWrapper<UserPurchaseLog> recentWrapper = new LambdaQueryWrapper<>();
+        recentWrapper.eq(UserPurchaseLog::getUserId, userId)
+                     .ge(UserPurchaseLog::getPurchaseTime, thirtyDaysAgo);
+        Long recentOrders = purchaseLogMapper.selectCount(recentWrapper);
+        stats.put("recentOrders", recentOrders);
         
+        List<UserPurchaseLog> recentLogs = allLogs.stream()
+            .filter(log -> log.getPurchaseTime() != null && log.getPurchaseTime().isAfter(thirtyDaysAgo))
+            .toList();
         BigDecimal recentAmount = recentLogs.stream()
             .map(UserPurchaseLog::getTotalAmount)
+            .filter(amount -> amount != null)
             .reduce(BigDecimal.ZERO, BigDecimal::add);
         stats.put("recentAmount", recentAmount);
         

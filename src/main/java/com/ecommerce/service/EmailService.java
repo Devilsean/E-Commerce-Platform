@@ -37,7 +37,7 @@ public class EmailService {
     /**
      * 发送简单文本邮件
      */
-    @Async
+    @Async("taskExecutor")
     public void sendSimpleEmail(String to, String subject, String content) {
         try {
             SimpleMailMessage message = new SimpleMailMessage();
@@ -53,11 +53,20 @@ public class EmailService {
     }
 
     /**
-     * 发送HTML邮件
+     * 发送HTML邮件（异步）
      */
-    @Async
+    @Async("taskExecutor")
     public void sendHtmlEmail(String to, String subject, String htmlContent) {
+        doSendHtmlEmail(to, subject, htmlContent);
+    }
+
+    /**
+     * 实际发送HTML邮件的方法（同步）
+     * 供内部调用，避免嵌套@Async问题
+     */
+    private void doSendHtmlEmail(String to, String subject, String htmlContent) {
         try {
+            log.info("开始发送HTML邮件: to={}, subject={}", to, subject);
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
             helper.setFrom(fromEmail);
@@ -67,171 +76,131 @@ public class EmailService {
             mailSender.send(message);
             log.info("HTML邮件发送成功: to={}, subject={}", to, subject);
         } catch (MessagingException e) {
-            log.error("HTML邮件发送失败: to={}, subject={}, error={}", to, subject, e.getMessage());
+            log.error("HTML邮件发送失败(MessagingException): to={}, subject={}, error={}", to, subject, e.getMessage(), e);
+        } catch (Exception e) {
+            log.error("HTML邮件发送失败(Exception): to={}, subject={}, error={}", to, subject, e.getMessage(), e);
         }
     }
 
     /**
-     * 发送订单确认邮件
+     * 获取订单通知邮箱
+     * 优先使用订单的通知邮箱，如果没有则使用用户邮箱
      */
-    @Async
-    public void sendOrderConfirmationEmail(User user, Order order, List<OrderItem> items) {
-        if (user.getEmail() == null || user.getEmail().isEmpty()) {
-            log.warn("用户邮箱为空，无法发送订单确认邮件: userId={}", user.getId());
-            return;
+    private String getNotificationEmail(User user, Order order) {
+        // 优先使用订单指定的通知邮箱
+        if (order.getNotificationEmail() != null && !order.getNotificationEmail().isEmpty()) {
+            return order.getNotificationEmail();
         }
-
-        String subject = String.format("[%s] 订单确认 - %s", platformName, order.getOrderNo());
-        String htmlContent = buildOrderConfirmationHtml(user, order, items);
-        sendHtmlEmail(user.getEmail(), subject, htmlContent);
+        // 其次使用用户邮箱
+        if (user != null && user.getEmail() != null && !user.getEmail().isEmpty()) {
+            return user.getEmail();
+        }
+        return null;
     }
+
 
     /**
      * 发送订单支付成功邮件
      */
-    @Async
+    @Async("taskExecutor")
     public void sendPaymentSuccessEmail(User user, Order order) {
-        if (user.getEmail() == null || user.getEmail().isEmpty()) {
-            log.warn("用户邮箱为空，无法发送支付成功邮件: userId={}", user.getId());
+        String email = getNotificationEmail(user, order);
+        if (email == null) {
+            log.warn("无可用邮箱，无法发送支付成功邮件: userId={}, orderNo={}",
+                user != null ? user.getId() : "null", order.getOrderNo());
             return;
         }
 
         String subject = String.format("[%s] 支付成功 - %s", platformName, order.getOrderNo());
-        String htmlContent = buildPaymentSuccessHtml(user, order);
-        sendHtmlEmail(user.getEmail(), subject, htmlContent);
+        String htmlContent = buildPaymentSuccessHtml(user, order, null);
+        doSendHtmlEmail(email, subject, htmlContent);
+    }
+
+    /**
+     * 发送订单支付成功邮件（包含商品清单）
+     */
+    @Async("taskExecutor")
+    public void sendPaymentSuccessEmail(User user, Order order, List<OrderItem> items) {
+        String email = getNotificationEmail(user, order);
+        if (email == null) {
+            log.warn("无可用邮箱，无法发送支付成功邮件: userId={}, orderNo={}",
+                user != null ? user.getId() : "null", order.getOrderNo());
+            return;
+        }
+
+        log.info("准备发送支付成功邮件: email={}, orderNo={}, itemsCount={}",
+            email, order.getOrderNo(), items != null ? items.size() : 0);
+        
+        String subject = String.format("[%s] 支付成功 - %s", platformName, order.getOrderNo());
+        String htmlContent = buildPaymentSuccessHtml(user, order, items);
+        doSendHtmlEmail(email, subject, htmlContent);
     }
 
     /**
      * 发送订单发货通知邮件
      */
-    @Async
+    @Async("taskExecutor")
     public void sendShippingNotificationEmail(User user, Order order) {
-        if (user.getEmail() == null || user.getEmail().isEmpty()) {
-            log.warn("用户邮箱为空，无法发送发货通知邮件: userId={}", user.getId());
+        String email = getNotificationEmail(user, order);
+        if (email == null) {
+            log.warn("无可用邮箱，无法发送发货通知邮件: userId={}, orderNo={}",
+                user != null ? user.getId() : "null", order.getOrderNo());
             return;
         }
 
+        log.info("准备发送发货通知邮件: email={}, orderNo={}", email, order.getOrderNo());
+        
         String subject = String.format("[%s] 订单已发货 - %s", platformName, order.getOrderNo());
         String htmlContent = buildShippingNotificationHtml(user, order);
-        sendHtmlEmail(user.getEmail(), subject, htmlContent);
+        doSendHtmlEmail(email, subject, htmlContent);
     }
 
-    /**
-     * 发送订单完成邮件
-     */
-    @Async
-    public void sendOrderCompletionEmail(User user, Order order) {
-        if (user.getEmail() == null || user.getEmail().isEmpty()) {
-            log.warn("用户邮箱为空，无法发送订单完成邮件: userId={}", user.getId());
-            return;
-        }
-
-        String subject = String.format("[%s] 订单已完成 - %s", platformName, order.getOrderNo());
-        String htmlContent = buildOrderCompletionHtml(user, order);
-        sendHtmlEmail(user.getEmail(), subject, htmlContent);
-    }
-
-    /**
-     * 构建订单确认HTML内容
-     */
-    private String buildOrderConfirmationHtml(User user, Order order, List<OrderItem> items) {
-        StringBuilder itemsHtml = new StringBuilder();
-        for (OrderItem item : items) {
-            itemsHtml.append(String.format(
-                "<tr><td>%s</td><td>%d</td><td>¥%.2f</td><td>¥%.2f</td></tr>",
-                item.getProductName(),
-                item.getQuantity(),
-                item.getPrice(),
-                item.getSubtotal()
-            ));
-        }
-
-        return String.format("""
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="UTF-8">
-                <style>
-                    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-                    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-                    .header { background: #4CAF50; color: white; padding: 20px; text-align: center; }
-                    .content { padding: 20px; background: #f9f9f9; }
-                    .order-info { background: white; padding: 15px; margin: 15px 0; border-radius: 5px; }
-                    table { width: 100%%; border-collapse: collapse; margin: 15px 0; }
-                    th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
-                    th { background: #f5f5f5; }
-                    .total { font-size: 18px; font-weight: bold; color: #4CAF50; }
-                    .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
-                </style>
-            </head>
-            <body>
-                <div class="container">
-                    <div class="header">
-                        <h1>订单确认</h1>
-                    </div>
-                    <div class="content">
-                        <p>尊敬的 %s，</p>
-                        <p>感谢您在%s下单！您的订单已成功创建。</p>
-                        
-                        <div class="order-info">
-                            <h3>订单信息</h3>
-                            <p><strong>订单号：</strong>%s</p>
-                            <p><strong>下单时间：</strong>%s</p>
-                            <p><strong>订单状态：</strong>待支付</p>
-                        </div>
-                        
-                        <div class="order-info">
-                            <h3>商品清单</h3>
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>商品名称</th>
-                                        <th>数量</th>
-                                        <th>单价</th>
-                                        <th>小计</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    %s
-                                </tbody>
-                            </table>
-                            <p class="total">订单总额：¥%.2f</p>
-                        </div>
-                        
-                        <div class="order-info">
-                            <h3>收货信息</h3>
-                            <p><strong>收货人：</strong>%s</p>
-                            <p><strong>联系电话：</strong>%s</p>
-                            <p><strong>收货地址：</strong>%s</p>
-                        </div>
-                        
-                        <p style="color: #ff5722; font-weight: bold;">请尽快完成支付，未支付订单将在30分钟后自动取消。</p>
-                    </div>
-                    <div class="footer">
-                        <p>这是一封自动发送的邮件，请勿直接回复。</p>
-                        <p>&copy; 2024 %s. All rights reserved.</p>
-                    </div>
-                </div>
-            </body>
-            </html>
-            """,
-            user.getUsername(),
-            platformName,
-            order.getOrderNo(),
-            order.getCreateTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
-            itemsHtml.toString(),
-            order.getTotalAmount(),
-            order.getReceiverName(),
-            order.getReceiverPhone(),
-            order.getReceiverAddress(),
-            platformName
-        );
-    }
 
     /**
      * 构建支付成功HTML内容
      */
-    private String buildPaymentSuccessHtml(User user, Order order) {
+    private String buildPaymentSuccessHtml(User user, Order order, List<OrderItem> items) {
+        // 获取用户名，如果用户为null则使用"尊敬的客户"
+        String userName = "尊敬的客户";
+        if (user != null && user.getUsername() != null) {
+            userName = user.getUsername();
+        }
+        
+        // 构建商品清单HTML
+        String itemsHtml = "";
+        if (items != null && !items.isEmpty()) {
+            StringBuilder sb = new StringBuilder();
+            sb.append("""
+                <div class="order-info">
+                    <h3>商品清单</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>商品名称</th>
+                                <th>数量</th>
+                                <th>单价</th>
+                                <th>小计</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                """);
+            for (OrderItem item : items) {
+                sb.append(String.format(
+                    "<tr><td>%s</td><td>%d</td><td>¥%.2f</td><td>¥%.2f</td></tr>",
+                    item.getProductName() != null ? item.getProductName() : "商品",
+                    item.getQuantity() != null ? item.getQuantity() : 0,
+                    item.getPrice() != null ? item.getPrice() : BigDecimal.ZERO,
+                    item.getSubtotal() != null ? item.getSubtotal() : BigDecimal.ZERO
+                ));
+            }
+            sb.append("""
+                        </tbody>
+                    </table>
+                </div>
+                """);
+            itemsHtml = sb.toString();
+        }
+
         return String.format("""
             <!DOCTYPE html>
             <html>
@@ -244,6 +213,9 @@ public class EmailService {
                     .content { padding: 20px; background: #f9f9f9; }
                     .success-icon { font-size: 48px; text-align: center; margin: 20px 0; }
                     .order-info { background: white; padding: 15px; margin: 15px 0; border-radius: 5px; }
+                    table { width: 100%%; border-collapse: collapse; margin: 15px 0; }
+                    th, td { padding: 10px; text-align: left; border-bottom: 1px solid #ddd; }
+                    th { background: #f5f5f5; }
                     .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
                 </style>
             </head>
@@ -264,6 +236,8 @@ public class EmailService {
                             <p><strong>支付时间：</strong>%s</p>
                         </div>
                         
+                        %s
+                        
                         <div class="order-info">
                             <h3>收货信息</h3>
                             <p><strong>收货人：</strong>%s</p>
@@ -281,13 +255,14 @@ public class EmailService {
             </body>
             </html>
             """,
-            user.getUsername(),
+            userName,
             order.getOrderNo(),
-            order.getActualAmount(),
+            order.getActualAmount() != null ? order.getActualAmount() : order.getTotalAmount(),
             order.getPaymentTime() != null ? order.getPaymentTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) : "刚刚",
-            order.getReceiverName(),
-            order.getReceiverPhone(),
-            order.getReceiverAddress(),
+            itemsHtml,
+            order.getReceiverName() != null ? order.getReceiverName() : "",
+            order.getReceiverPhone() != null ? order.getReceiverPhone() : "",
+            order.getReceiverAddress() != null ? order.getReceiverAddress() : "",
             platformName
         );
     }
@@ -296,6 +271,12 @@ public class EmailService {
      * 构建发货通知HTML内容
      */
     private String buildShippingNotificationHtml(User user, Order order) {
+        // 获取用户名，如果用户为null则使用"尊敬的客户"
+        String userName = "尊敬的客户";
+        if (user != null && user.getUsername() != null) {
+            userName = user.getUsername();
+        }
+        
         return String.format("""
             <!DOCTYPE html>
             <html>
@@ -349,70 +330,16 @@ public class EmailService {
             </body>
             </html>
             """,
-            user.getUsername(),
+            userName,
             order.getOrderNo(),
             order.getDeliveryTime() != null ? order.getDeliveryTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) : "刚刚",
             order.getLogisticsCompany() != null ? order.getLogisticsCompany() : "待更新",
             order.getLogisticsNo() != null ? order.getLogisticsNo() : "待更新",
-            order.getReceiverName(),
-            order.getReceiverPhone(),
-            order.getReceiverAddress(),
+            order.getReceiverName() != null ? order.getReceiverName() : "",
+            order.getReceiverPhone() != null ? order.getReceiverPhone() : "",
+            order.getReceiverAddress() != null ? order.getReceiverAddress() : "",
             platformName
         );
     }
 
-    /**
-     * 构建订单完成HTML内容
-     */
-    private String buildOrderCompletionHtml(User user, Order order) {
-        return String.format("""
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="UTF-8">
-                <style>
-                    body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-                    .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-                    .header { background: #FF9800; color: white; padding: 20px; text-align: center; }
-                    .content { padding: 20px; background: #f9f9f9; }
-                    .order-info { background: white; padding: 15px; margin: 15px 0; border-radius: 5px; }
-                    .thank-you { text-align: center; font-size: 24px; color: #FF9800; margin: 20px 0; }
-                    .footer { text-align: center; padding: 20px; color: #666; font-size: 12px; }
-                </style>
-            </head>
-            <body>
-                <div class="container">
-                    <div class="header">
-                        <h1>订单已完成</h1>
-                    </div>
-                    <div class="content">
-                        <div class="thank-you">感谢您的购买！</div>
-                        <p>尊敬的 %s，</p>
-                        <p>您的订单已确认收货，交易完成。</p>
-                        
-                        <div class="order-info">
-                            <h3>订单信息</h3>
-                            <p><strong>订单号：</strong>%s</p>
-                            <p><strong>完成时间：</strong>%s</p>
-                            <p><strong>订单金额：</strong><span style="color: #FF9800; font-size: 18px; font-weight: bold;">¥%.2f</span></p>
-                        </div>
-                        
-                        <p>如果您对商品满意，欢迎给予好评！如有任何问题，请随时联系我们的客服。</p>
-                        <p>期待您的再次光临！</p>
-                    </div>
-                    <div class="footer">
-                        <p>这是一封自动发送的邮件，请勿直接回复。</p>
-                        <p>&copy; 2024 %s. All rights reserved.</p>
-                    </div>
-                </div>
-            </body>
-            </html>
-            """,
-            user.getUsername(),
-            order.getOrderNo(),
-            order.getFinishTime() != null ? order.getFinishTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) : "刚刚",
-            order.getActualAmount(),
-            platformName
-        );
-    }
 }

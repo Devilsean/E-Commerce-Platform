@@ -1,4 +1,4 @@
-// 客户管理模块 - 管理员视角
+// 客户管理模块 - 商家视角
 
 const CustomerManagement = {
     currentPage: 1,
@@ -13,13 +13,13 @@ const CustomerManagement = {
     },
 
     /**
-     * 加载客户列表
+     * 加载客户列表（商家的客户）
      */
     async loadCustomers(keyword = '') {
         try {
             const url = keyword
-                ? `${API_BASE}/api/admin/customers?keyword=${encodeURIComponent(keyword)}`
-                : `${API_BASE}/api/admin/customers`;
+                ? `${API_BASE}/merchant/customers?keyword=${encodeURIComponent(keyword)}`
+                : `${API_BASE}/merchant/customers`;
 
             const response = await fetch(url, {
                 headers: {
@@ -116,7 +116,7 @@ const CustomerManagement = {
      */
     async viewCustomerDetail(customerId) {
         try {
-            const response = await fetch(`${API_BASE}/api/admin/customers/${customerId}/stats`, {
+            const response = await fetch(`${API_BASE}/merchant/customers/${customerId}/stats`, {
                 headers: {
                     'Authorization': `Bearer ${utils.getToken()}`
                 }
@@ -260,7 +260,7 @@ const CustomerManagement = {
         container.innerHTML = '<div class="loading-text">加载中...</div>';
 
         try {
-            const response = await fetch(`${API_BASE}/api/admin/customers/${customerId}/browse-logs?limit=50`, {
+            const response = await fetch(`${API_BASE}/merchant/customers/${customerId}/browse-logs?limit=50`, {
                 headers: {
                     'Authorization': `Bearer ${utils.getToken()}`
                 }
@@ -322,7 +322,7 @@ const CustomerManagement = {
         container.innerHTML = '<div class="loading-text">加载中...</div>';
 
         try {
-            const response = await fetch(`${API_BASE}/api/admin/customers/${customerId}/purchase-logs?limit=50`, {
+            const response = await fetch(`${API_BASE}/merchant/customers/${customerId}/purchase-logs?limit=50`, {
                 headers: {
                     'Authorization': `Bearer ${utils.getToken()}`
                 }
@@ -347,21 +347,19 @@ const CustomerManagement = {
                     <table class="data-table">
                         <thead>
                             <tr>
-                                <th>订单ID</th>
+                                <th>订单号</th>
                                 <th>商品数量</th>
                                 <th>订单金额</th>
                                 <th>购买时间</th>
-                                <th>IP地址</th>
                             </tr>
                         </thead>
                         <tbody>
                             ${logs.map(log => `
                                 <tr>
-                                    <td>#${log.orderId}</td>
+                                    <td>${log.orderNo || '#' + log.orderId}</td>
                                     <td>${log.itemCount || 0} 件</td>
                                     <td style="color: var(--danger); font-weight: 600;">¥${log.totalAmount || 0}</td>
                                     <td>${this.formatDateTime(log.purchaseTime)}</td>
-                                    <td style="font-size: 12px; color: var(--text-secondary);">${log.ipAddress || '-'}</td>
                                 </tr>
                             `).join('')}
                         </tbody>

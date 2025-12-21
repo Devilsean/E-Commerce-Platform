@@ -105,6 +105,9 @@ public class OrderController {
         // 生成订单号
         String orderNo = generateOrderNo();
 
+        // 获取用户信息，用于获取默认邮箱
+        User user = userMapper.selectById(userId);
+
         // 创建订单
         Order order = new Order();
         order.setOrderNo(orderNo);
@@ -116,6 +119,15 @@ public class OrderController {
         order.setReceiverPhone(request.getReceiverPhone());
         order.setReceiverAddress(request.getReceiverAddress());
         order.setRemark(request.getRemark());
+        
+        // 设置通知邮箱：优先使用订单指定的邮箱，否则使用用户邮箱
+        String notificationEmail = request.getNotificationEmail();
+        if (notificationEmail == null || notificationEmail.isEmpty()) {
+            if (user != null && user.getEmail() != null && !user.getEmail().isEmpty()) {
+                notificationEmail = user.getEmail();
+            }
+        }
+        order.setNotificationEmail(notificationEmail);
 
         int result = orderMapper.insert(order);
         if (result <= 0) {
@@ -143,35 +155,11 @@ public class OrderController {
             productMapper.updateById(product);
         }
 
-        // 发送订单确认邮件
-        try {
-            User user = userMapper.selectById(userId);
-            if (user != null) {
-                emailService.sendOrderConfirmationEmail(user, order, request.getItems().stream()
-                    .map(itemReq -> {
-                        OrderItem item = new OrderItem();
-                        Product p = products.stream()
-                            .filter(prod -> prod.getId().equals(itemReq.getProductId()))
-                            .findFirst()
-                            .orElse(null);
-                        if (p != null) {
-                            item.setProductName(p.getName());
-                            item.setQuantity(itemReq.getQuantity());
-                            item.setPrice(p.getPrice());
-                            item.setSubtotal(p.getPrice().multiply(new BigDecimal(itemReq.getQuantity())));
-                        }
-                        return item;
-                    })
-                    .toList());
-            }
-        } catch (Exception e) {
-            log.error("发送订单确认邮件失败", e);
-        }
-
         Map<String, Object> data = new HashMap<>();
         data.put("orderId", order.getId());
         data.put("orderNo", orderNo);
         data.put("totalAmount", totalAmount);
+        data.put("notificationEmail", order.getNotificationEmail());
 
         return Result.success("订单创建成功", data);
     }
@@ -241,6 +229,7 @@ public class OrderController {
             orderMap.put("receiverName", order.getReceiverName());
             orderMap.put("receiverPhone", order.getReceiverPhone());
             orderMap.put("receiverAddress", order.getReceiverAddress());
+            orderMap.put("notificationEmail", order.getNotificationEmail());
 
             // 查询订单项
             LambdaQueryWrapper<OrderItem> itemWrapper = new LambdaQueryWrapper<>();
@@ -276,17 +265,18 @@ public class OrderController {
         stats.put("completedOrders", allOrders.stream().filter(o -> o.getStatus() == 4).count());
         stats.put("cancelledOrders", allOrders.stream().filter(o -> o.getStatus() == 5).count());
         
-        // 计算总消费金额
+        // 计算总消费金额 - 修复NPE问题
         BigDecimal totalAmount = allOrders.stream()
-                .filter(o -> o.getStatus() == 4) // 只统计已完成订单
+                .filter(o -> o.getStatus() != null && o.getStatus() == 4) // 只统计已完成订单
                 .map(Order::getActualAmount)
+                .filter(amount -> amount != null) // 过滤null值避免NPE
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         stats.put("totalAmount", totalAmount);
         
-        // 最近30天订单数
+        // 最近30天订单数 - 修复NPE问题
         LocalDateTime thirtyDaysAgo = LocalDateTime.now().minusDays(30);
         long recentOrders = allOrders.stream()
-                .filter(o -> o.getCreateTime().isAfter(thirtyDaysAgo))
+                .filter(o -> o.getCreateTime() != null && o.getCreateTime().isAfter(thirtyDaysAgo))
                 .count();
         stats.put("recentOrders", recentOrders);
 
@@ -331,6 +321,7 @@ public class OrderController {
         result.put("logisticsCompany", order.getLogisticsCompany());
         result.put("logisticsNo", order.getLogisticsNo());
         result.put("remark", order.getRemark());
+        result.put("notificationEmail", order.getNotificationEmail());
         result.put("createTime", order.getCreateTime());
 
         // 查询订单项
@@ -347,9 +338,9 @@ public class OrderController {
      */
     @PostMapping("/{id}/pay")
     @Transactional(rollbackFor = Exception.class)
-    public Result<Void> payOrder(@PathVariable Long id,
+    public Result<Map<String, Object>> payOrder(@PathVariable Long id,
                                   @RequestHeader("Authorization") String authHeader,
-                                  @RequestBody Map<String, Integer> request) {
+                                  @RequestBody PayOrderRequest request) {
         Long userId = getUserIdFromToken(authHeader);
         if (userId == null) {
             return Result.error("请先登录");
@@ -368,9 +359,25 @@ public class OrderController {
             return Result.error("订单状态不正确");
         }
 
+        // 获取用户信息
+        User user = userMapper.selectById(userId);
+        
+        // 检查并更新通知邮箱（支付时可以更新邮箱）
+        String notificationEmail = request.getNotificationEmail();
+        if (notificationEmail != null && !notificationEmail.trim().isEmpty()) {
+            order.setNotificationEmail(notificationEmail.trim());
+        }
+        
+        // 如果订单没有通知邮箱，尝试使用用户邮箱
+        if ((order.getNotificationEmail() == null || order.getNotificationEmail().isEmpty())
+            && user != null && user.getEmail() != null && !user.getEmail().isEmpty()) {
+            order.setNotificationEmail(user.getEmail());
+        }
+
         // 更新订单状态
         order.setStatus(1); // 已支付
-        order.setPaymentType(request.get("paymentType"));
+        Integer paymentType = request.getPaymentType() != null ? request.getPaymentType() : 1;
+        order.setPaymentType(paymentType);
         order.setPaymentTime(LocalDateTime.now());
         
         int result = orderMapper.updateById(order);
@@ -391,17 +398,34 @@ public class OrderController {
             }
         }
 
-        // 发送支付成功邮件
+        // 发送支付成功邮件（包含商品清单）
+        // 即使user为null，只要订单有通知邮箱也会发送
+        String emailSentTo = null;
         try {
-            User user = userMapper.selectById(userId);
-            if (user != null) {
-                emailService.sendPaymentSuccessEmail(user, order);
+            String targetEmail = order.getNotificationEmail();
+            if (targetEmail != null && !targetEmail.isEmpty()) {
+                emailService.sendPaymentSuccessEmail(user, order, items);
+                emailSentTo = targetEmail;
+                log.info("支付成功邮件已发送至: {}, 订单号: {}", targetEmail, order.getOrderNo());
+            } else {
+                log.warn("订单没有通知邮箱，无法发送支付成功邮件: orderNo={}", order.getOrderNo());
             }
         } catch (Exception e) {
-            log.error("发送支付成功邮件失败", e);
+            log.error("发送支付成功邮件失败: orderNo={}", order.getOrderNo(), e);
         }
 
-        return Result.success("支付成功");
+        // 返回支付结果
+        Map<String, Object> data = new HashMap<>();
+        data.put("orderId", order.getId());
+        data.put("orderNo", order.getOrderNo());
+        data.put("paymentTime", order.getPaymentTime());
+        data.put("notificationEmail", order.getNotificationEmail());
+        data.put("emailSent", emailSentTo != null);
+        if (emailSentTo != null) {
+            data.put("emailSentTo", emailSentTo);
+        }
+
+        return Result.success("支付成功", data);
     }
 
     /**
@@ -487,16 +511,6 @@ public class OrderController {
             return Result.error("确认失败");
         }
 
-        // 发送订单完成邮件
-        try {
-            User user = userMapper.selectById(userId);
-            if (user != null) {
-                emailService.sendOrderCompletionEmail(user, order);
-            }
-        } catch (Exception e) {
-            log.error("发送订单完成邮件失败", e);
-        }
-
         return Result.success("确认收货成功");
     }
 
@@ -575,6 +589,12 @@ public class OrderController {
         private String receiverAddress;
 
         private String remark;
+        
+        /**
+         * 通知邮箱（用于接收订单相关通知）
+         * 如果不填写，将使用用户个人信息中的邮箱
+         */
+        private String notificationEmail;
     }
 
     @Data
@@ -584,5 +604,18 @@ public class OrderController {
 
         @NotNull(message = "数量不能为空")
         private Integer quantity;
+    }
+
+    @Data
+    static class PayOrderRequest {
+        /**
+         * 支付方式：1-微信，2-支付宝
+         */
+        private Integer paymentType;
+        
+        /**
+         * 通知邮箱（用于接收订单相关通知）
+         */
+        private String notificationEmail;
     }
 }

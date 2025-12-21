@@ -22,7 +22,7 @@ const SalesReportService = {
                 return;
             }
 
-            let url = `${API_BASE_URL}/merchant/reports/sales`;
+            let url = `${API_BASE}/merchant/reports/sales`;
             const params = new URLSearchParams();
             if (startDate) params.append('startDate', startDate);
             if (endDate) params.append('endDate', endDate);
@@ -214,7 +214,7 @@ const SalesReportService = {
             const token = localStorage.getItem('token');
             if (!token) return;
 
-            const response = await fetch(`${API_BASE_URL}/merchant/reports/top-products?limit=10`, {
+            const response = await fetch(`${API_BASE}/merchant/reports/top-products?limit=10`, {
                 headers: {
                     'Authorization': `Bearer ${token}`
                 }

@@ -108,6 +108,11 @@ public class Order implements Serializable {
     private String remark;
     
     /**
+     * 通知邮箱（用于接收订单相关通知）
+     */
+    private String notificationEmail;
+    
+    /**
      * 逻辑删除：0-未删除，1-已删除
      */
     @TableLogic

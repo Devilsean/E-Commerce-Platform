@@ -458,9 +458,16 @@ public class MerchantController {
         }
 
         // 发送发货通知邮件
+        // 即使user为null，只要订单有通知邮箱也会发送
         try {
             User user = userMapper.selectById(order.getUserId());
-            if (user != null) {
+            String targetEmail = order.getNotificationEmail();
+            if (targetEmail == null || targetEmail.isEmpty()) {
+                if (user != null && user.getEmail() != null && !user.getEmail().isEmpty()) {
+                    targetEmail = user.getEmail();
+                }
+            }
+            if (targetEmail != null && !targetEmail.isEmpty()) {
                 emailService.sendShippingNotificationEmail(user, order);
             }
         } catch (Exception e) {
@@ -683,11 +690,12 @@ public class MerchantController {
                 orders = new ArrayList<>();
             }
             
-            // 统计数据
+            // 统计数据 - 修复NPE问题
             int totalOrders = orders.size();
             BigDecimal totalRevenue = orders.stream()
-                .filter(o -> o.getStatus() == 4) // 只统计已完成订单
+                .filter(o -> o.getStatus() != null && o.getStatus() == 4) // 只统计已完成订单
                 .map(Order::getActualAmount)
+                .filter(amount -> amount != null) // 过滤null值
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
             
             // 按商品统计销量
@@ -711,10 +719,11 @@ public class MerchantController {
                 productSalesMap.put(product.getId(), salesData);
             }
             
-            // 按日期统计
+            // 按日期统计 - 修复NPE问题
             Map<String, BigDecimal> dailySales = new java.util.TreeMap<>();
             for (Order order : orders) {
-                if (order.getStatus() == 4) {
+                if (order.getStatus() != null && order.getStatus() == 4
+                    && order.getCreateTime() != null && order.getActualAmount() != null) {
                     String date = order.getCreateTime().toLocalDate().toString();
                     dailySales.merge(date, order.getActualAmount(), BigDecimal::add);
                 }
@@ -785,6 +794,351 @@ public class MerchantController {
         
         List<UserPurchaseLog> logs = purchaseLogMapper.getMerchantPurchaseLog(merchantId, limit);
         return Result.success(logs);
+    }
+
+    /**
+     * 获取商家的客户列表（购买过商家商品的用户）
+     */
+    @GetMapping("/customers")
+    public Result<List<Map<String, Object>>> getMerchantCustomers(
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            @RequestParam(required = false) String keyword) {
+        Long merchantId = getMerchantIdFromToken(authHeader);
+        if (merchantId == null) {
+            return Result.error("无权限访问，请以商家身份登录");
+        }
+
+        try {
+            // 查询商家的所有商品ID
+            LambdaQueryWrapper<Product> productWrapper = new LambdaQueryWrapper<>();
+            productWrapper.eq(Product::getMerchantId, merchantId);
+            List<Product> products = productMapper.selectList(productWrapper);
+            List<Long> productIds = products.stream().map(Product::getId).collect(java.util.stream.Collectors.toList());
+
+            if (productIds.isEmpty()) {
+                return Result.success(new ArrayList<>());
+            }
+
+            // 查询包含这些商品的订单项
+            LambdaQueryWrapper<OrderItem> itemWrapper = new LambdaQueryWrapper<>();
+            itemWrapper.in(OrderItem::getProductId, productIds);
+            List<OrderItem> orderItems = orderItemMapper.selectList(itemWrapper);
+
+            if (orderItems.isEmpty()) {
+                return Result.success(new ArrayList<>());
+            }
+
+            // 获取订单ID列表
+            List<Long> orderIds = orderItems.stream()
+                    .map(OrderItem::getOrderId)
+                    .distinct()
+                    .collect(java.util.stream.Collectors.toList());
+
+            // 查询订单获取用户ID
+            LambdaQueryWrapper<Order> orderWrapper = new LambdaQueryWrapper<>();
+            orderWrapper.in(Order::getId, orderIds);
+            List<Order> orders = orderMapper.selectList(orderWrapper);
+
+            // 获取用户ID列表
+            List<Long> userIds = orders.stream()
+                    .map(Order::getUserId)
+                    .distinct()
+                    .collect(java.util.stream.Collectors.toList());
+
+            if (userIds.isEmpty()) {
+                return Result.success(new ArrayList<>());
+            }
+
+            // 查询用户信息
+            LambdaQueryWrapper<User> userWrapper = new LambdaQueryWrapper<>();
+            userWrapper.in(User::getId, userIds);
+            if (keyword != null && !keyword.trim().isEmpty()) {
+                userWrapper.and(w -> w.like(User::getUsername, keyword)
+                        .or().like(User::getPhone, keyword)
+                        .or().like(User::getEmail, keyword));
+            }
+            userWrapper.orderByDesc(User::getCreateTime);
+            List<User> users = userMapper.selectList(userWrapper);
+
+            // 组装结果
+            List<Map<String, Object>> result = new ArrayList<>();
+            for (User user : users) {
+                Map<String, Object> userMap = new HashMap<>();
+                userMap.put("id", user.getId());
+                userMap.put("username", user.getUsername());
+                userMap.put("phone", user.getPhone());
+                userMap.put("email", user.getEmail());
+                userMap.put("userType", user.getUserType());
+                userMap.put("status", user.getStatus());
+                userMap.put("createTime", user.getCreateTime());
+
+                // 统计该用户在该商家的订单数
+                long orderCount = orders.stream()
+                        .filter(o -> o.getUserId().equals(user.getId()))
+                        .count();
+                userMap.put("orderCount", orderCount);
+
+                // 统计该用户浏览该商家商品的次数
+                LambdaQueryWrapper<UserBrowseLog> browseWrapper = new LambdaQueryWrapper<>();
+                browseWrapper.eq(UserBrowseLog::getUserId, user.getId())
+                        .in(UserBrowseLog::getProductId, productIds);
+                Long browseCount = browseLogMapper.selectCount(browseWrapper);
+                userMap.put("browseCount", browseCount);
+
+                result.add(userMap);
+            }
+
+            return Result.success(result);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Result.error("获取客户列表失败：" + e.getMessage());
+        }
+    }
+
+    /**
+     * 获取商家客户的统计信息
+     */
+    @GetMapping("/customers/{userId}/stats")
+    public Result<Map<String, Object>> getMerchantCustomerStats(
+            @PathVariable Long userId,
+            @RequestHeader(value = "Authorization", required = false) String authHeader) {
+        Long merchantId = getMerchantIdFromToken(authHeader);
+        if (merchantId == null) {
+            return Result.error("无权限访问，请以商家身份登录");
+        }
+
+        try {
+            Map<String, Object> stats = new HashMap<>();
+
+            // 查询商家的所有商品ID
+            LambdaQueryWrapper<Product> productWrapper = new LambdaQueryWrapper<>();
+            productWrapper.eq(Product::getMerchantId, merchantId);
+            List<Product> products = productMapper.selectList(productWrapper);
+            List<Long> productIds = products.stream().map(Product::getId).collect(java.util.stream.Collectors.toList());
+
+            // 浏览统计
+            Map<String, Object> browseStats = new HashMap<>();
+            if (!productIds.isEmpty()) {
+                LambdaQueryWrapper<UserBrowseLog> browseWrapper = new LambdaQueryWrapper<>();
+                browseWrapper.eq(UserBrowseLog::getUserId, userId)
+                        .in(UserBrowseLog::getProductId, productIds);
+                Long totalBrowse = browseLogMapper.selectCount(browseWrapper);
+                browseStats.put("totalBrowse", totalBrowse);
+
+                // 最近7天浏览
+                browseWrapper.ge(UserBrowseLog::getBrowseTime, LocalDateTime.now().minusDays(7));
+                Long recentBrowse = browseLogMapper.selectCount(browseWrapper);
+                browseStats.put("recentBrowse", recentBrowse);
+            } else {
+                browseStats.put("totalBrowse", 0);
+                browseStats.put("recentBrowse", 0);
+            }
+            stats.put("browseStats", browseStats);
+
+            // 购买统计
+            Map<String, Object> purchaseStats = new HashMap<>();
+            if (!productIds.isEmpty()) {
+                // 查询包含商家商品的订单项
+                LambdaQueryWrapper<OrderItem> itemWrapper = new LambdaQueryWrapper<>();
+                itemWrapper.in(OrderItem::getProductId, productIds);
+                List<OrderItem> orderItems = orderItemMapper.selectList(itemWrapper);
+
+                List<Long> orderIds = orderItems.stream()
+                        .map(OrderItem::getOrderId)
+                        .distinct()
+                        .collect(java.util.stream.Collectors.toList());
+
+                if (!orderIds.isEmpty()) {
+                    LambdaQueryWrapper<Order> orderWrapper = new LambdaQueryWrapper<>();
+                    orderWrapper.in(Order::getId, orderIds)
+                            .eq(Order::getUserId, userId);
+                    List<Order> orders = orderMapper.selectList(orderWrapper);
+
+                    purchaseStats.put("totalOrders", orders.size());
+
+                    // 最近30天订单
+                    long recentOrders = orders.stream()
+                            .filter(o -> o.getCreateTime() != null && o.getCreateTime().isAfter(LocalDateTime.now().minusDays(30)))
+                            .count();
+                    purchaseStats.put("recentOrders", recentOrders);
+
+                    // 总消费金额
+                    java.math.BigDecimal totalAmount = orders.stream()
+                            .filter(o -> o.getStatus() == 4) // 已完成订单
+                            .map(o -> o.getActualAmount() != null ? o.getActualAmount() : java.math.BigDecimal.ZERO)
+                            .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add);
+                    purchaseStats.put("totalAmount", totalAmount);
+
+                    // 最近30天消费
+                    java.math.BigDecimal recentAmount = orders.stream()
+                            .filter(o -> o.getStatus() == 4 && o.getCreateTime() != null && o.getCreateTime().isAfter(LocalDateTime.now().minusDays(30)))
+                            .map(o -> o.getActualAmount() != null ? o.getActualAmount() : java.math.BigDecimal.ZERO)
+                            .reduce(java.math.BigDecimal.ZERO, java.math.BigDecimal::add);
+                    purchaseStats.put("recentAmount", recentAmount);
+                } else {
+                    purchaseStats.put("totalOrders", 0);
+                    purchaseStats.put("recentOrders", 0);
+                    purchaseStats.put("totalAmount", 0);
+                    purchaseStats.put("recentAmount", 0);
+                }
+            } else {
+                purchaseStats.put("totalOrders", 0);
+                purchaseStats.put("recentOrders", 0);
+                purchaseStats.put("totalAmount", 0);
+                purchaseStats.put("recentAmount", 0);
+            }
+            stats.put("purchaseStats", purchaseStats);
+
+            // 订单状态统计
+            Map<String, Object> orderStats = new HashMap<>();
+            if (!productIds.isEmpty()) {
+                LambdaQueryWrapper<OrderItem> itemWrapper = new LambdaQueryWrapper<>();
+                itemWrapper.in(OrderItem::getProductId, productIds);
+                List<OrderItem> orderItems = orderItemMapper.selectList(itemWrapper);
+
+                List<Long> orderIds = orderItems.stream()
+                        .map(OrderItem::getOrderId)
+                        .distinct()
+                        .collect(java.util.stream.Collectors.toList());
+
+                if (!orderIds.isEmpty()) {
+                    LambdaQueryWrapper<Order> orderWrapper = new LambdaQueryWrapper<>();
+                    orderWrapper.in(Order::getId, orderIds)
+                            .eq(Order::getUserId, userId);
+                    List<Order> orders = orderMapper.selectList(orderWrapper);
+
+                    orderStats.put("totalOrders", orders.size());
+                    orderStats.put("pendingOrders", orders.stream().filter(o -> o.getStatus() == 0).count());
+                    orderStats.put("completedOrders", orders.stream().filter(o -> o.getStatus() == 4).count());
+                    orderStats.put("cancelledOrders", orders.stream().filter(o -> o.getStatus() == 5).count());
+                } else {
+                    orderStats.put("totalOrders", 0);
+                    orderStats.put("pendingOrders", 0);
+                    orderStats.put("completedOrders", 0);
+                    orderStats.put("cancelledOrders", 0);
+                }
+            } else {
+                orderStats.put("totalOrders", 0);
+                orderStats.put("pendingOrders", 0);
+                orderStats.put("completedOrders", 0);
+                orderStats.put("cancelledOrders", 0);
+            }
+            stats.put("orderStats", orderStats);
+
+            return Result.success(stats);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Result.error("获取客户统计失败：" + e.getMessage());
+        }
+    }
+
+    /**
+     * 获取商家客户的浏览日志
+     */
+    @GetMapping("/customers/{userId}/browse-logs")
+    public Result<List<UserBrowseLog>> getMerchantCustomerBrowseLogs(
+            @PathVariable Long userId,
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            @RequestParam(defaultValue = "50") Integer limit) {
+        Long merchantId = getMerchantIdFromToken(authHeader);
+        if (merchantId == null) {
+            return Result.error("无权限访问，请以商家身份登录");
+        }
+
+        try {
+            // 查询商家的所有商品ID
+            LambdaQueryWrapper<Product> productWrapper = new LambdaQueryWrapper<>();
+            productWrapper.eq(Product::getMerchantId, merchantId);
+            List<Product> products = productMapper.selectList(productWrapper);
+            List<Long> productIds = products.stream().map(Product::getId).collect(java.util.stream.Collectors.toList());
+
+            if (productIds.isEmpty()) {
+                return Result.success(new ArrayList<>());
+            }
+
+            // 查询该用户浏览商家商品的日志
+            LambdaQueryWrapper<UserBrowseLog> browseWrapper = new LambdaQueryWrapper<>();
+            browseWrapper.eq(UserBrowseLog::getUserId, userId)
+                    .in(UserBrowseLog::getProductId, productIds)
+                    .orderByDesc(UserBrowseLog::getBrowseTime)
+                    .last("LIMIT " + limit);
+            List<UserBrowseLog> logs = browseLogMapper.selectList(browseWrapper);
+
+            return Result.success(logs);
+        } catch (Exception e) {
+            return Result.error("获取浏览日志失败：" + e.getMessage());
+        }
+    }
+
+    /**
+     * 获取商家客户的购买日志
+     */
+    @GetMapping("/customers/{userId}/purchase-logs")
+    public Result<List<Map<String, Object>>> getMerchantCustomerPurchaseLogs(
+            @PathVariable Long userId,
+            @RequestHeader(value = "Authorization", required = false) String authHeader,
+            @RequestParam(defaultValue = "50") Integer limit) {
+        Long merchantId = getMerchantIdFromToken(authHeader);
+        if (merchantId == null) {
+            return Result.error("无权限访问，请以商家身份登录");
+        }
+
+        try {
+            // 查询商家的所有商品ID
+            LambdaQueryWrapper<Product> productWrapper = new LambdaQueryWrapper<>();
+            productWrapper.eq(Product::getMerchantId, merchantId);
+            List<Product> products = productMapper.selectList(productWrapper);
+            List<Long> productIds = products.stream().map(Product::getId).collect(java.util.stream.Collectors.toList());
+
+            if (productIds.isEmpty()) {
+                return Result.success(new ArrayList<>());
+            }
+
+            // 查询包含商家商品的订单项
+            LambdaQueryWrapper<OrderItem> itemWrapper = new LambdaQueryWrapper<>();
+            itemWrapper.in(OrderItem::getProductId, productIds);
+            List<OrderItem> orderItems = orderItemMapper.selectList(itemWrapper);
+
+            List<Long> orderIds = orderItems.stream()
+                    .map(OrderItem::getOrderId)
+                    .distinct()
+                    .collect(java.util.stream.Collectors.toList());
+
+            if (orderIds.isEmpty()) {
+                return Result.success(new ArrayList<>());
+            }
+
+            // 查询该用户的订单
+            LambdaQueryWrapper<Order> orderWrapper = new LambdaQueryWrapper<>();
+            orderWrapper.in(Order::getId, orderIds)
+                    .eq(Order::getUserId, userId)
+                    .orderByDesc(Order::getCreateTime)
+                    .last("LIMIT " + limit);
+            List<Order> orders = orderMapper.selectList(orderWrapper);
+
+            // 组装结果
+            List<Map<String, Object>> result = new ArrayList<>();
+            for (Order order : orders) {
+                Map<String, Object> logMap = new HashMap<>();
+                logMap.put("orderId", order.getId());
+                logMap.put("orderNo", order.getOrderNo());
+                logMap.put("totalAmount", order.getActualAmount());
+                logMap.put("purchaseTime", order.getCreateTime());
+                logMap.put("status", order.getStatus());
+
+                // 统计该订单中商家商品的数量
+                long itemCount = orderItems.stream()
+                        .filter(item -> item.getOrderId().equals(order.getId()))
+                        .count();
+                logMap.put("itemCount", itemCount);
+
+                result.add(logMap);
+            }
+
+            return Result.success(result);
+        } catch (Exception e) {
+            return Result.error("获取购买日志失败：" + e.getMessage());
+        }
     }
 
     /**
