@@ -13,6 +13,17 @@ NC='\033[0m'
 PROJECT_DIR="/root/website"
 cd $PROJECT_DIR
 
+# 加载环境变量文件
+if [ -f ".env" ]; then
+    echo -e "${GREEN}✓ 加载 .env 配置文件${NC}"
+    set -a
+    source .env
+    set +a
+else
+    echo -e "${YELLOW}⚠ 未找到 .env 文件，使用默认配置${NC}"
+    echo -e "${YELLOW}  提示: 复制 .env.example 为 .env 并填写配置${NC}"
+fi
+
 # 设置环境变量
 export MAVEN_OPTS="-Xmx1024m -Xms512m -XX:MaxMetaspaceSize=256m"
 export NODE_OPTIONS="--max-old-space-size=1536"

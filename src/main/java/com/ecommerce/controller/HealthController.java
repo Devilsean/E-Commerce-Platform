@@ -1,11 +1,14 @@
 package com.ecommerce.controller;
 
 import com.ecommerce.common.Result;
+import com.ecommerce.service.EmailService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.LocalDateTime;
@@ -25,6 +28,12 @@ public class HealthController {
 
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
+
+    @Autowired
+    private EmailService emailService;
+
+    @Value("${spring.mail.username:未配置}")
+    private String mailUsername;
 
     /**
      * 简单健康检查
@@ -126,5 +135,47 @@ public class HealthController {
 
         ready.put("ready", isReady);
         return Result.success(ready);
+    }
+
+    /**
+     * 测试邮件发送
+     * 使用方法: GET /api/health/test-email?to=your-email@example.com
+     */
+    @GetMapping("/test-email")
+    public Result<Map<String, Object>> testEmail(@RequestParam String to) {
+        Map<String, Object> result = new HashMap<>();
+        result.put("timestamp", LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
+        result.put("mailConfig", mailUsername);
+        result.put("targetEmail", to);
+        
+        try {
+            String subject = "邮件测试 - 电商平台";
+            String content = String.format("""
+                <!DOCTYPE html>
+                <html>
+                <head><meta charset="UTF-8"></head>
+                <body style="font-family: Arial, sans-serif; padding: 20px;">
+                    <h2 style="color: #4CAF50;">✓ 邮件配置测试成功！</h2>
+                    <p>这是一封测试邮件，用于验证邮件服务配置是否正确。</p>
+                    <p><strong>发送时间：</strong>%s</p>
+                    <p><strong>发件邮箱：</strong>%s</p>
+                    <hr>
+                    <p style="color: #666; font-size: 12px;">此邮件由电商平台自动发送</p>
+                </body>
+                </html>
+                """,
+                LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")),
+                mailUsername
+            );
+            
+            emailService.sendHtmlEmail(to, subject, content);
+            result.put("status", "SUCCESS");
+            result.put("message", "邮件已发送（异步），请检查收件箱和垃圾邮件文件夹");
+        } catch (Exception e) {
+            result.put("status", "FAILED");
+            result.put("error", e.getMessage());
+        }
+        
+        return Result.success(result);
     }
 }

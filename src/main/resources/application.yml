@@ -64,10 +64,10 @@ spring:
   
   # 邮件配置
   mail:
-    host: smtp.gmail.com
-    port: 587
-    username: cunzhangqie@gmail.com
-    password: zdnr mmhu yjie shyk
+    host: ${SMTP_HOST:smtp.gmail.com}
+    port: ${SMTP_PORT:587}
+    username: ${SMTP_USER}
+    password: ${SMTP_PASS}
     properties:
       mail:
         smtp:
@@ -76,6 +76,7 @@ spring:
             enable: true
             required: true
     default-encoding: UTF-8
+
 
 # MyBatis Plus配置
 mybatis-plus:
