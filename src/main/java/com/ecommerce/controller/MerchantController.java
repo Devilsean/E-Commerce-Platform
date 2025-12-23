@@ -785,15 +785,98 @@ public class MerchantController {
      * 获取客户购买日志
      */
     @GetMapping("/logs/purchase")
-    public Result<List<UserPurchaseLog>> getPurchaseLogs(@RequestHeader(value = "Authorization", required = false) String authHeader,
-                                                          @RequestParam(defaultValue = "100") Integer limit) {
+    public Result<List<Map<String, Object>>> getPurchaseLogs(@RequestHeader(value = "Authorization", required = false) String authHeader,
+                                                              @RequestParam(defaultValue = "100") Integer limit) {
         Long merchantId = getMerchantIdFromToken(authHeader);
         if (merchantId == null) {
             return Result.error("无权限访问，请以商家身份登录");
         }
         
-        List<UserPurchaseLog> logs = purchaseLogMapper.getMerchantPurchaseLog(merchantId, limit);
-        return Result.success(logs);
+        try {
+            // 查询商家的所有商品ID
+            LambdaQueryWrapper<Product> productWrapper = new LambdaQueryWrapper<>();
+            productWrapper.eq(Product::getMerchantId, merchantId);
+            List<Product> products = productMapper.selectList(productWrapper);
+            List<Long> productIds = products.stream().map(Product::getId).collect(java.util.stream.Collectors.toList());
+            
+            if (productIds.isEmpty()) {
+                return Result.success(new ArrayList<>());
+            }
+            
+            // 查询包含商家商品的订单项
+            LambdaQueryWrapper<OrderItem> itemWrapper = new LambdaQueryWrapper<>();
+            itemWrapper.in(OrderItem::getProductId, productIds);
+            List<OrderItem> orderItems = orderItemMapper.selectList(itemWrapper);
+            
+            if (orderItems.isEmpty()) {
+                return Result.success(new ArrayList<>());
+            }
+            
+            // 获取订单ID列表
+            List<Long> orderIds = orderItems.stream()
+                    .map(OrderItem::getOrderId)
+                    .distinct()
+                    .collect(java.util.stream.Collectors.toList());
+            
+            // 查询购买日志
+            LambdaQueryWrapper<UserPurchaseLog> logWrapper = new LambdaQueryWrapper<>();
+            logWrapper.in(UserPurchaseLog::getOrderId, orderIds)
+                      .orderByDesc(UserPurchaseLog::getPurchaseTime)
+                      .last("LIMIT " + limit);
+            List<UserPurchaseLog> logs = purchaseLogMapper.selectList(logWrapper);
+            
+            if (logs.isEmpty()) {
+                return Result.success(new ArrayList<>());
+            }
+            
+            // 获取用户ID列表
+            List<Long> userIds = logs.stream()
+                    .map(UserPurchaseLog::getUserId)
+                    .distinct()
+                    .collect(java.util.stream.Collectors.toList());
+            
+            // 查询用户信息
+            Map<Long, User> userMap = new HashMap<>();
+            if (!userIds.isEmpty()) {
+                LambdaQueryWrapper<User> userWrapper = new LambdaQueryWrapper<>();
+                userWrapper.in(User::getId, userIds);
+                List<User> users = userMapper.selectList(userWrapper);
+                for (User user : users) {
+                    userMap.put(user.getId(), user);
+                }
+            }
+            
+            // 组装结果
+            List<Map<String, Object>> result = new ArrayList<>();
+            for (UserPurchaseLog log : logs) {
+                Map<String, Object> logMap = new HashMap<>();
+                logMap.put("id", log.getId());
+                logMap.put("userId", log.getUserId());
+                logMap.put("orderId", log.getOrderId());
+                logMap.put("totalAmount", log.getTotalAmount());
+                logMap.put("itemCount", log.getItemCount());
+                logMap.put("purchaseTime", log.getPurchaseTime());
+                logMap.put("ipAddress", log.getIpAddress());
+                logMap.put("createTime", log.getCreateTime());
+                
+                // 添加用户信息
+                User user = userMap.get(log.getUserId());
+                if (user != null) {
+                    logMap.put("userName", user.getUsername());
+                    logMap.put("userPhone", user.getPhone());
+                } else {
+                    logMap.put("userName", "用户#" + log.getUserId());
+                    logMap.put("userPhone", null);
+                }
+                
+                result.add(logMap);
+            }
+            
+            return Result.success(result);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return Result.error("获取购买日志失败：" + e.getMessage());
+        }
     }
 
     /**

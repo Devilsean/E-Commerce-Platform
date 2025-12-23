@@ -6,10 +6,14 @@ import com.ecommerce.entity.Order;
 import com.ecommerce.entity.OrderItem;
 import com.ecommerce.entity.Product;
 import com.ecommerce.entity.User;
+import com.ecommerce.entity.UserPurchaseLog;
+import com.ecommerce.entity.PurchaseLogItem;
 import com.ecommerce.mapper.OrderItemMapper;
 import com.ecommerce.mapper.OrderMapper;
 import com.ecommerce.mapper.ProductMapper;
 import com.ecommerce.mapper.UserMapper;
+import com.ecommerce.mapper.UserPurchaseLogMapper;
+import com.ecommerce.mapper.PurchaseLogItemMapper;
 import com.ecommerce.service.EmailService;
 import com.ecommerce.utils.JwtUtil;
 import lombok.Data;
@@ -18,6 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
@@ -53,6 +58,12 @@ public class OrderController {
 
     @Autowired
     private EmailService emailService;
+
+    @Autowired
+    private UserPurchaseLogMapper purchaseLogMapper;
+
+    @Autowired
+    private PurchaseLogItemMapper purchaseLogItemMapper;
 
     /**
      * 从请求头中提取用户ID
@@ -340,7 +351,8 @@ public class OrderController {
     @Transactional(rollbackFor = Exception.class)
     public Result<Map<String, Object>> payOrder(@PathVariable Long id,
                                   @RequestHeader("Authorization") String authHeader,
-                                  @RequestBody PayOrderRequest request) {
+                                  @RequestBody PayOrderRequest request,
+                                  HttpServletRequest httpRequest) {
         Long userId = getUserIdFromToken(authHeader);
         if (userId == null) {
             return Result.error("请先登录");
@@ -396,6 +408,15 @@ public class OrderController {
                 product.setSales((product.getSales() != null ? product.getSales() : 0) + item.getQuantity());
                 productMapper.updateById(product);
             }
+        }
+
+        // 记录购买日志
+        try {
+            recordPurchaseLog(userId, order, items, getClientIp(httpRequest));
+            log.info("购买日志已记录: orderId={}, userId={}", order.getId(), userId);
+        } catch (Exception e) {
+            log.error("记录购买日志失败: orderId={}", order.getId(), e);
+            // 不影响支付流程，继续执行
         }
 
         // 发送支付成功邮件（包含商品清单）
@@ -570,6 +591,58 @@ public class OrderController {
             case 5: return "已取消";
             default: return "未知";
         }
+    }
+
+    /**
+     * 记录购买日志
+     */
+    private void recordPurchaseLog(Long userId, Order order, List<OrderItem> items, String ipAddress) {
+        // 创建购买日志
+        UserPurchaseLog purchaseLog = new UserPurchaseLog();
+        purchaseLog.setUserId(userId);
+        purchaseLog.setOrderId(order.getId());
+        purchaseLog.setTotalAmount(order.getActualAmount());
+        purchaseLog.setItemCount(items.size());
+        purchaseLog.setPurchaseTime(LocalDateTime.now());
+        purchaseLog.setIpAddress(ipAddress);
+        purchaseLog.setCreateTime(LocalDateTime.now());
+        
+        purchaseLogMapper.insert(purchaseLog);
+        
+        // 创建购买日志商品明细
+        for (OrderItem item : items) {
+            PurchaseLogItem logItem = new PurchaseLogItem();
+            logItem.setLogId(purchaseLog.getId());
+            logItem.setProductId(item.getProductId());
+            logItem.setProductName(item.getProductName());
+            logItem.setProductPrice(item.getPrice());
+            logItem.setQuantity(item.getQuantity());
+            logItem.setSubtotal(item.getSubtotal());
+            logItem.setCreateTime(LocalDateTime.now());
+            
+            purchaseLogItemMapper.insert(logItem);
+        }
+    }
+
+    /**
+     * 获取客户端IP地址
+     */
+    private String getClientIp(HttpServletRequest request) {
+        String ip = request.getHeader("X-Forwarded-For");
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getHeader("Proxy-Client-IP");
+        }
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getHeader("WL-Proxy-Client-IP");
+        }
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getRemoteAddr();
+        }
+        // 如果是多个代理，取第一个IP
+        if (ip != null && ip.contains(",")) {
+            ip = ip.split(",")[0].trim();
+        }
+        return ip;
     }
 
     // ========== 请求DTO类 ==========
