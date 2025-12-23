@@ -33,6 +33,8 @@ class App {
         this.router.register('/register', () => this.renderRegister());
         this.router.register('/profile', () => this.renderProfile());
         this.router.register('/merchant', () => this.renderMerchantManagement());
+        this.router.register('/merchant/products', () => this.renderMerchantProducts());
+        this.router.register('/merchant/orders', () => this.renderMerchantOrders());
         this.router.register('/merchant/reports', () => this.renderSalesReports());
         this.router.register('/merchant/customers', () => this.renderCustomerManagement());
 
@@ -2048,6 +2050,313 @@ class App {
         // 加载统计数据和商品数据
         MerchantService.loadMerchantStats();
         this.loadMerchantData();
+    }
+
+    // 渲染商品管理独立页面
+    renderMerchantProducts() {
+        const user = utils.getUserInfo();
+        if (!user || (user.userType !== 2 && user.role !== 'merchant')) {
+            utils.showToast('需要商家权限', 'error');
+            this.router.navigate('/');
+            return;
+        }
+
+        const content = document.getElementById('main-content');
+        content.innerHTML = `
+            <div class="section">
+                <div class="page-header">
+                    <button class="btn btn-sm" onclick="app.router.navigate('/merchant')">← 返回商家中心</button>
+                    <h2><svg width="24" height="24" class="icon" aria-hidden="true"><use xlink:href="#icon-box"></use></svg> 商品管理</h2>
+                </div>
+                
+                <div class="section-header" style="margin-top: 20px; display: flex; justify-content: space-between; align-items: center;">
+                    <div class="search-box">
+                        <input type="text" id="productSearchInput" placeholder="搜索商品名称" class="form-input" style="width: 300px;">
+                        <button class="btn btn-primary" onclick="app.handleProductSearch()">
+                            <svg width="16" height="16" class="icon" aria-hidden="true"><use xlink:href="#icon-search"></use></svg>
+                            搜索
+                        </button>
+                    </div>
+                    <button class="btn btn-primary" onclick="app.showAddProductModal()">
+                        <svg width="18" height="18" class="icon" aria-hidden="true"><use xlink:href="#icon-plus"></use></svg>
+                        添加商品
+                    </button>
+                </div>
+                
+                <div id="merchant-products-page" style="margin-top: 20px;">
+                    <div class="loading-text">加载中...</div>
+                </div>
+            </div>
+            
+            <!-- 添加/编辑商品模态框 -->
+            <div id="productModal" class="modal" style="display:none;">
+                <div class="modal-content modal-large">
+                    <div class="modal-header">
+                        <h3 id="modalTitle">添加商品</h3>
+                        <button class="modal-close" onclick="app.closeProductModal()">×</button>
+                    </div>
+                    <form id="productForm" onsubmit="app.handleAddProduct(event)">
+                        <input type="hidden" id="productId" name="id">
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>
+                                    <span class="label-required">*</span>
+                                    商品名称
+                                </label>
+                                <input type="text" id="productName" name="name" placeholder="请输入商品名称" required class="form-input">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>商品分类</label>
+                                <select id="productCategory" name="categoryId" class="form-input">
+                                    <option value="">加载中...</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>商品状态</label>
+                                <select id="productStatus" name="status" class="form-input">
+                                    <option value="1">上架</option>
+                                    <option value="0">下架</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>
+                                    <span class="label-required">*</span>
+                                    商品价格（元）
+                                </label>
+                                <input type="number" id="productPrice" name="price" placeholder="0.00" step="0.01" min="0" required class="form-input">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>原价（元）</label>
+                                <input type="number" id="productOriginalPrice" name="originalPrice" placeholder="0.00" step="0.01" min="0" class="form-input">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>
+                                    <span class="label-required">*</span>
+                                    库存数量
+                                </label>
+                                <input type="number" id="productStock" name="stock" placeholder="0" min="0" required class="form-input">
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>商品描述</label>
+                            <textarea id="productDescription" name="description" rows="3" placeholder="请输入商品描述信息" class="form-input"></textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>
+                                主图URL
+                                <span class="label-hint">（可选，支持http://或https://开头的图片链接）</span>
+                            </label>
+                            <input type="url" id="productMainImage" name="mainImage" placeholder="https://example.com/image.jpg" class="form-input" oninput="app.updateImagePreview()">
+                            <div id="mainImagePreview" class="image-preview">
+                                <div class="image-preview-placeholder">暂无图片</div>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>
+                                商品图片组
+                                <span class="label-hint">（可选，多个URL用逗号分隔）</span>
+                            </label>
+                            <textarea id="productImages" name="images" rows="2" placeholder="https://example.com/img1.jpg,https://example.com/img2.jpg" class="form-input"></textarea>
+                            <div class="form-hint">💡 提示：可以输入多个图片URL，用英文逗号分隔</div>
+                        </div>
+                        
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" onclick="app.closeProductModal()">取消</button>
+                            <button type="submit" class="btn btn-primary">保存</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        `;
+
+        // 加载商品数据
+        this.loadMerchantProductsPage();
+    }
+
+    // 加载商品管理页面数据
+    async loadMerchantProductsPage(keyword = '') {
+        try {
+            const products = await utils.request('/merchant/products');
+            const container = document.getElementById('merchant-products-page');
+            if (!container) return;
+
+            // 如果有搜索关键词，进行过滤
+            let filteredProducts = products;
+            if (keyword) {
+                filteredProducts = products.filter(p =>
+                    p.name.toLowerCase().includes(keyword.toLowerCase())
+                );
+            }
+
+            if (filteredProducts.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state-small">
+                        <div class="empty-icon-small">📦</div>
+                        <p>${keyword ? '未找到匹配的商品' : '还没有商品'}</p>
+                        <button class="btn btn-primary" onclick="app.showAddProductModal()">
+                            添加第一个商品
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = `
+                <div class="products-table">
+                    <table class="data-table" style="width: 100%;">
+                        <thead>
+                            <tr>
+                                <th style="width: 80px;">图片</th>
+                                <th>商品名称</th>
+                                <th style="width: 100px;">价格</th>
+                                <th style="width: 80px;">库存</th>
+                                <th style="width: 80px;">销量</th>
+                                <th style="width: 80px;">状态</th>
+                                <th style="width: 150px;">操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${filteredProducts.map(p => `
+                                <tr>
+                                    <td>
+                                        <div style="width: 60px; height: 60px; border-radius: 8px; overflow: hidden; background: #f5f5f5; display: flex; align-items: center; justify-content: center;">
+                                            ${p.mainImage ? `<img src="${p.mainImage}" alt="${p.name}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.innerHTML='📦'">` : '📦'}
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div style="font-weight: 500;">${p.name}</div>
+                                        <div style="font-size: 12px; color: var(--text-secondary); margin-top: 4px;">${p.description || '暂无描述'}</div>
+                                    </td>
+                                    <td style="color: var(--danger); font-weight: 600;">¥${p.price}</td>
+                                    <td>${p.stock}</td>
+                                    <td>${p.sales || 0}</td>
+                                    <td>
+                                        <span class="badge ${p.status === 1 ? 'badge-success' : 'badge-secondary'}">
+                                            ${p.status === 1 ? '上架' : '下架'}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm" onclick="app.editProduct(${p.id})">
+                                            <svg width="14" height="14" class="icon" aria-hidden="true"><use xlink:href="#icon-edit"></use></svg>
+                                            编辑
+                                        </button>
+                                        <button class="btn btn-sm btn-danger" onclick="app.deleteProduct(${p.id})" style="margin-left: 8px;">
+                                            <svg width="14" height="14" class="icon" aria-hidden="true"><use xlink:href="#icon-delete"></use></svg>
+                                            删除
+                                        </button>
+                                    </td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+                <div style="margin-top: 16px; color: var(--text-secondary); font-size: 13px;">
+                    共 ${filteredProducts.length} 件商品
+                </div>
+            `;
+        } catch (error) {
+            console.error('Load merchant products page error:', error);
+            const container = document.getElementById('merchant-products-page');
+            if (container) {
+                container.innerHTML = '<div class="error">加载失败，请刷新重试</div>';
+            }
+        }
+    }
+
+    // 商品搜索
+    handleProductSearch() {
+        const keyword = document.getElementById('productSearchInput')?.value?.trim() || '';
+        this.loadMerchantProductsPage(keyword);
+    }
+
+    // 渲染订单管理独立页面
+    renderMerchantOrders() {
+        const user = utils.getUserInfo();
+        if (!user || (user.userType !== 2 && user.role !== 'merchant')) {
+            utils.showToast('需要商家权限', 'error');
+            this.router.navigate('/');
+            return;
+        }
+
+        const content = document.getElementById('main-content');
+        content.innerHTML = `
+            <div class="section">
+                <div class="page-header">
+                    <button class="btn btn-sm" onclick="app.router.navigate('/merchant')">← 返回商家中心</button>
+                    <h2><svg width="24" height="24" class="icon" aria-hidden="true"><use xlink:href="#icon-order"></use></svg> 订单管理</h2>
+                </div>
+                
+                <div class="order-tabs" style="margin-top: 20px;">
+                    <button class="order-tab active" onclick="app.filterMerchantOrdersPage(null)">全部订单</button>
+                    <button class="order-tab" onclick="app.filterMerchantOrdersPage(0)">待支付</button>
+                    <button class="order-tab" onclick="app.filterMerchantOrdersPage(1)">已支付</button>
+                    <button class="order-tab" onclick="app.filterMerchantOrdersPage(3)">已发货</button>
+                    <button class="order-tab" onclick="app.filterMerchantOrdersPage(4)">已完成</button>
+                    <button class="order-tab" onclick="app.filterMerchantOrdersPage(5)">已取消</button>
+                </div>
+                
+                <div id="merchant-orders-page" style="margin-top: 20px;">
+                    <div class="loading-text">加载中...</div>
+                </div>
+            </div>
+        `;
+
+        // 加载订单数据
+        this.currentMerchantOrderStatus = null;
+        this.loadMerchantOrdersPage();
+    }
+
+    // 加载订单管理页面数据
+    async loadMerchantOrdersPage(status = null) {
+        const container = document.getElementById('merchant-orders-page');
+        if (!container) return;
+
+        container.innerHTML = '<div class="loading-text">加载中...</div>';
+
+        try {
+            const url = status !== null ? `/merchant/orders?status=${status}` : '/merchant/orders';
+            const orders = await utils.request(url);
+
+            if (!orders || orders.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state-small">
+                        <div class="empty-icon-small">📦</div>
+                        <p>暂无订单</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = orders.map(order => MerchantService.renderMerchantOrderCard(order)).join('');
+        } catch (error) {
+            console.error('Load merchant orders page error:', error);
+            container.innerHTML = '<div class="error">加载订单失败</div>';
+        }
+    }
+
+    // 筛选订单（独立页面版本）
+    filterMerchantOrdersPage(status) {
+        this.currentMerchantOrderStatus = status;
+
+        // 更新标签激活状态
+        document.querySelectorAll('.order-tab').forEach(tab => {
+            tab.classList.remove('active');
+        });
+        event.target.classList.add('active');
+
+        // 加载订单
+        this.loadMerchantOrdersPage(status);
     }
 
     // 渲染销售报表页面

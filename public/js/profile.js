@@ -304,7 +304,7 @@ const ProfileService = {
                         <h3><svg width="18" height="18" class="icon" aria-hidden="true"><use xlink:href="#icon-star"></use></svg> 管理中心</h3>
                     </div>
                     <div class="settings-list">
-                        <div class="setting-item">
+                        <div class="setting-item" onclick="window.location.hash = '/merchant/products';">
                             <div class="stat-icon">
                                 <img src="https://img.icons8.com/?size=100&id=12091&format=png" alt="Total Products Icon" style="width: 32px; height: 32px;">
                             </div>
@@ -312,9 +312,9 @@ const ProfileService = {
                                 <h4>商品管理</h4>
                                 <p>查看和管理店铺商品</p>
                             </div>
-                            <button class="btn btn-sm btn-primary" onclick="event.stopPropagation(); window.location.hash = '/merchant';">进入</button>
+                            <button class="btn btn-sm btn-primary" onclick="event.stopPropagation(); window.location.hash = '/merchant/products';">进入</button>
                         </div>
-                        <div class="setting-item">
+                        <div class="setting-item" onclick="window.location.hash = '/merchant/orders';">
                             <div class="stat-icon">
                                 <img src="https://img.icons8.com/?size=100&id=4255&format=png" alt="Total Products Icon" style="width: 32px; height: 32px;">
                             </div>
@@ -322,7 +322,7 @@ const ProfileService = {
                                 <h4>订单管理</h4>
                                 <p>处理客户订单和发货</p>
                             </div>
-                            <button class="btn btn-sm btn-primary" onclick="event.stopPropagation(); window.location.hash = '/merchant';">进入</button>
+                            <button class="btn btn-sm btn-primary" onclick="event.stopPropagation(); window.location.hash = '/merchant/orders';">进入</button>
                         </div>
                         <div class="setting-item" onclick="showMerchantStatsModal()">
                             <div class="stat-icon">
@@ -333,6 +333,16 @@ const ProfileService = {
                                 <p>查看销售趋势和热门商品</p>
                             </div>
                             <button class="btn btn-sm btn-primary" onclick="event.stopPropagation(); showMerchantStatsModal();">分析</button>
+                        </div>
+                        <div class="setting-item" onclick="window.location.hash = '/merchant/customers';">
+                            <div class="stat-icon">
+                                <img src="https://img.icons8.com/?size=100&id=23264&format=png" alt="Customer Management Icon" style="width: 32px; height: 32px;">
+                            </div>
+                            <div class="setting-info">
+                                <h4>客户管理</h4>
+                                <p>查看客户信息和行为日志</p>
+                            </div>
+                            <button class="btn btn-sm btn-primary" onclick="event.stopPropagation(); window.location.hash = '/merchant/customers';">管理</button>
                         </div>
                         <div class="setting-item" onclick="showDeleteAccountModal()">
                             <div class="stat-icon">
