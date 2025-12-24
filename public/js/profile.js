@@ -157,19 +157,6 @@ const ProfileService = {
                     </div>
                 </div>
 
-                <!-- 收货地址 -->
-                <div class="profile-section">
-                    <div class="section-title">
-                        <h3><svg width="18" height="18" class="icon" aria-hidden="true"><use xlink:href="#icon-location"></use></svg> 收货地址</h3>
-                        <button class="btn btn-primary btn-sm" onclick="ProfileService.showAddAddressModal()">
-                            + 新增地址
-                        </button>
-                    </div>
-                    <div id="addressList">
-                        <div class="loading-text">加载中...</div>
-                    </div>
-                </div>
-
                 <!-- 账户设置 -->
                 <div class="profile-section">
                     <div class="section-title">
@@ -409,7 +396,7 @@ const ProfileService = {
         }
 
         // 只显示最近10条
-        const recentHistory = history.slice(0, 10);
+        const recentHistory = history.slice(0, 12);
 
         container.innerHTML = `
             <div class="products-grid" style="grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));">
@@ -431,7 +418,7 @@ const ProfileService = {
                     </div>
                 `).join('')}
             </div>
-            ${history.length > 10 ? `<p style="text-align: center; margin-top: 16px; color: var(--text-secondary); font-size: 13px;">仅显示最近10条浏览记录</p>` : ''}
+            ${history.length > 12 ? `<p style="text-align: center; margin-top: 16px; color: var(--text-secondary); font-size: 13px;">仅显示最近12条浏览记录</p>` : ''}
         `;
     },
 
